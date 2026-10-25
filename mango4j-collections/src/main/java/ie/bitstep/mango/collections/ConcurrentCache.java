@@ -15,10 +15,58 @@ import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.INFO;
 import static java.lang.System.Logger.Level.TRACE;
 
+/**
+ * A thread-safe, time-based cache for values that must be <em>closed safely</em> when they are no longer wanted.
+ *
+ * <p><strong>This is deliberately not a general-purpose cache.</strong> It was built for, and is shaped by, the
+ * mango4j-crypto library, where the cached values are wrapped (data) encryption keys held in memory
+ * ({@code CachedWrappedKeyHolder}, an {@link AutoCloseable} that destroys the key material when closed).
+ * Handling secrets that way imposes requirements an ordinary {@code ConcurrentHashMap} with a TTL does not meet:
+ *
+ * <ul>
+ *   <li><strong>A separate "current" entry.</strong> Besides the keyed entries there is one special slot,
+ *   set with {@link #putCurrent(Object, Object)} and read with {@link #getCurrent()}. In crypto this is the key
+ *   currently used for <em>encryption</em>; the keyed entries are the older keys needed to <em>decrypt</em> data
+ *   written earlier. The current entry has its own TTL ({@code currentEntryTTL}, typically much longer than
+ *   {@code cacheEntryTTL}), is not refreshed by reads, and is replaced (not merely overwritten) when a new
+ *   current entry is set. {@link #get(Object)} falls back to it when the key is not among the keyed entries.</li>
+ *
+ *   <li><strong>Sliding expiry for keyed entries.</strong> Every successful {@link #get(Object)} pushes the
+ *   entry's expiry out by {@code cacheEntryTTL} (expire-after-access), so keys that are in active use stay
+ *   cached and idle ones disappear.</li>
+ *
+ *   <li><strong>Deferred close with a grace period.</strong> When an entry expires, or the cache is cleared, an
+ *   {@link AutoCloseable} value is <em>not</em> closed straight away. Another thread may have fetched it a moment
+ *   earlier and still be using it, and destroying key material under an in-flight operation causes failures or
+ *   races. Instead the entry is moved to an "evicted" set and closed by a purge task only after
+ *   {@code gracePeriod} has elapsed. Evicted values that are not {@code AutoCloseable} are simply dropped.
+ *   Exceptions thrown by {@code close()} are logged and swallowed so one failure cannot stop other keys being
+ *   destroyed.</li>
+ *
+ *   <li><strong>Deterministic clean-up.</strong> Eviction and purge run on a caller-supplied
+ *   {@link ScheduledExecutorService} and a caller-supplied {@link Clock} (so tests can control time), and
+ *   {@link #shutdown()} stops the scheduler and closes every remaining value immediately, ignoring the grace
+ *   period. The caller owns the executor's lifecycle and must call {@code shutdown()}.</li>
+ *
+ *   <li><strong>Runtime-tunable TTLs.</strong> The TTLs and grace period can be changed after construction
+ *   because the crypto service creates the cache statically but is configured later (for example by Spring).
+ *   A change applies to entries stored, or accessed, after the change.</li>
+ * </ul>
+ *
+ * <p><strong>What it does not do.</strong> There is no size bound or eviction by weight, no loading function
+ * (callers check {@link #get(Object)} and then {@link #put(Object, Object)}), no statistics, and no support for
+ * null keys. If you only need a plain TTL or size-bounded cache, use a library such as Caffeine instead; use this
+ * class when values need the safe, delayed close described above.
+ *
+ * @param <K> key type
+ * @param <V> value type, ideally {@link AutoCloseable} if it holds a resource or secret that must be released
+ */
 public class ConcurrentCache<K, V> {
 	private final System.Logger logger = System.getLogger(ConcurrentCache.class.getName());
 
+	/** How often the eviction and purge tasks run when not specified. */
 	public static final Duration DEFAULT_EVICTION_TASK_PERIOD = Duration.ofMinutes(1);
+	/** How long an evicted closeable value is kept before it is closed when not specified. */
 	public static final Duration DEFAULT_GRACE_PERIOD = Duration.ofSeconds(5);
 
 	private Duration cacheEntryTTL;
