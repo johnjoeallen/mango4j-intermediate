@@ -17,6 +17,13 @@
 
     <dependencies>
         <dependency>
+            <groupId>ie.bitstep.mango</groupId>
+            <artifactId>mango4j-spring-logging</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
         </dependency>

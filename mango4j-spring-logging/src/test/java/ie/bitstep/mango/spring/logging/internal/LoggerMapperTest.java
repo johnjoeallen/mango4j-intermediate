@@ -1,7 +1,7 @@
 package ie.bitstep.mango.spring.logging.internal;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import ie.bitstep.mango.collections.ListBuilder;
+import ie.bitstep.mango.spring.logging.test.ListBuilder;
 import ie.bitstep.mango.spring.logging.LogProjection;
 import ie.bitstep.mango.spring.logging.annotations.LoggableClass;
 import ie.bitstep.mango.spring.logging.annotations.LoggableField;
@@ -13,12 +13,12 @@ import ie.bitstep.mango.spring.logging.internal.accessors.GetterAccessor;
 import ie.bitstep.mango.spring.logging.test.data.SecretData;
 import ie.bitstep.mango.spring.logging.test.data.SecretDataLogProjection;
 import ie.bitstep.mango.spring.logging.test.data.SecretDataLogProjectionToMap;
-import ie.bitstep.mango.utils.converters.CollectionToSize;
-import ie.bitstep.mango.utils.converters.Converter;
-import ie.bitstep.mango.utils.masking.FullMasker;
-import ie.bitstep.mango.utils.masking.IdMasker;
-import ie.bitstep.mango.utils.masking.Mask;
-import ie.bitstep.mango.utils.masking.PanMasker;
+import ie.bitstep.mango.spring.logging.converters.CollectionToSize;
+import ie.bitstep.mango.spring.logging.converters.Converter;
+import ie.bitstep.mango.spring.logging.masking.FullMasker;
+import ie.bitstep.mango.spring.logging.masking.IdMasker;
+import ie.bitstep.mango.spring.logging.masking.Mask;
+import ie.bitstep.mango.spring.logging.masking.PanMasker;
 import org.assertj.core.util.Lists;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

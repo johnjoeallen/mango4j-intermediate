@@ -1,9 +1,9 @@
 package ie.bitstep.mango.spring.logging.adapter;
 
-import ie.bitstep.mango.collections.MapBuilder;
 import org.slf4j.Logger;
 import org.slf4j.event.Level;
 
+import java.util.LinkedHashMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,7 +25,9 @@ public abstract class AbstractLoggerAdapter implements LoggerAdapter {
 			return (Map<String, Object>) loggable;    //NOSONAR
 		} else {
 			// would like to fix this so that if it's an object it will get ObjectMapper mapped
-			return MapBuilder.<String, Object>map().with("failure", String.valueOf(loggable)).build();
+			Map<String, Object> failure = new LinkedHashMap<>();
+			failure.put("failure", String.valueOf(loggable));
+			return failure;
 		}
 	}
 

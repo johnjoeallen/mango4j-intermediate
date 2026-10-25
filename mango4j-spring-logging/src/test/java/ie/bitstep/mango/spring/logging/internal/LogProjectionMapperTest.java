@@ -1,8 +1,8 @@
 package ie.bitstep.mango.spring.logging.internal;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import ie.bitstep.mango.collections.ListBuilder;
-import ie.bitstep.mango.collections.MapBuilder;
+import ie.bitstep.mango.spring.logging.test.ListBuilder;
+import ie.bitstep.mango.spring.logging.test.MapBuilder;
 import ie.bitstep.mango.spring.logging.LogProjection;
 import ie.bitstep.mango.spring.logging.annotations.LoggableClass;
 import ie.bitstep.mango.spring.logging.annotations.LoggableField;

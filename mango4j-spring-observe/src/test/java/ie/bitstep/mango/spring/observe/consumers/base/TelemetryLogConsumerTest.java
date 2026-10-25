@@ -1,8 +1,8 @@
 package ie.bitstep.mango.spring.observe.consumers.base;
 
 import ie.bitstep.mango.spring.aop.MethodInfo;
-import ie.bitstep.mango.collections.ListBuilder;
-import ie.bitstep.mango.collections.MapBuilder;
+import ie.bitstep.mango.spring.logging.test.ListBuilder;
+import ie.bitstep.mango.spring.logging.test.MapBuilder;
 import ie.bitstep.mango.spring.observe.context.Observation;
 import net.logstash.logback.argument.StructuredArgument;
 import org.junit.jupiter.api.BeforeEach;

@@ -9,7 +9,7 @@ import ie.bitstep.mango.spring.logging.internal.DiagnosticContextLogger;
 import ie.bitstep.mango.spring.logging.test.TestUtils;
 import ie.bitstep.mango.spring.logging.web.populators.WebContextPostPopulator;
 import ie.bitstep.mango.spring.logging.web.populators.WebContextPrePopulator;
-import ie.bitstep.mango.reflection.utils.test.MDCTestUtils;
+import ie.bitstep.mango.spring.logging.test.MDCTestUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.AfterEach;

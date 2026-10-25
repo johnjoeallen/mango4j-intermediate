@@ -1,7 +1,6 @@
 package ie.bitstep.mango.spring.observe.aspect;
 
 import ie.bitstep.mango.spring.aop.MethodInfo;
-import ie.bitstep.mango.collections.MapBuilder;
 import ie.bitstep.mango.spring.logging.internal.LoggerMapper;
 import ie.bitstep.mango.spring.observe.annotations.Observe;
 import ie.bitstep.mango.spring.observe.annotations.Tag;
@@ -23,6 +22,7 @@ import org.springframework.stereotype.Component;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -117,13 +117,13 @@ public class ObservationProcessor {
 	private Map<String, Object> getTags(Observation observation, Object[] args) {
 		Annotation[][] parameterAnnotations = observation.methodInfo().getParameterAnnotations();
 		Iterator<Annotation[]> iterator = Arrays.stream(parameterAnnotations).iterator();
-		MapBuilder<String, Object> mapBuilder = new MapBuilder<>(new HashMap<>());
+		Map<String, Object> result = new HashMap<>();
 
 		for (Object arg : args) {
 			// Really need bitstep annotation utils here, get rid of this loop
 			for (Annotation pa : iterator.next()) {
 				if (pa instanceof Tag t) {
-					mapBuilder.injectAll(getTagValue(arg, t));
+					result.putAll(getTagValue(arg, t));
 				}
 			}
 
@@ -132,13 +132,13 @@ public class ObservationProcessor {
 					Tag tag = AnnotationUtils.findAnnotation(f, Tag.class);
 
 					if (tag != null) {
-						mapBuilder.injectAll(getTagValue(getObjectField(arg, f), tag));
+						result.putAll(getTagValue(getObjectField(arg, f), tag));
 					}
 				}
 			}
 		}
 
-		return mapBuilder.build();
+		return result;
 	}
 
 	static Object getObjectField(Object arg, Field f) {
@@ -158,28 +158,30 @@ public class ObservationProcessor {
 	private Map<String, Object> getParameters(Observation observation, Object[] args) {
 		Annotation[][] parameterAnnotations = observation.methodInfo().getParameterAnnotations();
 		Iterator<Annotation[]> iterator = Arrays.stream(parameterAnnotations).iterator();
-		MapBuilder<String, Object> mapBuilder = new MapBuilder<>(new HashMap<>());
+		Map<String, Object> result = new HashMap<>();
 
 		for (Object arg : args) {
 			// Really need bitstep annotation utils here, get rid of this loop
 			for (Annotation pa : iterator.next()) {
 				if (pa instanceof Observe o) {
-					mapBuilder.injectAll(getParamValue(arg, o));
+					result.putAll(getParamValue(arg, o));
 				}
 				if (pa instanceof Tag t) {
-					mapBuilder.injectAll(getTagValue(arg, t));
+					result.putAll(getTagValue(arg, t));
 				}
 			}
 		}
 
-		return mapBuilder.build();
+		return result;
 	}
 
 	private Map<String, Object> getTagValue(Object arg, Tag tag) {
 		String name = tag.name();
 
 		if (StringUtils.isNotEmpty(name)) {
-			return MapBuilder.<String, Object>map().with(name, String.valueOf(arg)).build();
+			Map<String, Object> tagValue = new LinkedHashMap<>();
+			tagValue.put(name, String.valueOf(arg));
+			return tagValue;
 		}
 
 		return Collections.emptyMap();
@@ -190,7 +192,9 @@ public class ObservationProcessor {
 		String name = pa.name();
 
 		if (StringUtils.isNotEmpty(name)) {
-			return MapBuilder.<String, Object>map().with(name, LoggerMapper.toLoggable(arg)).build();
+			Map<String, Object> param = new LinkedHashMap<>();
+			param.put(name, LoggerMapper.toLoggable(arg));
+			return param;
 		}
 
 		return Collections.emptyMap();

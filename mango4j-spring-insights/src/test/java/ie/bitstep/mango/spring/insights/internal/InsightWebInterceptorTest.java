@@ -1,9 +1,9 @@
 package ie.bitstep.mango.spring.insights.internal;
 
-import ie.bitstep.mango.collections.MapBuilder;
+import ie.bitstep.mango.spring.logging.test.MapBuilder;
 import ie.bitstep.mango.spring.insights.consts.InsightStatus;
 import ie.bitstep.mango.spring.insights.initialiser.DefaultInsightsContextInitialiser;
-import ie.bitstep.mango.reflection.utils.test.MDCTestUtils;
+import ie.bitstep.mango.spring.logging.test.MDCTestUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.AfterEach;

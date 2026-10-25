@@ -4,7 +4,7 @@ import ie.bitstep.mango.spring.insights.annotations.Insight;
 import ie.bitstep.mango.spring.insights.consts.InsightType;
 import ie.bitstep.mango.spring.insights.internal.Insights;
 import ie.bitstep.mango.spring.insights.internal.InsightsThreadContext;
-import ie.bitstep.mango.reflection.utils.test.MDCTestUtils;
+import ie.bitstep.mango.spring.logging.test.MDCTestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

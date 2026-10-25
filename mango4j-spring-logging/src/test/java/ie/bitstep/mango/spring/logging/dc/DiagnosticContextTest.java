@@ -6,7 +6,7 @@ import ie.bitstep.mango.spring.logging.LogContext;
 import ie.bitstep.mango.spring.logging.LogUtils;
 import ie.bitstep.mango.spring.logging.RootLogContext;
 import ie.bitstep.mango.spring.logging.config.DiagnosticLifecycleLogger;
-import ie.bitstep.mango.reflection.utils.test.MDCTestUtils;
+import ie.bitstep.mango.spring.logging.test.MDCTestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

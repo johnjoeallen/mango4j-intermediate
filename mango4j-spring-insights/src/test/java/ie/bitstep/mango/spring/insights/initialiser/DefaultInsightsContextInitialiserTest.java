@@ -2,7 +2,7 @@ package ie.bitstep.mango.spring.insights.initialiser;
 
 import ie.bitstep.mango.spring.insights.consts.InsightType;
 import ie.bitstep.mango.spring.insights.internal.AppInsight;
-import ie.bitstep.mango.reflection.utils.test.MDCTestUtils;
+import ie.bitstep.mango.spring.logging.test.MDCTestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

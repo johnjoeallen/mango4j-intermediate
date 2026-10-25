@@ -1,6 +1,6 @@
 package ie.bitstep.mango.spring.logging.adapter;
 
-import ie.bitstep.mango.collections.MapBuilder;
+import ie.bitstep.mango.spring.logging.test.MapBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

@@ -1,8 +1,8 @@
 package ie.bitstep.mango.spring.logging.internal;
 
 import ie.bitstep.mango.spring.logging.annotations.LoggableView;
-import ie.bitstep.mango.utils.converters.CollectionToSize;
-import ie.bitstep.mango.utils.masking.IdMasker;
+import ie.bitstep.mango.spring.logging.converters.CollectionToSize;
+import ie.bitstep.mango.spring.logging.masking.IdMasker;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

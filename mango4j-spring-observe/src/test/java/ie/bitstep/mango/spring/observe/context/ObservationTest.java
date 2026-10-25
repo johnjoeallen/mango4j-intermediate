@@ -1,14 +1,14 @@
 package ie.bitstep.mango.spring.observe.context;
 
 import ie.bitstep.mango.spring.aop.MethodInfo;
-import ie.bitstep.mango.collections.ListBuilder;
-import ie.bitstep.mango.collections.MapBuilder;
+import ie.bitstep.mango.spring.logging.test.ListBuilder;
+import ie.bitstep.mango.spring.logging.test.MapBuilder;
 import ie.bitstep.mango.spring.observe.annotations.ObservationTags;
 import ie.bitstep.mango.spring.observe.annotations.Observe;
 import ie.bitstep.mango.spring.observe.factory.ObservationFactory;
 import ie.bitstep.mango.spring.observe.initialisers.DefaultObservationInitializer;
 import ie.bitstep.mango.spring.observe.initialisers.ObservationInitializer;
-import ie.bitstep.mango.reflection.utils.test.MDCTestUtils;
+import ie.bitstep.mango.spring.logging.test.MDCTestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

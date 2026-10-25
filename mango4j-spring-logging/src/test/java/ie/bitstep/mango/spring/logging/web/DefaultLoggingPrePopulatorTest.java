@@ -5,7 +5,7 @@ import ie.bitstep.mango.spring.logging.dc.DiagnosticContext;
 import ie.bitstep.mango.spring.logging.dc.DiagnosticContextThreadLocal;
 import ie.bitstep.mango.spring.logging.web.populators.base.DefaultLoggingPrePopulator;
 import ie.bitstep.mango.spring.logging.web.populators.base.PopulatorConstants;
-import ie.bitstep.mango.reflection.utils.test.MDCTestUtils;
+import ie.bitstep.mango.spring.logging.test.MDCTestUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.AfterEach;

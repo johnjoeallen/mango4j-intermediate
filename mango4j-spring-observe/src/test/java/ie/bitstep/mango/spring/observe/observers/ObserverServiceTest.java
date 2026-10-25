@@ -1,6 +1,6 @@
 package ie.bitstep.mango.spring.observe.observers;
 
-import ie.bitstep.mango.collections.ListBuilder;
+import ie.bitstep.mango.spring.logging.test.ListBuilder;
 import ie.bitstep.mango.spring.observe.context.Observation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

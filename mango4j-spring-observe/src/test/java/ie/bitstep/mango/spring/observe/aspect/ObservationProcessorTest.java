@@ -1,7 +1,7 @@
 package ie.bitstep.mango.spring.observe.aspect;
 
-import ie.bitstep.mango.collections.ListBuilder;
-import ie.bitstep.mango.collections.MapBuilder;
+import ie.bitstep.mango.spring.logging.test.ListBuilder;
+import ie.bitstep.mango.spring.logging.test.MapBuilder;
 import ie.bitstep.mango.spring.logging.annotations.LoggableClass;
 import ie.bitstep.mango.spring.logging.annotations.LoggableField;
 import ie.bitstep.mango.spring.observe.annotations.Independent;
@@ -17,7 +17,7 @@ import ie.bitstep.mango.spring.observe.initialisers.DefaultObservationInitialize
 import ie.bitstep.mango.spring.observe.initialisers.ObservationInitializer;
 import ie.bitstep.mango.spring.observe.observers.Observer;
 import ie.bitstep.mango.spring.observe.observers.ObserverService;
-import ie.bitstep.mango.reflection.utils.test.MDCTestUtils;
+import ie.bitstep.mango.spring.logging.test.MDCTestUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.jupiter.api.AfterEach;

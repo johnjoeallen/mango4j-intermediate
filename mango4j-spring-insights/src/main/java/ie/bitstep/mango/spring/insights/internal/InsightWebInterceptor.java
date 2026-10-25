@@ -1,6 +1,5 @@
 package ie.bitstep.mango.spring.insights.internal;
 
-import ie.bitstep.mango.collections.MapBuilder;
 import ie.bitstep.mango.spring.insights.annotations.Insight;
 import ie.bitstep.mango.spring.insights.consts.InsightStatus;
 import ie.bitstep.mango.spring.insights.consts.InsightType;
@@ -15,6 +14,7 @@ import org.springframework.web.servlet.HandlerMapping;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static ie.bitstep.mango.spring.insights.internal.InsightsContext.HTTP_KEY;
@@ -42,11 +42,11 @@ public class InsightWebInterceptor implements HandlerInterceptor {
 	}
 
 	private Map<String, Object> getRequestHTTPInfo(HttpServletRequest request) {
-		return MapBuilder.<String, Object>map()
-				.with(InsightsContext.HTTP_METHOD_KEY, request.getMethod())
-				.with(InsightsContext.HTTP_URL_KEY, request.getRequestURI())
-				.with(InsightsContext.HTTP_MAPPING_KEY, request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE))
-				.build();
+		Map<String, Object> info = new LinkedHashMap<>();
+		info.put(InsightsContext.HTTP_METHOD_KEY, request.getMethod());
+		info.put(InsightsContext.HTTP_URL_KEY, request.getRequestURI());
+		info.put(InsightsContext.HTTP_MAPPING_KEY, request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE));
+		return info;
 	}
 
 	@Insight(type = InsightType.INTERCEPTOR, action = "InsightWebInterceptor")

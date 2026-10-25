@@ -1,9 +1,9 @@
 package ie.bitstep.mango.spring.logging;
 
-import ie.bitstep.mango.collections.ListBuilder;
+import ie.bitstep.mango.spring.logging.test.ListBuilder;
 import ie.bitstep.mango.spring.logging.sanitiser.IgnoredPackageSanitiser;
 import ie.bitstep.mango.spring.logging.web.WebMDCField;
-import ie.bitstep.mango.reflection.utils.test.MDCTestUtils;
+import ie.bitstep.mango.spring.logging.test.MDCTestUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

@@ -3,7 +3,7 @@ package ie.bitstep.mango.spring.observe.observers.base;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.cfg.DateTimeFeature;
-import ie.bitstep.mango.collections.ListBuilder;
+import ie.bitstep.mango.spring.logging.test.ListBuilder;
 import ie.bitstep.mango.spring.observe.consumers.base.Log;
 import ie.bitstep.mango.spring.observe.consumers.base.LogConsumer;
 import ie.bitstep.mango.spring.observe.context.Observation;

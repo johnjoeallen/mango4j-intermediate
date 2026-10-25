@@ -1,6 +1,5 @@
 package ie.bitstep.mango.spring.observe.consumers.base;
 
-import ie.bitstep.mango.collections.MapBuilder;
 import ie.bitstep.mango.spring.observe.context.Observation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,19 +37,17 @@ public class TelemetryLogConsumer implements Consumer<List<Telemetry>> {
 	public void accept(List<Telemetry> telemetries) {
 		Telemetry telemetry = telemetries.get(0);
 		Map<String, Object> tags = new HashMap<>(telemetry.tags());
-		MapBuilder<String, Object> mapBuilder = new MapBuilder<>(new HashMap<>());
-
 		tags.remove(RTT_RANGE);
 		tags.put(RTT, telemetry.observation().roundTripTime());
 
-		Map<String, Object> msg = mapBuilder
-			.with(TELEMETRY, MapBuilder.map(new HashMap<>())
-				.with(ID, telemetry.observation().observationId())
-				.with(LABEL, telemetry.observation().label())
-				.with(LOG_KEY_TIMESTAMP, Instant.ofEpochMilli(telemetry.observation().startTimeMillis()).toString())
-				.with(TAGS, tags)
-				.build())
-			.build();
+		Map<String, Object> telemetryData = new HashMap<>();
+		telemetryData.put(ID, telemetry.observation().observationId());
+		telemetryData.put(LABEL, telemetry.observation().label());
+		telemetryData.put(LOG_KEY_TIMESTAMP, Instant.ofEpochMilli(telemetry.observation().startTimeMillis()).toString());
+		telemetryData.put(TAGS, tags);
+
+		Map<String, Object> msg = new HashMap<>();
+		msg.put(TELEMETRY, telemetryData);
 
 		if (telemetry.observation().throwable() != null) {
 			getLogger(telemetry.observation()).error(null, entries(msg));

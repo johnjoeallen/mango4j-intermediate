@@ -13,11 +13,6 @@
     <artifactId>mango4j-spring-aop</artifactId>
 
     <dependencies>
-        <dependency>
-            <groupId>ie.bitstep.mango</groupId>
-            <artifactId>mango4j-reflection</artifactId>
-            <version>${mango4j.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>org.springframework</groupId>

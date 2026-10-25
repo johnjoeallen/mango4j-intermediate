@@ -6,7 +6,7 @@ import ie.bitstep.mango.spring.insights.initialiser.DefaultInsightsContextInitia
 import ie.bitstep.mango.spring.insights.initialiser.InsightsContextInitialiser;
 import ie.bitstep.mango.spring.insights.publisher.InsightsPublisher;
 import ie.bitstep.mango.spring.insights.publisher.InsightsPublisherLogFile;
-import ie.bitstep.mango.reflection.utils.test.MDCTestUtils;
+import ie.bitstep.mango.spring.logging.test.MDCTestUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.jupiter.api.AfterEach;

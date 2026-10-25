@@ -5,12 +5,12 @@ import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.cfg.DateTimeFeature;
 import tools.jackson.databind.MapperFeature;
 import tools.jackson.databind.json.JsonMapper;
-import ie.bitstep.mango.collections.MapBuilder;
 import ie.bitstep.mango.spring.observe.consumers.base.Log;
 import ie.bitstep.mango.spring.observe.context.Observation;
 import ie.bitstep.mango.spring.observe.observers.Observer;
 import org.springframework.stereotype.Component;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -37,12 +37,8 @@ public class LogObserver extends Observer<Log> {
 
 	@Override
 	public void onExit(Observation observation) {
-		Log log = new Log(observation,
-			MapBuilder.<String, Object>map()
-				.with(
-					"observation",
-					objectMapper.convertValue(observation, Map.class))
-				.build());
-		consume(log);
+		Map<String, Object> data = new LinkedHashMap<>();
+		data.put("observation", objectMapper.convertValue(observation, Map.class));
+		consume(new Log(observation, data));
 	}
 }

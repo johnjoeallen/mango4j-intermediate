@@ -1,6 +1,6 @@
 package ie.bitstep.mango.spring.observe.web;
 
-import ie.bitstep.mango.collections.ListBuilder;
+import ie.bitstep.mango.spring.logging.test.ListBuilder;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

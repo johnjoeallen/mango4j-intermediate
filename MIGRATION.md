@@ -17,7 +17,10 @@ break it and implement the needed part inside the dependant.
 3. Prefer inlining a small slice (one builder, a test helper) over depending on a
    whole library for it.
 
-## Dependency analysis: current `mango4j-spring-*` modules
+## Dependency analysis: `mango4j-spring-*` modules
+
+**Status: done** (see readme log). Only `crypto-caas-delegate -> crypto-core` remains. The table below is
+the original analysis; `utils` masking/converters were copied into logging rather than depended on.
 
 Counts are import statements of the external class in that module, from
 `src/main` / `src/test`. These were the old `com.mastercard.commons.mango.*` names; they are now `ie.bitstep.mango.*`.

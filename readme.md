@@ -20,7 +20,7 @@ Newest entries go at the bottom of the [log](#progress-log). Detail lives in
 | `mango4j-crypto` | `mango4j-crypto/` | crypto-core, crypto, aws-kms-delegate | yes | n/a | yes | yes (upstream is public) | not yet |
 | `mango4j-flowsink` | `mango4j-flowsink/` | annotations, core, spring, spring-boot | yes | yes | n/a (no Jackson) | yes (upstream is public) | not yet |
 | `mango4j-swarm` | `mango4j-swarm/` | single module | yes | yes | yes | yes (upstream is public) | not yet |
-| `mango4j-spring` | `mango4j-spring-parent/` | aop, logging, insights, observe, data, crypto-caas-delegate | yes | yes | yes | yes, one open question | not yet |
+| `mango4j-spring` | `mango4j-spring-parent/` | aop, logging, insights, observe, data, crypto-caas-delegate | yes | yes | yes | yes, one open question | five modules: yes. CaaS delegate: needs `crypto-core` |
 
 "Ready to split" stays "not yet" until the cross-group dependencies are broken and each group
 builds standalone from a fresh clone (see [Next](#next)).
@@ -88,10 +88,32 @@ Maven project.
 - Core's parent used to add `jackson-databind` to every core module; it is now declared only in
   `mango4j-utils`, plus test scope in `mango4j-collections`.
 
+### Breaking spring's dependencies on core
+- Spring depended on four core modules (`reflection`, `collections`, `utils`, `validation`) and on
+  `crypto-core`. After analysing real usage, spring now depends on **no** core module, and
+  only the CaaS delegate still depends on `crypto-core`.
+  - `validation`: declared, never used. Removed.
+  - `reflection`: test-only. `MDCTestUtils` is now a plain-reflection helper in
+    `mango4j-spring-logging`'s test sources; `ReflectionUtils.getMethod` became a three-line
+    helper in the aop tests.
+  - `collections`: `MapBuilder` was used in six places in main code, all replaced by plain
+    `LinkedHashMap`/`HashMap` (values can be null, so `Map.of` was not an option). Tests use slim
+    `MapBuilder`/`ListBuilder` helpers from the logging test-jar, which insights and observe
+    consume (test scope).
+  - `utils`: only the `masking` and `converters` packages (about 720 lines, self-contained) were
+    used, and they are part of logging's public annotation API
+    (`@LoggableField(masker = ...)`). They were **copied** into
+    `ie.bitstep.mango.spring.logging.masking` / `.converters` with their tests. Core's copy was
+    left alone; whether core should keep or drop it is a separate decision about core's public API.
+- The copied `MaskerFactoryTest` failed once inside logging: it cleared two of the factory's three
+  static caches, which was invisible in `utils` where nothing else populated the third. Fixed.
+- Proof: `mvn -f mango4j-spring-parent/pom.xml verify -pl '!../mango4j-spring-crypto-caas-delegate'`
+  builds and tests the other five spring modules with no other group in the reactor.
+
 ## Next
-1. Break cross-group dependencies per the [analysis](MIGRATION.md): inline the test-only
-   `reflection` and `collections` helpers in the spring modules, and decide whether spring keeps
-   `mango4j-utils` (masking and converters) or takes those classes in.
+1. Break remaining cross-group dependencies: `crypto-core` depends on `mango4j-collections`
+   (`ConcurrentCache`), `mango4j-crypto` on `mango4j-utils`; the CaaS delegate needs `crypto-core`.
+   Decide per case: depend, or inline.
 2. Confirm the CaaS delegate is publishable.
 3. Make each group build standalone from a clean clone against published (or `-SNAPSHOT`)
    artifacts of the others, not the reactor.

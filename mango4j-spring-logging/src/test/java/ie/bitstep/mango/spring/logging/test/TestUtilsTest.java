@@ -2,7 +2,7 @@ package ie.bitstep.mango.spring.logging.test;
 
 import ie.bitstep.mango.spring.logging.dc.DiagnosticContext;
 import ie.bitstep.mango.spring.logging.dc.DiagnosticContextThreadLocal;
-import ie.bitstep.mango.reflection.utils.test.MDCTestUtils;
+import ie.bitstep.mango.spring.logging.test.MDCTestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

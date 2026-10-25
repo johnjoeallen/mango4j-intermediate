@@ -10,7 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Method;
 
-import static ie.bitstep.mango.reflection.utils.ReflectionUtils.getMethod;
+import static ie.bitstep.mango.spring.aop.TestMethods.getMethod;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;

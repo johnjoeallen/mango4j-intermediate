@@ -7,7 +7,7 @@ import ie.bitstep.mango.spring.logging.adapter.LoggerAdapter;
 import ie.bitstep.mango.spring.logging.annotations.LoggableMethod;
 import ie.bitstep.mango.spring.logging.dc.DiagnosticContext;
 import ie.bitstep.mango.spring.logging.level.ExceptionLogLevelStrategy;
-import ie.bitstep.mango.reflection.utils.test.MDCTestUtils;
+import ie.bitstep.mango.spring.logging.test.MDCTestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

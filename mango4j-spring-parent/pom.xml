@@ -56,6 +56,7 @@
         <!--    Plugin versions    -->
         <maven.deploy.plugin>3.2.0</maven.deploy.plugin>
         <maven.dependency.plugin>3.9.0</maven.dependency.plugin>
+        <maven.jar.plugin>3.5.1</maven.jar.plugin>
         <maven.help.plugin>3.5.2</maven.help.plugin>
         <maven.compiler.plugin>3.16.0</maven.compiler.plugin>
         <maven.surefire.plugin>3.6.0</maven.surefire.plugin>
@@ -67,7 +68,6 @@
         <pitest.junit5.plugin.version>1.2.3</pitest.junit5.plugin.version>
 
         <!--    Dependencies versions    -->
-        <mango4j.version>1.1.0-SNAPSHOT</mango4j.version>
         <mango4j-crypto.version>1.0.1-SNAPSHOT</mango4j-crypto.version>
         <spring-boot.version>4.1.2</spring-boot.version>
         <commons-collections4.version>4.6.0</commons-collections4.version>
@@ -92,6 +92,12 @@
             <plugin>
                 <artifactId>maven-deploy-plugin</artifactId>
                 <version>${maven.deploy.plugin}</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven.jar.plugin}</version>
             </plugin>
 
             <plugin>
@@ -242,18 +248,6 @@
                 <version>${spring-boot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>ie.bitstep.mango</groupId>
-                <artifactId>mango4j-utils</artifactId>
-                <version>${mango4j.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>ie.bitstep.mango</groupId>
-                <artifactId>mango4j-collections</artifactId>
-                <version>${mango4j.version}</version>
             </dependency>
 
             <dependency>

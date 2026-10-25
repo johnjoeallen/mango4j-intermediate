@@ -15,6 +15,22 @@
     <name>mango4j-spring-logging</name>
     <packaging>jar</packaging>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -64,23 +80,8 @@
         </dependency>
         <dependency>
             <groupId>ie.bitstep.mango</groupId>
-            <artifactId>mango4j-utils</artifactId>
-            <version>${mango4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ie.bitstep.mango</groupId>
-            <artifactId>mango4j-collections</artifactId>
-            <version>${mango4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ie.bitstep.mango</groupId>
             <artifactId>mango4j-spring-aop</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ie.bitstep.mango</groupId>
-            <artifactId>mango4j-reflection</artifactId>
-            <version>${mango4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

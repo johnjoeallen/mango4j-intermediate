@@ -1,7 +1,7 @@
 package ie.bitstep.mango.spring.insights.annotations;
 
-import ie.bitstep.mango.utils.masking.Masker;
-import ie.bitstep.mango.utils.masking.NoMasker;
+import ie.bitstep.mango.spring.logging.masking.Masker;
+import ie.bitstep.mango.spring.logging.masking.NoMasker;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
