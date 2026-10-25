@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.mastercard</groupId>
+        <artifactId>parent</artifactId>
+        <version>3.0.0</version>
+        <relativePath/>
+    </parent>
+
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>mango4j-spring-aop</module>
+        <module>mango4j-spring-logging</module>
+        <module>mango4j-spring-insights</module>
+        <module>mango4j-spring-observe</module>
+        <module>mango4j-spring-data</module>
+        <module>mango4j-spring-crypto-caas-delegate</module>
+    </modules>
+
+    <groupId>com.mastercard.commons.mango</groupId>
+    <artifactId>mango4j-spring</artifactId>
+    <version>2.21.0</version>
+
+    <properties>
+        <java.version>17</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <encoding>UTF-8</encoding>
+        <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
+        <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
+        <archetype.encoding>${encoding}</archetype.encoding>
+
+        <!--    Plugin versions    -->
+        <maven.deploy.plugin>3.1.3</maven.deploy.plugin>
+        <maven.help.plugin>3.5.1</maven.help.plugin>
+        <maven.compiler.plugin>3.13.0</maven.compiler.plugin>
+        <maven.surefire.plugin>3.5.2</maven.surefire.plugin>
+        <maven.javadoc.plugin.version>3.11.2</maven.javadoc.plugin.version>
+        <maven.checkstyle.plugin.version>3.6.0</maven.checkstyle.plugin.version>
+        <maven.versions.plugin.version>2.16.1</maven.versions.plugin.version>
+        <checkstyle.version>10.26.1</checkstyle.version>
+        <pitest.plugin.version>1.19.4</pitest.plugin.version>
+        <pitest.junit5.plugin.version>1.2.3</pitest.junit5.plugin.version>
+
+        <!--    Dependencies versions    -->
+        <mango4j.version>2.21.0</mango4j.version>
+        <spring.version>3.5.9</spring.version>
+        <jakarta.servlet.api>6.1.0</jakarta.servlet.api>
+        <slf4j-api.version>2.0.17</slf4j-api.version>
+        <assertj.core>3.27.3</assertj.core>
+        <hibernate.version>6.6.7.Final</hibernate.version>
+        <commons-collections4.version>4.5.0</commons-collections4.version>
+        <commons-lang3.version>3.18.0</commons-lang3.version>
+        <aspectjrt.version>1.9.24</aspectjrt.version>
+        <junit-jupiter-api.version>5.13.3</junit-jupiter-api.version>
+        <junit-mockito.version>5.18.0</junit-mockito.version>
+        <logback-core.version>1.5.18</logback-core.version>
+        <logstash-logback-encoder.version>8.1</logstash-logback-encoder.version>
+        <lombok.version>1.18.38</lombok.version>
+        <jackson.version>2.19.1</jackson.version>
+
+        <!--        MC enterprise       -->
+        <mc-enterprise-logging-rest.version>3.1.2.RELEASE</mc-enterprise-logging-rest.version>
+    </properties>
+
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin}</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <compilerArgument>-parameters</compilerArgument>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>${maven.deploy.plugin}</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-help-plugin</artifactId>
+                <version>${maven.help.plugin}</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven.surefire.plugin}</version>
+            </plugin>
+
+            <!--     Versions     -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>${maven.versions.plugin.version}</version>
+                <configuration>
+                    <ruleSet>
+                        <ignoreVersion>
+                            <type>regex</type>
+                            <version>(.+-.*)</version> <!-- this will disable -SNAPSHOTS too -->
+                        </ignoreVersion>
+                    </ruleSet>
+                </configuration>
+            </plugin>
+
+            <!--     JavaDocs     -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven.javadoc.plugin.version}</version>
+                <configuration>
+                    <doctitle>${project.name} ${project.version}</doctitle>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Checkstyle -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${maven.checkstyle.plugin.version}</version>
+                <configuration>
+                    <configLocation>checkstyle.xml</configLocation>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                    <sourceDirectories>
+                        <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+                    </sourceDirectories>
+                    <excludes>**/generated/**/*</excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>build</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>package</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>${checkstyle.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <!-- PITEST mvn clean test-compile org.pitest:pitest-maven:mutationCoverage   -->
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <version>${pitest.plugin.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-junit5-plugin</artifactId>
+                        <version>${pitest.junit5.plugin.version}</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <verbose>true</verbose>
+                    <withHistory>false</withHistory>
+                    <mutationThreshold>93</mutationThreshold>
+                    <targetClasses>
+                        <param>com.mastercard.commons.mango4j.*</param>
+                        <param>com.mastercard.commons.mango.*</param>
+                    </targetClasses>
+                    <targetTests>
+                        <param>com.mastercard.commons.mango.*</param>
+                        <param>com.mastercard.commons.mango4j.*</param>
+                    </targetTests>
+
+                    <excludedClasses>
+                        <param>com.mastercard.commons.mango.logging.config.DiagnosticLifecycleLogger</param>
+                    </excludedClasses>
+
+                    <excludedMethods>
+                        <param>putClassMetaData</param>
+                        <param>putFieldMetaData</param>
+                        <param>getConverter</param>
+                    </excludedMethods>
+
+                    <avoidCallsTo>
+                    </avoidCallsTo>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.mastercard.commons.mango</groupId>
+                <artifactId>mango4j-utils</artifactId>
+                <version>${mango4j.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.mastercard.commons.mango</groupId>
+                <artifactId>mango4j-collections</artifactId>
+                <version>${mango4j.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>jakarta.servlet</groupId>
+                <artifactId>jakarta.servlet-api</artifactId>
+                <version>${jakarta.servlet.api}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit-jupiter-api.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-collections4</artifactId>
+                <version>${commons-collections4.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.aspectj</groupId>
+                <artifactId>aspectjrt</artifactId>
+                <version>${aspectjrt.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-api</artifactId>
+                <version>${junit-jupiter-api.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-test</artifactId>
+                <version>${spring.version}</version>
+                <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.hamcrest</groupId>
+                        <artifactId>hamcrest</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <version>${spring.version}</version>
+                <artifactId>spring-boot-starter-data-jpa</artifactId>
+            </dependency>
+
+            <dependency>
+                <groupId>org.hibernate.orm</groupId>
+                <artifactId>hibernate-core</artifactId>
+                <version>${hibernate.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+                <scope>provided</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>${slf4j-api.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>${logback-core.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>${logstash-logback-encoder.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit-jupiter-api.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>${junit-mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.core}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>${junit-jupiter-api.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>finicity</id>
+            <repositories>
+                <repository>
+                    <id>central</id>
+                    <url>https://repo.fini.city/artifactory/libs-release</url>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                </repository>
+                <repository>
+                    <id>snapshots</id>
+                    <url>https://repo.fini.city/artifactory/libs-snapshot</url>
+                    <releases>
+                        <enabled>false</enabled>
+                    </releases>
+                </repository>
+            </repositories>
+            <distributionManagement>
+                <repository>
+                    <id>central</id>
+                    <url>https://repo.fini.city/artifactory/libs-release-local</url>
+                </repository>
+                <snapshotRepository>
+                    <id>snapshots</id>
+                    <url>https://repo.fini.city/artifactory/libs-snapshot-local</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+    </profiles>
+</project>

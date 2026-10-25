@@ -1,0 +1,112 @@
+# Example application.yml for mango4j-spring-logging
+# This file demonstrates how to configure diagnostic lifecycle logging
+# =============================================================================
+# PRODUCTION CONFIGURATION (Default - Lifecycle Logging DISABLED)
+# =============================================================================
+mango:
+  logging:
+    diagnostic:
+      lifecycle-logging-enabled: false  # Default: disabled for minimal log volume
+---
+# =============================================================================
+# DEVELOPMENT PROFILE (Lifecycle Logging ENABLED)
+# =============================================================================
+spring:
+  config:
+    activate:
+      on-profile: dev
+mango:
+  logging:
+    diagnostic:
+      lifecycle-logging-enabled: true  # Enabled: track all context lifecycle events
+logging:
+  level:
+    com.mastercard.commons.mango.logging.dc: INFO
+    com.mastercard.commons.mango.logging.internal: INFO
+---
+# =============================================================================
+# STAGING/QA PROFILE (Lifecycle Logging ENABLED for validation)
+# =============================================================================
+spring:
+  config:
+    activate:
+      on-profile: staging
+mango:
+  logging:
+    diagnostic:
+      lifecycle-logging-enabled: true  # Enabled: validate no memory leaks
+logging:
+  level:
+    com.mastercard.commons.mango.logging.dc: INFO
+    com.mastercard.commons.mango.logging.internal: INFO
+---
+# =============================================================================
+# PRODUCTION PROFILE (Lifecycle Logging DISABLED)
+# =============================================================================
+spring:
+  config:
+    activate:
+      on-profile: prod
+mango:
+  logging:
+    diagnostic:
+      lifecycle-logging-enabled: false  # Disabled: minimize log volume
+logging:
+  level:
+    com.mastercard.commons.mango.logging.dc: WARN
+    com.mastercard.commons.mango.logging.internal: WARN
+---
+# =============================================================================
+# TROUBLESHOOTING PROFILE (Lifecycle Logging ENABLED for debugging)
+# =============================================================================
+spring:
+  config:
+    activate:
+      on-profile: troubleshooting
+mango:
+  logging:
+    diagnostic:
+      lifecycle-logging-enabled: true  # Enabled: investigate memory issues
+logging:
+  level:
+    com.mastercard.commons.mango.logging.dc: INFO
+    com.mastercard.commons.mango.logging.internal: INFO
+    com.mastercard.commons.mango.logging.dc.DiagnosticContextThreadLocal: DEBUG
+---
+# =============================================================================
+# NOTES
+# =============================================================================
+# 
+# Property: mango.logging.diagnostic.lifecycle-logging-enabled
+# Type: boolean
+# Default: false
+# 
+# When enabled, logs at INFO level:
+# - DiagnosticContext creation, push, up, and clear events
+# - DiagnosticContextItem creation and cleanup events
+# - Object memory addresses for tracking
+# 
+# Enable via:
+# 1. Profile-specific configuration (shown above)
+# 2. Environment variable: MANGO_LOGGING_DIAGNOSTIC_LIFECYCLE_LOGGING_ENABLED=true
+# 3. Command line: --mango.logging.diagnostic.lifecycle-logging-enabled=true
+# 4. External config server
+# 
+# Performance impact:
+# - Disabled: Zero overhead ✅
+# - Enabled: ~30-60 microseconds per request (minimal)
+# 
+# Use cases:
+# - Memory leak investigation
+# - Understanding request flow
+# - Validating context cleanup
+# - Development debugging
+# 
+# Best practices:
+# ✅ Keep disabled in production by default
+# ✅ Enable in development environments
+# ✅ Enable temporarily for troubleshooting only
+# ✅ Monitor log volume when enabled
+# ✅ Use async logging for high throughput
+# 
+# See: DIAGNOSTIC_LIFECYCLE_LOGGING_CONFIGURATION.md for complete documentation
