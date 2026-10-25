@@ -19,9 +19,9 @@ break it and implement the needed part inside the dependant.
 
 ## Dependency analysis: `mango4j-spring-*` modules
 
-**Status: done** (see readme log). Spring now depends on `mango4j-utils` (logging) and `crypto-core` (CaaS delegate) only. The
-table below is the original analysis; masking stays in `mango4j-utils` because it is reusable
-outside logging (API responses).
+**Status: done** (see readme log). Spring now depends on `mango4j-masking` and `mango4j-utils` (logging) and `crypto-core` (CaaS delegate) only. The
+table below is the original analysis; masking was extracted into its own core module,
+`mango4j-masking`, because it is reusable outside logging (API responses).
 
 Counts are import statements of the external class in that module, from
 `src/main` / `src/test`. These were the old `com.mastercard.commons.mango.*` names; they are now `ie.bitstep.mango.*`.
@@ -70,7 +70,7 @@ Still to review before publishing: `mango4j-spring-crypto-caas-delegate` talks t
 
 1. Remove the zero-use dependencies (`validation`, `logging-rest`) and confirm it builds.
 2. Break the test-only and trivial ones (`reflection`, `collections`).
-3. Decide on `utils` masking/converters, then implement the chosen option.
+3. Masking extracted into `mango4j-masking` (done); decide whether `converters` stays in utils.
 4. Make the root pom self-contained (no internal parent or finicity profile).
 5. Rename groupId/packages.
 6. Upgrade to Java 25 and Spring Boot 4 (single `spring-boot.version`, import the
@@ -114,7 +114,7 @@ level. Nothing inherits from the root, which is only a throw-away aggregator.
 
 | Future repo | Parent / root pom | Modules |
 |---|---|---|
-| mango4j | `mango4j-parent/` | `mango4j-collections`, `-reflection`, `-utils`, `-validation`, `-hibernate-proxy-resolver` |
+| mango4j | `mango4j-parent/` | `mango4j-collections`, `-masking`, `-reflection`, `-utils`, `-validation`, `-hibernate-proxy-resolver` |
 | mango4j-crypto | `mango4j-crypto/` (nested, as upstream) | `mango4j-crypto-core`, `mango4j-crypto`, `mango4j-crypto-aws-kms-delegate` |
 | mango4j-flowsink | `mango4j-flowsink/` (nested) | `mango4j-flowsink-annotations`, `-core`, `-spring`, `-spring-boot` |
 | mango4j-swarm | `mango4j-swarm/` (single module) | n/a |

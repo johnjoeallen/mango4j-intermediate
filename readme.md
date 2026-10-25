@@ -16,11 +16,11 @@ Newest entries go at the bottom of the [log](#progress-log). Detail lives in
 
 | Future repo | Directory (parent pom) | Modules | Java 25 | Boot 4 / Spring 7 | Jackson 3 | Internal refs removed | Ready to split |
 |---|---|---|---|---|---|---|---|
-| `mango4j` | `mango4j-parent/` | collections, reflection, utils, validation, hibernate-proxy-resolver | yes | n/a | yes | yes (upstream is public) | not yet |
+| `mango4j` | `mango4j-parent/` | collections, masking, reflection, utils, validation, hibernate-proxy-resolver | yes | n/a | yes | yes (upstream is public) | not yet |
 | `mango4j-crypto` | `mango4j-crypto/` | crypto-core, crypto, aws-kms-delegate | yes | n/a | yes | yes (upstream is public) | not yet |
 | `mango4j-flowsink` | `mango4j-flowsink/` | annotations, core, spring, spring-boot | yes | yes | n/a (no Jackson) | yes (upstream is public) | not yet |
 | `mango4j-swarm` | `mango4j-swarm/` | single module | yes | yes | yes | yes (upstream is public) | not yet |
-| `mango4j-spring` | `mango4j-spring-parent/` | aop, logging, insights, observe, data, crypto-caas-delegate | yes | yes | yes | yes, one open question | needs `mango4j-utils` (logging) and `crypto-core` (CaaS delegate) |
+| `mango4j-spring` | `mango4j-spring-parent/` | aop, logging, insights, observe, data, crypto-caas-delegate | yes | yes | yes | yes, one open question | needs `mango4j-masking` and `mango4j-utils` (logging), `crypto-core` (CaaS delegate) |
 
 "Ready to split" stays "not yet" until the cross-group dependencies are broken and each group
 builds standalone from a fresh clone (see [Next](#next)).
@@ -102,16 +102,26 @@ Maven project.
     consume (test scope).
   - `utils`: only the `masking` and `converters` packages are used. First attempt: copy them
     into logging. **Reversed**: masking is reusable beyond logging (API responses can use it too),
-    so it stays in `mango4j-utils` as its own reusable code and logging keeps a versioned
-    dependency on it. The copy was deleted.
+    so it was instead extracted from `mango4j-utils` into its own module, `mango4j-masking`
+    (see below). `converters` (four small classes that exist for logging) stays in utils for now.
+
+### Masking becomes its own module
+- New core module `mango4j-masking`: the `masking` package moved out of `mango4j-utils` with its
+  tests (59 of the old 221 utils tests). Its only dependency is commons-lang3, so API code can use
+  it without pulling Jackson, commons-text or the rest of utils.
+- The Java package is unchanged (`ie.bitstep.mango.utils.masking`). `mango4j-utils` 1.0.0 is on
+  Maven Central with that package, so this keeps the move source-compatible: consumers moving to
+  1.1.0 add the `mango4j-masking` dependency and keep their imports. Renaming the package to
+  `ie.bitstep.mango.masking` is a possible follow-up, but a breaking one.
+- Consequence for 1.1.0 release notes: utils 1.1.0 no longer contains masking.
+- Spring logging now depends on `mango4j-masking` and `mango4j-utils` (for converters).
 
 ## Next
 1. Break remaining cross-group dependencies where it makes sense: `crypto-core` depends on
    `mango4j-collections` (only for `ConcurrentCache`, which backs the grace-period close of cached
-   key material), `mango4j-crypto` on `mango4j-utils`. Options for `ConcurrentCache`: move it into
+   key material; now documented in its Javadoc), `mango4j-crypto` on `mango4j-utils`. Options for `ConcurrentCache`: move it into
    crypto-core, replace it with a smaller purpose-built holder, use Caffeine, or keep the
-   dependency. Masking stays in `mango4j-utils` (reusable for API responses); worth considering
-   whether it deserves its own small module so consumers do not pull the rest of utils.
+   dependency. Decide whether logging's `converters` should stay in utils or move into logging.
 2. Confirm the CaaS delegate is publishable.
 3. Make each group build standalone from a clean clone against published (or `-SNAPSHOT`)
    artifacts of the others, not the reactor.

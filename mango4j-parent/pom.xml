@@ -36,6 +36,7 @@
 
     <modules>
         <module>../mango4j-collections</module>
+        <module>../mango4j-masking</module>
         <module>../mango4j-utils</module>
         <module>../mango4j-hibernate-proxy-resolver</module>
         <module>../mango4j-validation</module>
