@@ -1,16 +1,16 @@
 # mango4j-crypto-caas-delegate
-## Extension Plugin to easily support CaaS encryption in Mastercard applications
+## Extension Plugin to easily support CaaS encryption (Crypto-as-a-Service)
 
 ### Steps to use
 
 #### Preconditions
-Make sure you've followed the steps [documented here](https://confluence.mastercard.int/spaces/MANGO/pages/1181005587/mango4j-crypto+-+Documentation) to onboard your application into the mango4j-crypto framework.
+Make sure you've followed the steps documented in the [mango4j-crypto](https://github.com/bitstep-ie/mango4j-crypto) project to onboard your application into the mango4j-crypto framework.
 
 #### Step 1
 Add this dependency to your application POM file
 ~~~xml
     <dependency>
-        <groupId>com.mastercard.commons.mango</groupId>
+        <groupId>ie.bitstep.mango.spring</groupId>
         <artifactId>mango4j-spring-crypto-caas-delegate</artifactId>
         <version>2.4.0</version>
     </dependency>

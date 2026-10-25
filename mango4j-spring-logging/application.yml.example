@@ -21,8 +21,8 @@ mango:
       lifecycle-logging-enabled: true  # Enabled: track all context lifecycle events
 logging:
   level:
-    com.mastercard.commons.mango.logging.dc: INFO
-    com.mastercard.commons.mango.logging.internal: INFO
+    ie.bitstep.mango.spring.logging.dc: INFO
+    ie.bitstep.mango.spring.logging.internal: INFO
 ---
 # =============================================================================
 # STAGING/QA PROFILE (Lifecycle Logging ENABLED for validation)
@@ -37,8 +37,8 @@ mango:
       lifecycle-logging-enabled: true  # Enabled: validate no memory leaks
 logging:
   level:
-    com.mastercard.commons.mango.logging.dc: INFO
-    com.mastercard.commons.mango.logging.internal: INFO
+    ie.bitstep.mango.spring.logging.dc: INFO
+    ie.bitstep.mango.spring.logging.internal: INFO
 ---
 # =============================================================================
 # PRODUCTION PROFILE (Lifecycle Logging DISABLED)
@@ -53,8 +53,8 @@ mango:
       lifecycle-logging-enabled: false  # Disabled: minimize log volume
 logging:
   level:
-    com.mastercard.commons.mango.logging.dc: WARN
-    com.mastercard.commons.mango.logging.internal: WARN
+    ie.bitstep.mango.spring.logging.dc: WARN
+    ie.bitstep.mango.spring.logging.internal: WARN
 ---
 # =============================================================================
 # TROUBLESHOOTING PROFILE (Lifecycle Logging ENABLED for debugging)
@@ -69,9 +69,9 @@ mango:
       lifecycle-logging-enabled: true  # Enabled: investigate memory issues
 logging:
   level:
-    com.mastercard.commons.mango.logging.dc: INFO
-    com.mastercard.commons.mango.logging.internal: INFO
-    com.mastercard.commons.mango.logging.dc.DiagnosticContextThreadLocal: DEBUG
+    ie.bitstep.mango.spring.logging.dc: INFO
+    ie.bitstep.mango.spring.logging.internal: INFO
+    ie.bitstep.mango.spring.logging.dc.DiagnosticContextThreadLocal: DEBUG
 ---
 # =============================================================================
 # NOTES

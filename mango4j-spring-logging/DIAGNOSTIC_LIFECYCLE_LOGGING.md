@@ -26,7 +26,7 @@
 ## Enable/Disable Logging
 
 ```java
-import com.mastercard.commons.mango.logging.config.DiagnosticLifecycleLogger;
+import ie.bitstep.mango.spring.logging.config.DiagnosticLifecycleLogger;
 
 // Enable general lifecycle logging
 DiagnosticLifecycleLogger.setEnabled(true);
@@ -755,11 +755,11 @@ DiagnosticLifecycleLogger.setThreadlocalEnabled(false);
 </appender>
 
 <!-- Route diagnostic logs to separate file -->
-<logger name="com.mastercard.commons.mango.logging.dc" level="INFO" additivity="false">
+<logger name="ie.bitstep.mango.spring.logging.dc" level="INFO" additivity="false">
     <appender-ref ref="DIAGNOSTIC"/>
 </logger>
 
-<logger name="com.mastercard.commons.mango.logging.internal.DiagnosticContextItem" level="INFO" additivity="false">
+<logger name="ie.bitstep.mango.spring.logging.internal.DiagnosticContextItem" level="INFO" additivity="false">
     <appender-ref ref="DIAGNOSTIC"/>
 </logger>
 ```
@@ -778,11 +778,11 @@ DiagnosticLifecycleLogger.setThreadlocalEnabled(false);
 </Appenders>
 
 <Loggers>
-    <Logger name="com.mastercard.commons.mango.logging.dc" level="info" additivity="false">
+    <Logger name="ie.bitstep.mango.spring.logging.dc" level="info" additivity="false">
         <AppenderRef ref="DiagnosticLog"/>
     </Logger>
     
-    <Logger name="com.mastercard.commons.mango.logging.internal.DiagnosticContextItem" level="info" additivity="false">
+    <Logger name="ie.bitstep.mango.spring.logging.internal.DiagnosticContextItem" level="info" additivity="false">
         <AppenderRef ref="DiagnosticLog"/>
     </Logger>
 </Loggers>
@@ -803,13 +803,13 @@ System.out.println("ThreadLocal Enabled: " + DiagnosticLifecycleLogger.isThreadl
 ### Check 2: Is log level correct?
 ```xml
 <!-- Ensure INFO level is enabled -->
-<logger name="com.mastercard.commons.mango.logging.dc" level="INFO"/>
+<logger name="ie.bitstep.mango.spring.logging.dc" level="INFO"/>
 ```
 
 ### Check 3: Are you looking at the right logger?
-- DiagnosticContext logs → `com.mastercard.commons.mango.logging.dc.DiagnosticContext`
-- ThreadLocal logs → `com.mastercard.commons.mango.logging.dc.DiagnosticContextThreadLocal`
-- DiagnosticContextItem logs → `com.mastercard.commons.mango.logging.internal.DiagnosticContextItem`
+- DiagnosticContext logs → `ie.bitstep.mango.spring.logging.dc.DiagnosticContext`
+- ThreadLocal logs → `ie.bitstep.mango.spring.logging.dc.DiagnosticContextThreadLocal`
+- DiagnosticContextItem logs → `ie.bitstep.mango.spring.logging.internal.DiagnosticContextItem`
 
 ## Problem: Too many logs
 
@@ -822,8 +822,8 @@ DiagnosticLifecycleLogger.setThreadlocalEnabled(false);  // Reduces volume
 ### Solution 2: Filter by logger
 ```xml
 <!-- Only log DiagnosticContext, not DiagnosticContextItem -->
-<logger name="com.mastercard.commons.mango.logging.dc.DiagnosticContext" level="INFO"/>
-<logger name="com.mastercard.commons.mango.logging.internal.DiagnosticContextItem" level="WARN"/>
+<logger name="ie.bitstep.mango.spring.logging.dc.DiagnosticContext" level="INFO"/>
+<logger name="ie.bitstep.mango.spring.logging.internal.DiagnosticContextItem" level="WARN"/>
 ```
 
 ### Solution 3: Sample logging
@@ -904,7 +904,7 @@ INFO DiagnosticLoggingAutoConfiguration - Diagnostic lifecycle logging initializ
 
 ## DiagnosticLifecycleLogger
 
-**Package:** `com.mastercard.commons.mango.logging.config`
+**Package:** `ie.bitstep.mango.spring.logging.config`
 
 ### Methods
 

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>ie.bitstep.mango</groupId>
+        <artifactId>mango4j-crypto-framework</artifactId>
+        <version>1.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>mango4j-crypto-aws-kms-delegate</artifactId>
+    <name>AWS KMS Encryption Service Delegate for Mango4j Crypto</name>
+    <packaging>jar</packaging>
+
+    <properties>
+        <aws-kms-sdk.version>2.42.17</aws-kms-sdk.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>ie.bitstep.mango</groupId>
+            <artifactId>mango4j-crypto-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>kms</artifactId>
+            <version>${aws-kms-sdk.version}</version>
+        </dependency>
+    </dependencies>
+</project>

@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>mango4j-spring</artifactId>
-        <groupId>com.mastercard.commons.mango</groupId>
-        <version>2.21.0</version>
+        <groupId>ie.bitstep.mango</groupId>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -17,7 +17,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.mastercard.commons.mango</groupId>
+            <groupId>ie.bitstep.mango</groupId>
             <artifactId>mango4j-reflection</artifactId>
             <version>${mango4j.version}</version>
         </dependency>

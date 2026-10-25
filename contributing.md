@@ -8,8 +8,7 @@ Please note we have a code of conduct, please follow it in all your interactions
 
 ## Pull Request Process
 
-- Fork the repository to your own personal Bitbucket space
-  - Ensure you allow permissions to read to dfda-cicd user (this is to allow CI to build your branch)
+- Fork the repository on GitHub
 - Create a new feature branch off the develop branch
 - Implement your changes in the new feature branch
 - Ensure that the codebase is adequately covered by tests
@@ -24,7 +23,7 @@ Before a pull request can be merged it will require:
 ### Our Pledge
 In the interest of fostering an open and welcoming environment, we as contributors and maintainers pledge to making 
 participating in our project and our community a harassment-free experience for everyone, regardless of program, 
-level of experience, title and tenure with Mastercard
+level of experience, title and tenure
 
 ### Our Standards
 Examples of behaviour that contributes to creating a _positive_ environment include:

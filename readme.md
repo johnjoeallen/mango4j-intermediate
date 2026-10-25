@@ -15,7 +15,7 @@ Three are currently three modules available:
 ## Using the libraries
 
 See the project site and reference documentation to get started building an application using each specific module of this framework.
-[Usage documentation based on version](https://confluence.mastercard.int/display/MANGO/mango4j-spring)
+See the [docs](docs/mango4j-spring.md) folder.
 
 ## Contributions
 
@@ -35,14 +35,12 @@ Your local setup is required to have installed:
 - Your favourite java IDE (we know IntelliJ works :))
 - Maven (3.8.1)
 
-And access to artifactory.
-
 ### Get started
 
 #### Clone
-Clone the repository locally using your favourite git client and the https link from bitbucket
+Clone the repository locally using your favourite git client
 ```
-https://scm.mastercard.int/stash/scm/mango/mango4j-spring.git
+https://github.com/bitstep-ie/mango4j-spring.git
 ```
 
 #### Build

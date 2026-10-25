@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.mastercard.commons.mango</groupId>
+        <groupId>ie.bitstep.mango</groupId>
         <artifactId>mango4j-spring</artifactId>
-        <version>2.21.0</version>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>mango4j-spring-crypto-caas-delegate</artifactId>
@@ -19,14 +19,14 @@
         <jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
         <system-stubs-jupiter.version>2.1.8</system-stubs-jupiter.version>
         <sonar.coverage.exclusions>
-            **/model/**/*,com/mastercard/commons/mango4j/crypto/caas/delegate/config/RestTemplateBuilder.java
+            **/model/**/*,ie/bitstep/mango/spring/crypto/caas/delegate/config/RestTemplateBuilder.java
         </sonar.coverage.exclusions>
     </properties>
     <dependencies>
         <dependency>
-            <groupId>com.mastercard.commons.mango</groupId>
+            <groupId>ie.bitstep.mango</groupId>
             <artifactId>mango4j-crypto-core</artifactId>
-            <version>${mango4j.version}</version>
+            <version>${mango4j-crypto.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>

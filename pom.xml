@@ -4,16 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>com.mastercard</groupId>
-        <artifactId>parent</artifactId>
-        <version>3.0.0</version>
-        <relativePath/>
-    </parent>
-
     <packaging>pom</packaging>
 
     <modules>
+        <module>mango4j-parent</module>
+        <module>mango4j-crypto</module>
+        <module>mango4j-flowsink</module>
+        <module>mango4j-swarm</module>
         <module>mango4j-spring-aop</module>
         <module>mango4j-spring-logging</module>
         <module>mango4j-spring-insights</module>
@@ -22,9 +19,33 @@
         <module>mango4j-spring-crypto-caas-delegate</module>
     </modules>
 
-    <groupId>com.mastercard.commons.mango</groupId>
+    <groupId>ie.bitstep.mango</groupId>
     <artifactId>mango4j-spring</artifactId>
-    <version>2.21.0</version>
+    <version>1.0.0-SNAPSHOT</version>
+
+    <name>Mango4j Spring</name>
+    <description>Spring Boot support libraries for Mango4j</description>
+    <url>https://github.com/bitstep-ie/mango4j-spring</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>bitstep</id>
+            <name>Bitstep</name>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/bitstep-ie/mango4j-spring.git</connection>
+        <developerConnection>scm:git:ssh://github.com/bitstep-ie/mango4j-spring.git</developerConnection>
+        <url>https://github.com/bitstep-ie/mango4j-spring</url>
+    </scm>
 
     <properties>
         <java.version>17</java.version>
@@ -49,7 +70,8 @@
         <pitest.junit5.plugin.version>1.2.3</pitest.junit5.plugin.version>
 
         <!--    Dependencies versions    -->
-        <mango4j.version>2.21.0</mango4j.version>
+        <mango4j.version>1.1.0-SNAPSHOT</mango4j.version>
+        <mango4j-crypto.version>1.0.1-SNAPSHOT</mango4j-crypto.version>
         <spring.version>3.5.9</spring.version>
         <jakarta.servlet.api>6.1.0</jakarta.servlet.api>
         <slf4j-api.version>2.0.17</slf4j-api.version>
@@ -64,9 +86,6 @@
         <logstash-logback-encoder.version>8.1</logstash-logback-encoder.version>
         <lombok.version>1.18.38</lombok.version>
         <jackson.version>2.19.1</jackson.version>
-
-        <!--        MC enterprise       -->
-        <mc-enterprise-logging-rest.version>3.1.2.RELEASE</mc-enterprise-logging-rest.version>
     </properties>
 
 
@@ -80,6 +99,7 @@
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
                     <compilerArgument>-parameters</compilerArgument>
+                    <proc>full</proc>
                 </configuration>
             </plugin>
 
@@ -187,16 +207,14 @@
                     <withHistory>false</withHistory>
                     <mutationThreshold>93</mutationThreshold>
                     <targetClasses>
-                        <param>com.mastercard.commons.mango4j.*</param>
-                        <param>com.mastercard.commons.mango.*</param>
+                        <param>ie.bitstep.mango.spring.*</param>
                     </targetClasses>
                     <targetTests>
-                        <param>com.mastercard.commons.mango.*</param>
-                        <param>com.mastercard.commons.mango4j.*</param>
+                        <param>ie.bitstep.mango.spring.*</param>
                     </targetTests>
 
                     <excludedClasses>
-                        <param>com.mastercard.commons.mango.logging.config.DiagnosticLifecycleLogger</param>
+                        <param>ie.bitstep.mango.spring.logging.config.DiagnosticLifecycleLogger</param>
                     </excludedClasses>
 
                     <excludedMethods>
@@ -215,13 +233,21 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.mastercard.commons.mango</groupId>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>ie.bitstep.mango</groupId>
                 <artifactId>mango4j-utils</artifactId>
                 <version>${mango4j.version}</version>
             </dependency>
 
             <dependency>
-                <groupId>com.mastercard.commons.mango</groupId>
+                <groupId>ie.bitstep.mango</groupId>
                 <artifactId>mango4j-collections</artifactId>
                 <version>${mango4j.version}</version>
             </dependency>
@@ -348,36 +374,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <profiles>
-        <profile>
-            <id>finicity</id>
-            <repositories>
-                <repository>
-                    <id>central</id>
-                    <url>https://repo.fini.city/artifactory/libs-release</url>
-                    <snapshots>
-                        <enabled>false</enabled>
-                    </snapshots>
-                </repository>
-                <repository>
-                    <id>snapshots</id>
-                    <url>https://repo.fini.city/artifactory/libs-snapshot</url>
-                    <releases>
-                        <enabled>false</enabled>
-                    </releases>
-                </repository>
-            </repositories>
-            <distributionManagement>
-                <repository>
-                    <id>central</id>
-                    <url>https://repo.fini.city/artifactory/libs-release-local</url>
-                </repository>
-                <snapshotRepository>
-                    <id>snapshots</id>
-                    <url>https://repo.fini.city/artifactory/libs-snapshot-local</url>
-                </snapshotRepository>
-            </distributionManagement>
-        </profile>
-    </profiles>
 </project>

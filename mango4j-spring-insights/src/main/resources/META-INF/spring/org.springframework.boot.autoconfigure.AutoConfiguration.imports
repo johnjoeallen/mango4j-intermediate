@@ -1,3 +1,3 @@
-com.mastercard.commons.mango.logging.LoggingConfiguration
-com.mastercard.commons.mango.insights.InsightsConfiguration
+ie.bitstep.mango.spring.logging.LoggingConfiguration
+ie.bitstep.mango.spring.insights.InsightsConfiguration
 
