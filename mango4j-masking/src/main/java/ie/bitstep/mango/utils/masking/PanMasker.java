@@ -31,7 +31,7 @@ public class PanMasker extends ParameterisedMasker {
 	 * @param mask the mask annotation
 	 */
 	public PanMasker(Mask mask) {
-		this(mask.maskingChars());
+		this(MaskingUtils.resolveMaskingChars(mask.maskingChars(), DEFAULT_PAN_MASKING_CHARACTERS));
 	}
 
 

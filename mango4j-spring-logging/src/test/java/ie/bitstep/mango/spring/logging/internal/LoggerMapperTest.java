@@ -714,10 +714,10 @@ class LoggerMapperTest {
 		@JsonProperty("jsonName")                 // use json name
 		private String nameJson = "jsonName55";
 		@LoggableField
-		@Mask(masker = IdMasker.class, maskingChars = "X")     // with masking
+		@Mask(masker = IdMasker.class)     // with masking
 		private String account = "2345345765";
 		@LoggableField
-		@Mask(masker = PanMasker.class, maskingChars = "X")    // with masking of collections
+		@Mask(masker = PanMasker.class)    // with masking of collections
 		private List<String> pans = Arrays.asList("5432234534576562", "5432558257356834");
 		@LoggableField
 		@Converter(converter = CollectionToSize.class)     // with converter
@@ -798,7 +798,7 @@ class LoggerMapperTest {
 		@JsonProperty("jsonName")                // use json name
 		private String nameJson = "jsonName55";
 		@LoggableField
-		@Mask(masker = IdMasker.class, maskingChars = "X")    // with masking
+		@Mask(masker = IdMasker.class)    // with masking
 		private String account = "2345345765";
 		@LoggableField
 		@Converter(converter = CollectionToSize.class)     // with converter
@@ -816,7 +816,7 @@ class LoggerMapperTest {
 	public static class TestPojoLoggableParams {
 		private TestPojoLoggableALL nestedPojo = new TestPojoLoggableALL();    // use default field name
 		@LoggableField
-		@Mask(masker = FullMasker.class, maskingChars = "***")// with full masking
+		@Mask(masker = FullMasker.class)// with full masking
 		private Map<String, Object> map = new HashMap<>() {{
 			put("key1", "value1");
 			put("key2", null);
@@ -1079,7 +1079,7 @@ class LoggerMapperTest {
 		@LoggableClass
 		class TestMasker {
 			@LoggableField
-			@Mask(masker = FullMasker.class, maskingChars = "***")
+			@Mask(masker = FullMasker.class)
 			private String secret = "12345";
 		}
 
@@ -1223,7 +1223,7 @@ class LoggerMapperTest {
 		@LoggableClass
 		class TestLoggableMask {
 			@LoggableField
-			@Mask(masker = PanMasker.class, maskingChars = "X")
+			@Mask(masker = PanMasker.class)
 			private String pan = "1234567890123456";
 		}
 

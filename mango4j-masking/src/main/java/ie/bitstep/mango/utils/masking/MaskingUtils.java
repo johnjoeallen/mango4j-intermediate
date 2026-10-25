@@ -7,6 +7,21 @@ public final class MaskingUtils {
 	public static final int MINIMUM_LENGTH_OF_MASKING_AFFIXES = 0;
 
 	/**
+	 * Resolves the masking characters to use: the supplied ones if any, otherwise the masker's own default,
+	 * otherwise {@link Mask#DEFAULT_MASKING_CHARS}. Null and empty both count as not supplied.
+	 *
+	 * @param supplied the characters supplied by the caller, for example from {@link Mask#maskingChars()}
+	 * @param maskerDefault the masker's own default, may be null or empty if it has none
+	 * @return the masking characters to use, never null or empty
+	 */
+	public static String resolveMaskingChars(String supplied, String maskerDefault) {
+		if (StringUtils.isNotEmpty(supplied)) {
+			return supplied;
+		}
+		return StringUtils.isNotEmpty(maskerDefault) ? maskerDefault : Mask.DEFAULT_MASKING_CHARS;
+	}
+
+	/**
 	 * Prevents instantiation.
 	 */
 	private MaskingUtils() { // NOSONAR

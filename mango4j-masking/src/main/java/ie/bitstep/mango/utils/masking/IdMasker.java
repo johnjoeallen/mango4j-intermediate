@@ -22,7 +22,7 @@ public class IdMasker extends ParameterisedMasker {
 	 * @param mask the mask annotation
 	 */
 	public IdMasker(Mask mask) {
-		this(mask.maskingChars());
+		this(MaskingUtils.resolveMaskingChars(mask.maskingChars(), DEFAULT_ID_MASKING_CHARACTERS));
 	}
 
 	/**

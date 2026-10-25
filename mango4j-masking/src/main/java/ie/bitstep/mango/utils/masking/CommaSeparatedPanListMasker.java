@@ -27,6 +27,6 @@ public class CommaSeparatedPanListMasker extends AbstractCommaSeparatedListMaske
 	 * @param mask the mask annotation
 	 */
 	public CommaSeparatedPanListMasker(Mask mask) {
-		this(mask.maskingChars());
+		super(new PanMasker(mask));
 	}
 }

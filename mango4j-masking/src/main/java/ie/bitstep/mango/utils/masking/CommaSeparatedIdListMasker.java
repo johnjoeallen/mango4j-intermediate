@@ -27,6 +27,6 @@ public class CommaSeparatedIdListMasker extends AbstractCommaSeparatedListMasker
 	 * @param mask the mask annotation
 	 */
 	public CommaSeparatedIdListMasker(Mask mask) {
-		this(mask.maskingChars());
+		super(new IdMasker(mask));
 	}
 }

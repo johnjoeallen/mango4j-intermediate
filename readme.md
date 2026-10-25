@@ -147,13 +147,20 @@ Maven project.
 - Removed the deprecated `mask =` attribute from `@LoggableField` and `@LoggableParam`; use
   `@Mask(masker = ...)`. (`InsightVariable.mask()` is not deprecated and was left alone; the insights
   processor does not read it.)
-- **Migration trap, found by the tests:** `mask = IdMasker.class` used the masker's own default
-  masking characters, but `@Mask` always applies `maskingChars`, which defaults to `"*"`. A naive
-  switch to `@Mask(masker = IdMasker.class)` silently changes output (`12345XXXXX` becomes
-  `12345*****`; `FullMasker` goes from `***` to `*`). To keep the same output, set it explicitly:
-  `IdMasker` and `PanMasker` default to `X`, `FullMasker` to `***`. The migrated tests do that.
-- Open question for `mango4j-masking`: should `@Mask.maskingChars` default to "use the masker's
-  own default" instead of `*`? That would remove the trap but changes released behaviour.
+- The tests showed a migration trap: `mask = IdMasker.class` used the masker's own default masking
+  characters, but `@Mask` always applied `maskingChars`, which defaulted to `"*"`, so a naive switch
+  changed output (`12345XXXXX` became `12345*****`; `FullMasker` went from `***` to `*`).
+- **Fixed in `mango4j-masking`**: `@Mask.maskingChars` now defaults to empty, meaning "not supplied".
+  Resolution order is: characters supplied on `@Mask`, else the masker's own default (`X` for
+  `IdMasker`, `PanMasker` and the comma-separated list maskers, `***` for `FullMasker`), else
+  `Mask.DEFAULT_MASKING_CHARS` (`*`, which is what `ParameterisedMasker` and any masker without a
+  default use). Null and empty both count as not supplied. `MaskingUtils.resolveMaskingChars` does
+  the resolving; custom maskers should use it instead of reading `maskingChars()` raw.
+- Behaviour change versus `mango4j-utils` 1.0.0, for the release notes: `@Mask` without
+  `maskingChars` on `IdMasker`, `PanMasker`, `FullMasker` or the list maskers now yields the
+  masker's own default instead of `*`. Explicit `maskingChars` is unaffected.
+- `mask = X.class` to `@Mask(masker = X.class)` is now a one-for-one migration with identical
+  output (the logging tests use exactly that).
 
 ### Versions: everything is 4.0.0-SNAPSHOT
 - Every module in every group is now `4.0.0-SNAPSHOT` (core was 1.1.0, crypto 1.0.1, flowsink 0.1.6,
