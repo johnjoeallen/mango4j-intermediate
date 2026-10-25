@@ -7,13 +7,9 @@ import org.apache.hc.client5.http.ssl.DefaultHostnameVerifier;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
-import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
-import uk.org.webcompere.systemstubs.jupiter.SystemStub;
-import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.TrustManager;
@@ -23,13 +19,14 @@ import javax.net.ssl.X509TrustManager;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 
-@ExtendWith(SystemStubsExtension.class)
 class SslFactoryTest {
 
 	private static final String TEST_PROTOCOL = "TLSv1.2";
@@ -40,8 +37,7 @@ class SslFactoryTest {
 	private static final String STORE_PASSWORD_SYSTEM_ENV_NAME = "test_store_password_system_env_name";
 	private static final String STORE_PASSWORD_64 = "cGFzc3dvcmQ=";
 
-	@SystemStub
-	private final EnvironmentVariables environmentVariables = new EnvironmentVariables();
+	private final Map<String, String> environmentVariables = new HashMap<>();
 
 	private CaasDelegateConfig caasDelegateConfig;
 
@@ -54,7 +50,16 @@ class SslFactoryTest {
 		caasDelegateConfig.setClientAlias(TEST_CLIENT_ALIAS);
 		caasDelegateConfig.setKeyStoreLocation(TEST_KEY_STORE_FILE);
 		caasDelegateConfig.setTrustStoreLocation(TRUST_STORE_FILE_NAME);
-		sslFactory = new SslFactory(caasDelegateConfig);
+		sslFactory = newSslFactory();
+	}
+
+	private SslFactory newSslFactory() {
+		return new SslFactory(caasDelegateConfig) {
+			@Override
+			protected String getSystemEnv(String name) {
+				return environmentVariables.get(name);
+			}
+		};
 	}
 
 	@Test
@@ -155,8 +160,8 @@ class SslFactoryTest {
 	@Test
 	void getKeyManagerWhenEnvKeyStore() throws Exception {
 		caasDelegateConfig.setKeyStoreLocation("KEYSTORE");
-		sslFactory = new SslFactory(caasDelegateConfig);
-		environmentVariables.set("KEYSTORE", encodeKeyStore(TEST_KEY_STORE_FILE));
+		sslFactory = newSslFactory();
+		environmentVariables.put("KEYSTORE", encodeKeyStore(TEST_KEY_STORE_FILE));
 
 		X509KeyManager keyManager = sslFactory.getKeyManager(STORE_PASSWORD.toCharArray());
 
@@ -190,7 +195,7 @@ class SslFactoryTest {
 
 	@Test
 	void getSSLConnectionSocketFactoryWhenReadFromSystemEnvironment() {
-		environmentVariables.set(STORE_PASSWORD_SYSTEM_ENV_NAME, STORE_PASSWORD_64);
+		environmentVariables.put(STORE_PASSWORD_SYSTEM_ENV_NAME, STORE_PASSWORD_64);
 
 		SSLConnectionSocketFactory actual = sslFactory.getSSLConnectionSocketFactory(STORE_PASSWORD_SYSTEM_ENV_NAME, STORE_PASSWORD_SYSTEM_ENV_NAME);
 

@@ -7,11 +7,10 @@ import ie.bitstep.mango.spring.crypto.caas.delegate.model.batch.BatchRequestItem
 import ie.bitstep.mango.spring.crypto.caas.delegate.model.batch.DecryptBatchRequest;
 import ie.bitstep.mango.spring.crypto.caas.delegate.model.batch.DecryptBatchRequestItem;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
@@ -69,7 +68,7 @@ public class ProcessCaasService {
 	}
 
 	private <T> HttpEntity<T> buildHttpEntity(T request) {
-		MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+		HttpHeaders headers = new HttpHeaders();
 		headers.add("Content-Type", MediaType.APPLICATION_JSON.toString());
 		headers.add("Accept", MediaType.APPLICATION_JSON.toString());
 		return new HttpEntity<>(request, headers);

@@ -8,6 +8,7 @@
         <groupId>ie.bitstep.mango</groupId>
         <artifactId>mango4j-spring</artifactId>
         <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../mango4j-spring-parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>mango4j-spring-data</artifactId>
@@ -19,7 +20,7 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring.version}</version>
+                <version>${spring-boot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -37,6 +38,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa-test</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

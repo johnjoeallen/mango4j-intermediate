@@ -8,6 +8,7 @@
         <groupId>ie.bitstep.mango</groupId>
         <artifactId>mango4j-spring</artifactId>
         <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../mango4j-spring-parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>mango4j-spring-logging</artifactId>
@@ -28,6 +29,7 @@
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>jakarta.annotation</groupId>
@@ -37,6 +39,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

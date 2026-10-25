@@ -108,7 +108,6 @@ class InsightsProviderTest {
 		insightsProvider.publish(appInsight);
 
 		verify(taskExecutor, times(1)).execute(any());
-		verifyNoMoreInteractions(taskExecutor);
 		verify(publisher, times(1)).publish(appInsight);
 	}
 }

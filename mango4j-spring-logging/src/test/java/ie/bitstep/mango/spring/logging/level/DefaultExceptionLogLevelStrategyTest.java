@@ -1,5 +1,6 @@
 package ie.bitstep.mango.spring.logging.level;
 
+import org.springframework.mock.http.MockHttpInputMessage;
 import ie.bitstep.mango.spring.aop.MethodInfo;
 import ie.bitstep.mango.spring.logging.annotations.LoggableLevel;
 import ie.bitstep.mango.spring.logging.annotations.LoggableMethod;
@@ -100,7 +101,7 @@ class DefaultExceptionLogLevelStrategyTest {
 	@Test
 	public void getLogLevel_whenHttpMessageNotReadableException_thenInfo() throws Exception { // NOSONAR - public required used in test
 		Level level = strategy.getLogLevel(
-			new HttpMessageNotReadableException(""),
+			new HttpMessageNotReadableException("", new MockHttpInputMessage(new byte[0])),
 			new MethodInfo(getClass(), getClass().getMethod("getLogLevel_whenHttpMessageNotReadableException_thenInfo")));
 		assertThat(level).isEqualTo(Level.INFO);
 	}

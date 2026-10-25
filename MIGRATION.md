@@ -103,13 +103,49 @@ Builds, each independent (`<dir>` is `mango4j-crypto`, `mango4j-flowsink` or `ma
 Cross-group dependencies seen in poms: crypto-core -> `mango4j-collections`;
 crypto -> `mango4j-utils`; flowsink and swarm import nothing from the core modules.
 
-## Building from the root
+## Layout and building from the root
 
-`mvn clean verify -Dgpg.skip` at the root builds every group and passes, tests included
-(JDK 25). The root pom lists `mango4j-parent`, `mango4j-crypto`, `mango4j-flowsink`,
-`mango4j-swarm` and the spring modules.
+Each future repo is a directory pair: a parent pom directory plus its modules at the top
+level. Nothing inherits from the root, which is only a throw-away aggregator.
+
+| Future repo | Parent / root pom | Modules |
+|---|---|---|
+| mango4j | `mango4j-parent/` | `mango4j-collections`, `-reflection`, `-utils`, `-validation`, `-hibernate-proxy-resolver` |
+| mango4j-crypto | `mango4j-crypto/` (nested, as upstream) | `mango4j-crypto-core`, `mango4j-crypto`, `mango4j-crypto-aws-kms-delegate` |
+| mango4j-flowsink | `mango4j-flowsink/` (nested) | `mango4j-flowsink-annotations`, `-core`, `-spring`, `-spring-boot` |
+| mango4j-swarm | `mango4j-swarm/` (single module) | n/a |
+| mango4j-spring | `mango4j-spring-parent/` | `mango4j-spring-aop`, `-logging`, `-insights`, `-observe`, `-data`, `-crypto-caas-delegate` |
+
+Spring modules carry their own `lombok.config`; checkstyle, docs, readme, contributing and
+LICENSE live in `mango4j-spring-parent/`. When splitting, move the parent directory's
+contents to the new repo root together with the modules.
+
+`mvn clean verify -Dgpg.skip` at the root builds everything and passes, tests included.
+Per group: `mvn -f <parent-dir>/pom.xml clean verify -Dgpg.skip`.
+
+## Java 25 / Spring Boot 4 upgrade
+
+Done: all groups build and test on JDK 25. Spring modules and swarm use Spring Boot 4.1.2
+(Spring Framework 7.0.10); flowsink uses Framework 7.0.10 and `spring-boot-autoconfigure` 4.1.2.
+In the spring parent, library versions now come from the `spring-boot-dependencies` BOM;
+only plugins, `commons-collections4` and `logstash-logback-encoder` have explicit versions.
+
+Changes worth knowing:
+- `<proc>full</proc>` in the compiler config (JDK 23+ disables annotation processing by default).
+- Surefire loads Mockito as `-javaagent` (self-attach is deprecated and fails on JDK 25).
+- Boot 4 modularisation: `spring-boot-starter-data-jpa-test` for `@DataJpaTest`, new packages for
+  `EntityScan`, `AutoConfigureTestDatabase`, `HibernatePropertiesCustomizer`.
+- `HttpEntity` now takes `HttpHeaders`; `HttpMessageNotReadableException` needs an input message.
+- Removed `system-stubs` from the CaaS delegate tests (its agent cannot attach on JDK 25); the
+  test overrides the existing `SslFactory.getSystemEnv` hook instead.
+
+Not done:
+- Jackson 3 (`tools.jackson`): the spring modules still use Jackson 2 (`com.fasterxml`), which
+  Boot 4 still manages but treats as deprecated.
+- Core and crypto have no Spring dependency; they were only moved to `java.version` 25.
+- Pitest and Sonar profiles were not exercised.
 
 ## Status
 
-Dependency analysis table above still applies for the next step (breaking `reflection`, `collections`, `utils`).
-Not yet done: Java 25 / Spring Boot 4 upgrade of the spring modules (still Boot 3.5.9, `java.version` 17).
+Next: break `reflection`, `collections` and `utils` dependencies per the analysis table; decide
+on the CaaS delegate (see above).
