@@ -1,7 +1,7 @@
 package ie.bitstep.mango.spring.crypto.caas.delegate;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -85,7 +85,7 @@ class CaasUtilsTest {
 	}
 
 	@Test
-	void toJsonString() throws JsonProcessingException {
+	void toJsonString() throws JacksonException {
 		given(mockObjectMapper.writeValueAsString(testDTO)).willReturn(TEST_VALUE);
 
 		String actual = CaasUtils.toJsonString(mockObjectMapper, testDTO);
@@ -94,7 +94,7 @@ class CaasUtilsTest {
 	}
 
 	@Test
-	void toJsonStringObjectMapperException() throws JsonProcessingException {
+	void toJsonStringObjectMapperException() throws JacksonException {
 		RuntimeException cause = new RuntimeException();
 		given(mockObjectMapper.writeValueAsString(testDTO)).willThrow(cause);
 

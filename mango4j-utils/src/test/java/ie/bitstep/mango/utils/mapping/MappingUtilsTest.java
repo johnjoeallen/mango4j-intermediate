@@ -70,7 +70,7 @@ class MappingUtilsTest {
 			MappingUtils.fromObjectToMap(badClass);
 		});
 
-		assertThat(thrown.getMessage()).contains("com.fasterxml.jackson.databind.exc.InvalidDefinitionException");
+		assertThat(thrown.getMessage()).contains("tools.jackson.databind.exc.InvalidDefinitionException");
 	}
 
 	@Test
@@ -92,7 +92,7 @@ class MappingUtilsTest {
 			MappingUtils.fromObjectToJson(badClass);
 		});
 
-		assertThat(thrown.getMessage()).contains("com.fasterxml.jackson.databind.exc.InvalidDefinitionException");
+		assertThat(thrown.getMessage()).contains("tools.jackson.databind.exc.InvalidDefinitionException");
 	}
 
 	@Test
@@ -115,7 +115,7 @@ class MappingUtilsTest {
 			MappingUtils.fromJsonToMap("<>");
 		});
 
-		assertThat(thrown.getMessage()).contains("com.fasterxml.jackson.core.JsonParseException");
+		assertThat(thrown.getMessage()).contains("tools.jackson.core.exc.StreamReadException");
 	}
 
 	@Test

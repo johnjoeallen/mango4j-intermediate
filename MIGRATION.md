@@ -139,9 +139,10 @@ Changes worth knowing:
 - Removed `system-stubs` from the CaaS delegate tests (its agent cannot attach on JDK 25); the
   test overrides the existing `SslFactory.getSystemEnv` hook instead.
 
+Jackson 3 (`tools.jackson`, 3.1.7): done for core, crypto, spring and swarm; see the readme log
+for the behaviour defaults that were restored.
+
 Not done:
-- Jackson 3 (`tools.jackson`): the spring modules still use Jackson 2 (`com.fasterxml`), which
-  Boot 4 still manages but treats as deprecated.
 - Core and crypto have no Spring dependency; they were only moved to `java.version` 25.
 - Pitest and Sonar profiles were not exercised.
 

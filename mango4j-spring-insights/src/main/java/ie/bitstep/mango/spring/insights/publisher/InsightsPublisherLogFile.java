@@ -1,9 +1,10 @@
 package ie.bitstep.mango.spring.insights.publisher;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.cfg.DateTimeFeature;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.json.JsonMapper;
 import ie.bitstep.mango.collections.MapBuilder;
 import ie.bitstep.mango.spring.insights.internal.AppInsight;
 import org.slf4j.Logger;
@@ -17,11 +18,11 @@ public class InsightsPublisherLogFile implements InsightsPublisher {
 
 	private final Logger logger = LoggerFactory.getLogger(InsightsPublisherLogFile.class);
 
-	private final ObjectMapper objectMapper = new ObjectMapper()
+	private final ObjectMapper objectMapper = JsonMapper.builder()
+			.disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
 			.enable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-			.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-			.registerModule(new JavaTimeModule())
-			.registerModule(new Jdk8Module());
+			.disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+			.build();
 
 	@Override
 	public void publish(AppInsight insight) {

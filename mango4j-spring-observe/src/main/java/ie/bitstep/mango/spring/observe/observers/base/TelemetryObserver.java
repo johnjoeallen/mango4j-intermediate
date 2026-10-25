@@ -1,9 +1,10 @@
 package ie.bitstep.mango.spring.observe.observers.base;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.cfg.DateTimeFeature;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.json.JsonMapper;
 import ie.bitstep.mango.spring.observe.consumers.base.Telemetry;
 import ie.bitstep.mango.spring.observe.context.Observation;
 import ie.bitstep.mango.spring.observe.observers.Observer;
@@ -31,11 +32,11 @@ public class TelemetryObserver extends Observer<List<Telemetry>> {
 	private final ObjectMapper objectMapper = getObjectMapper();
 
 	static ObjectMapper getObjectMapper() {
-		return new ObjectMapper()
+		return JsonMapper.builder()
+			.disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
 			.enable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-			.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-			.registerModule(new JavaTimeModule())
-			.registerModule(new Jdk8Module());
+			.disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+			.build();
 	}
 
 	public TelemetryObserver(List<Consumer<List<Telemetry>>> consumers) {

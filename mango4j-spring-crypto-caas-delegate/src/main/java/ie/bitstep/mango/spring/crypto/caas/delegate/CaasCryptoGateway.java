@@ -1,6 +1,6 @@
 package ie.bitstep.mango.spring.crypto.caas.delegate;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import ie.bitstep.mango.crypto.core.factories.ConfigurableObjectMapperFactory;
 import ie.bitstep.mango.spring.crypto.caas.delegate.exceptions.CaasBatchItemException;
 import ie.bitstep.mango.spring.crypto.caas.delegate.model.DecryptRequest;
@@ -24,7 +24,7 @@ import org.springframework.http.HttpStatus;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static tools.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static ie.bitstep.mango.spring.crypto.caas.delegate.CaasConstants.BATCH_URI;
 import static ie.bitstep.mango.spring.crypto.caas.delegate.CaasConstants.DECRYPT_ADVANCED_AES_URI;
 import static ie.bitstep.mango.spring.crypto.caas.delegate.CaasConstants.DECRYPT_AES_URI;
@@ -172,8 +172,9 @@ public class CaasCryptoGateway {
 	}
 
 	private ObjectMapper objectMapper() {
-		ObjectMapper objectMapper = new ConfigurableObjectMapperFactory().objectMapper();
-		objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-		return objectMapper;
+		return new ConfigurableObjectMapperFactory().objectMapper()
+				.rebuild()
+				.disable(FAIL_ON_UNKNOWN_PROPERTIES)
+				.build();
 	}
 }

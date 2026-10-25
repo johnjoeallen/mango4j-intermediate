@@ -21,6 +21,10 @@
     </properties>
     <dependencies>
         <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
             <groupId>ie.bitstep.mango</groupId>
             <artifactId>mango4j-crypto-core</artifactId>
             <version>${mango4j-crypto.version}</version>

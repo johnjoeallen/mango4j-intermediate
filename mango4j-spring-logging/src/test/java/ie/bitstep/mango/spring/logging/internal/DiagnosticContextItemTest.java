@@ -1,6 +1,6 @@
 package ie.bitstep.mango.spring.logging.internal;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import ie.bitstep.mango.spring.aop.MethodInfo;
 import ie.bitstep.mango.collections.ListBuilder;
 import ie.bitstep.mango.collections.MapBuilder;

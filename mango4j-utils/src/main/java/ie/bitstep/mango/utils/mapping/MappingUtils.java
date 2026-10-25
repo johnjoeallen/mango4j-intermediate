@@ -1,10 +1,12 @@
 package ie.bitstep.mango.utils.mapping;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import ie.bitstep.mango.utils.mapping.exceptions.MappingException;
 import org.apache.commons.lang3.StringUtils;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -12,6 +14,11 @@ import java.util.Map;
 public class MappingUtils {
 	public static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<>() {
 	};
+
+	private static final JsonMapper JSON_MAPPER = JsonMapper.builder()
+			.disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+			.enable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+			.build();
 
 	/**
 	 * Prevents instantiation.
@@ -31,10 +38,9 @@ public class MappingUtils {
 	 */
 	public static Map<String, Object> fromObjectToMap(Object object) {
 		try {
-			ObjectMapper objectMapper = new ObjectMapper();
-			String json = objectMapper.writeValueAsString(object);
-			return objectMapper.readValue(json, MAP_TYPE_REFERENCE);
-		} catch (JsonProcessingException e) { // NOSONAR this should not happen at this stage, however gracefully handle it
+			String json = JSON_MAPPER.writeValueAsString(object);
+			return JSON_MAPPER.readValue(json, MAP_TYPE_REFERENCE);
+		} catch (JacksonException e) { // NOSONAR this should not happen at this stage, however gracefully handle it
 			throw new MappingException(e);
 		}
 	}
@@ -47,9 +53,8 @@ public class MappingUtils {
 	 */
 	public static String fromObjectToJson(Object object) {
 		try {
-			ObjectMapper objectMapper = new ObjectMapper();
-			return objectMapper.writeValueAsString(object);
-		} catch (JsonProcessingException e) { // NOSONAR this should not happen at this stage, however gracefully handle it
+			return JSON_MAPPER.writeValueAsString(object);
+		} catch (JacksonException e) { // NOSONAR this should not happen at this stage, however gracefully handle it
 			throw new MappingException(e);
 		}
 	}
@@ -65,10 +70,9 @@ public class MappingUtils {
 			if (StringUtils.isEmpty(json)) {
 				return new LinkedHashMap<>();
 			} else {
-				ObjectMapper objectMapper = new ObjectMapper();
-				return objectMapper.readValue(json, MAP_TYPE_REFERENCE);
+					return JSON_MAPPER.readValue(json, MAP_TYPE_REFERENCE);
 			}
-		} catch (JsonProcessingException e) { // NOSONAR this should not happen at this stage, however gracefully handle it
+		} catch (JacksonException e) { // NOSONAR this should not happen at this stage, however gracefully handle it
 			throw new MappingException(e);
 		}
 	}

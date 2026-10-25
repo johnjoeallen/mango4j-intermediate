@@ -1,6 +1,6 @@
 package ie.bitstep.mango.spring.crypto.caas.delegate;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpHeaders;
 

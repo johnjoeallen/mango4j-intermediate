@@ -1,7 +1,10 @@
 package ie.bitstep.mango.spring.logging.internal;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.json.JsonMapper;
 import ie.bitstep.mango.spring.logging.LogProjection;
 import ie.bitstep.mango.spring.logging.LogProjectionToMap;
 import ie.bitstep.mango.spring.logging.adapter.AbstractLoggerAdapter;
@@ -51,7 +54,10 @@ import java.util.function.UnaryOperator;
 public class LoggerMapper {
 
 	private static final Map<Class<?> /* type */, Map<String /* field-name */, AspectLoggerMetaData>> META_DATA = new ConcurrentHashMap<>();
-	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+	private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder()
+			.disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+			.enable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+			.build();
 	public static final Logger LOGGER = LoggerFactory.getLogger(LoggerMapper.class);
 
 	private LoggerMapper() {

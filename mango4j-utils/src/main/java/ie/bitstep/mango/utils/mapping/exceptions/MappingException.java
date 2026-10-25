@@ -1,6 +1,6 @@
 package ie.bitstep.mango.utils.mapping.exceptions;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
 
 public class MappingException extends RuntimeException {
 	/**
@@ -8,7 +8,7 @@ public class MappingException extends RuntimeException {
 	 *
 	 * @param e the underlying exception
 	 */
-	public MappingException(JsonProcessingException e) {
+	public MappingException(JacksonException e) {
 		super(e);
 	}
 }

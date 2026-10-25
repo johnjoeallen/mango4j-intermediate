@@ -18,8 +18,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.JsonNodeFactory;
 import org.junit.jupiter.api.Test;
 import org.postgresql.util.PGobject;
 import org.springframework.jdbc.core.ConnectionCallback;
@@ -773,7 +773,7 @@ class TaskRepositoryTest extends PostgresTestSupport {
 		PreparedStatement statement = mock(PreparedStatement.class);
 
 		var method = JdbcTaskRepository.class.getDeclaredMethod(
-				"setJson", PreparedStatement.class, com.fasterxml.jackson.databind.JsonNode.class);
+				"setJson", PreparedStatement.class, tools.jackson.databind.JsonNode.class);
 		method.setAccessible(true);
 		method.invoke(
 				repository, statement, JsonNodeFactory.instance.objectNode().put("subject", "hello"));
@@ -806,15 +806,15 @@ class TaskRepositoryTest extends PostgresTestSupport {
 	void jsonSerializationFailuresBecomeSqlExceptions() throws Exception {
 		ObjectMapper failingMapper = new ObjectMapper() {
 			@Override
-			public String writeValueAsString(Object value) throws com.fasterxml.jackson.core.JsonProcessingException {
-				throw new com.fasterxml.jackson.core.JsonProcessingException("broken") {};
+			public String writeValueAsString(Object value) throws tools.jackson.core.JacksonException {
+				throw new tools.jackson.core.JacksonException("broken") {};
 			}
 		};
 		JdbcTaskRepository repository =
 				new JdbcTaskRepository(mock(JdbcTemplate.class), failingMapper, new SchemaQualifiedTables(null));
 		PreparedStatement statement = mock(PreparedStatement.class);
 		Method method = JdbcTaskRepository.class.getDeclaredMethod(
-				"setJson", PreparedStatement.class, com.fasterxml.jackson.databind.JsonNode.class);
+				"setJson", PreparedStatement.class, tools.jackson.databind.JsonNode.class);
 		method.setAccessible(true);
 
 		assertThatThrownBy(() -> method.invoke(repository, statement, JsonNodeFactory.instance.objectNode()))

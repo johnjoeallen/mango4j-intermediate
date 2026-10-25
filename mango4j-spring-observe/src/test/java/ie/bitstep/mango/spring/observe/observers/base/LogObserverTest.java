@@ -1,7 +1,8 @@
 package ie.bitstep.mango.spring.observe.observers.base;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.cfg.DateTimeFeature;
 import ie.bitstep.mango.collections.ListBuilder;
 import ie.bitstep.mango.spring.observe.consumers.base.Log;
 import ie.bitstep.mango.spring.observe.consumers.base.LogConsumer;
@@ -40,7 +41,7 @@ class LogObserverTest {
 
 		assertThat(om).isNotNull();
 		assertThat(om.isEnabled(SerializationFeature.FAIL_ON_EMPTY_BEANS)).isTrue();
-		assertThat(om.isEnabled(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)).isFalse();
+		assertThat(om.isEnabled(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)).isFalse();
 	}
 
 	@Test

@@ -1,13 +1,13 @@
 package ie.bitstep.mango.crypto;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.MissingNode;
-import com.fasterxml.jackson.databind.node.NullNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.MissingNode;
+import tools.jackson.databind.node.NullNode;
+import tools.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.StringNode;
 import ie.bitstep.mango.crypto.core.domain.CryptoKey;
 import ie.bitstep.mango.crypto.core.domain.HmacHolder;
 import ie.bitstep.mango.crypto.core.encryption.EncryptionService;
@@ -209,12 +209,12 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void encryptWithObject() throws JsonProcessingException {
+	void encryptWithObject() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		given(mockedObjectMapper.createObjectNode()).willReturn(objectNode);
-		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new TextNode(TEST_PAN));
-		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new TextNode(TEST_USERNAME));
-		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new TextNode(TEST_ETHNICITY));
+		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new StringNode(TEST_PAN));
+		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new StringNode(TEST_USERNAME));
+		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new StringNode(TEST_ETHNICITY));
 		given(mockedObjectMapper.writeValueAsString(objectNodeArgumentCaptor.capture())).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockCryptoKeyProvider.getCurrentEncryptionKey()).willReturn(TEST_CRYPTO_KEY);
 		given(mockEncryptionService.encrypt(TEST_CRYPTO_KEY, TEST_MOCK_SOURCE_CIPHERTEXT)).willReturn(TEST_CIPHERTEXT_CONTAINER);
@@ -236,14 +236,14 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void encryptCollectionSuccess() throws JsonProcessingException {
+	void encryptCollectionSuccess() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		given(mockedObjectMapper.createObjectNode()).willReturn(objectNode);
-		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new TextNode(TEST_PAN));
-		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new TextNode(TEST_USERNAME));
-		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new TextNode(TEST_ETHNICITY));
+		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new StringNode(TEST_PAN));
+		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new StringNode(TEST_USERNAME));
+		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new StringNode(TEST_ETHNICITY));
 		ObjectNode highlyConfidentialObjectNode = new ObjectNode(JsonNodeFactory.instance);
-		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new TextNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
+		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new StringNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
 		given(mockedObjectMapper.convertValue(TEST_HIGHLY_CONFIDENTIAL_OBJECT, JsonNode.class)).willReturn(highlyConfidentialObjectNode);
 		given(mockedObjectMapper.writeValueAsString(objectNodeArgumentCaptor.capture())).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockCryptoKeyProvider.getCurrentEncryptionKey()).willReturn(TEST_CRYPTO_KEY);
@@ -269,14 +269,14 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void encryptArraySuccess() throws JsonProcessingException {
+	void encryptArraySuccess() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		given(mockedObjectMapper.createObjectNode()).willReturn(objectNode);
-		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new TextNode(TEST_PAN));
-		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new TextNode(TEST_USERNAME));
-		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new TextNode(TEST_ETHNICITY));
+		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new StringNode(TEST_PAN));
+		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new StringNode(TEST_USERNAME));
+		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new StringNode(TEST_ETHNICITY));
 		ObjectNode highlyConfidentialObjectNode = new ObjectNode(JsonNodeFactory.instance);
-		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new TextNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
+		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new StringNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
 		given(mockedObjectMapper.convertValue(TEST_HIGHLY_CONFIDENTIAL_OBJECT, JsonNode.class)).willReturn(highlyConfidentialObjectNode);
 		given(mockedObjectMapper.writeValueAsString(objectNodeArgumentCaptor.capture())).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockCryptoKeyProvider.getCurrentEncryptionKey()).willReturn(TEST_CRYPTO_KEY);
@@ -380,13 +380,13 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void encryptNullConvertedValue() throws JsonProcessingException {
+	void encryptNullConvertedValue() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		given(mockedObjectMapper.createObjectNode()).willReturn(objectNode);
 		given(mockCryptoKeyProvider.getCurrentEncryptionKey()).willReturn(TEST_CRYPTO_KEY);
 		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(null);
-		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new TextNode(TEST_USERNAME));
-		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new TextNode(TEST_ETHNICITY));
+		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new StringNode(TEST_USERNAME));
+		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new StringNode(TEST_ETHNICITY));
 		given(mockedObjectMapper.writeValueAsString(objectNodeArgumentCaptor.capture())).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockCryptoKeyProvider.getCurrentEncryptionKey()).willReturn(TEST_CRYPTO_KEY);
 		given(mockEncryptionService.encrypt(TEST_CRYPTO_KEY, TEST_MOCK_SOURCE_CIPHERTEXT)).willReturn(TEST_CIPHERTEXT_CONTAINER);
@@ -410,13 +410,13 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void encryptNullJsonNodeConvertedValue() throws JsonProcessingException {
+	void encryptNullJsonNodeConvertedValue() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		given(mockedObjectMapper.createObjectNode()).willReturn(objectNode);
 		given(mockCryptoKeyProvider.getCurrentEncryptionKey()).willReturn(TEST_CRYPTO_KEY);
 		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(NullNode.getInstance());
-		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new TextNode(TEST_USERNAME));
-		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new TextNode(TEST_ETHNICITY));
+		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new StringNode(TEST_USERNAME));
+		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new StringNode(TEST_ETHNICITY));
 		given(mockedObjectMapper.writeValueAsString(objectNodeArgumentCaptor.capture())).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockCryptoKeyProvider.getCurrentEncryptionKey()).willReturn(TEST_CRYPTO_KEY);
 		given(mockEncryptionService.encrypt(TEST_CRYPTO_KEY, TEST_MOCK_SOURCE_CIPHERTEXT)).willReturn(TEST_CIPHERTEXT_CONTAINER);
@@ -440,13 +440,13 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void encryptNullMissingNodeConvertedValue() throws JsonProcessingException {
+	void encryptNullMissingNodeConvertedValue() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		given(mockedObjectMapper.createObjectNode()).willReturn(objectNode);
 		given(mockCryptoKeyProvider.getCurrentEncryptionKey()).willReturn(TEST_CRYPTO_KEY);
 		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(MissingNode.getInstance());
-		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new TextNode(TEST_USERNAME));
-		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new TextNode(TEST_ETHNICITY));
+		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new StringNode(TEST_USERNAME));
+		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new StringNode(TEST_ETHNICITY));
 		given(mockedObjectMapper.writeValueAsString(objectNodeArgumentCaptor.capture())).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockCryptoKeyProvider.getCurrentEncryptionKey()).willReturn(TEST_CRYPTO_KEY);
 		given(mockEncryptionService.encrypt(TEST_CRYPTO_KEY, TEST_MOCK_SOURCE_CIPHERTEXT)).willReturn(TEST_CIPHERTEXT_CONTAINER);
@@ -470,13 +470,13 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void encryptWithNoEncryptionKeyIdAnnotation() throws JsonProcessingException {
+	void encryptWithNoEncryptionKeyIdAnnotation() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		given(mockedObjectMapper.createObjectNode()).willReturn(objectNode);
 		given(mockedObjectMapper.writeValueAsString(objectNodeArgumentCaptor.capture())).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
-		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new TextNode(TEST_PAN));
-		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new TextNode(TEST_USERNAME));
-		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new TextNode(TEST_ETHNICITY));
+		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new StringNode(TEST_PAN));
+		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new StringNode(TEST_USERNAME));
+		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new StringNode(TEST_ETHNICITY));
 		given(mockCryptoKeyProvider.getCurrentEncryptionKey()).willReturn(TEST_CRYPTO_KEY);
 		given(mockEncryptionService.encrypt(TEST_CRYPTO_KEY, TEST_MOCK_SOURCE_CIPHERTEXT)).willReturn(TEST_CIPHERTEXT_CONTAINER);
 		given(mockCiphertextFormatter.format(TEST_CIPHERTEXT_CONTAINER)).willReturn(TEST_MOCK_ENCRYPTED_DATA);
@@ -501,12 +501,12 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void encryptNonTransientCiphertextFormatFailure() throws JsonProcessingException {
+	void encryptNonTransientCiphertextFormatFailure() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		given(mockedObjectMapper.createObjectNode()).willReturn(objectNode);
-		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new TextNode(TEST_PAN));
-		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new TextNode(TEST_USERNAME));
-		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new TextNode(TEST_ETHNICITY));
+		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new StringNode(TEST_PAN));
+		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new StringNode(TEST_USERNAME));
+		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new StringNode(TEST_ETHNICITY));
 		given(mockedObjectMapper.writeValueAsString(objectNodeArgumentCaptor.capture())).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockCryptoKeyProvider.getCurrentEncryptionKey()).willReturn(TEST_CRYPTO_KEY);
 		given(mockEncryptionService.encrypt(TEST_CRYPTO_KEY, TEST_MOCK_SOURCE_CIPHERTEXT)).willReturn(TEST_CIPHERTEXT_CONTAINER);
@@ -529,12 +529,12 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void encryptGeneralException() throws JsonProcessingException {
+	void encryptGeneralException() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		given(mockedObjectMapper.createObjectNode()).willReturn(objectNode);
-		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new TextNode(TEST_PAN));
-		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new TextNode(TEST_USERNAME));
-		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new TextNode(TEST_ETHNICITY));
+		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new StringNode(TEST_PAN));
+		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new StringNode(TEST_USERNAME));
+		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new StringNode(TEST_ETHNICITY));
 		given(mockedObjectMapper.writeValueAsString(objectNodeArgumentCaptor.capture())).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockCryptoKeyProvider.getCurrentEncryptionKey()).willReturn(TEST_CRYPTO_KEY);
 		given(mockEncryptionService.encrypt(TEST_CRYPTO_KEY, TEST_MOCK_SOURCE_CIPHERTEXT)).willReturn(TEST_CIPHERTEXT_CONTAINER);
@@ -571,13 +571,13 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void encryptWithRetrySuccessOnFirstAttempt() throws JsonProcessingException {
+	void encryptWithRetrySuccessOnFirstAttempt() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		given(mockedObjectMapper.createObjectNode())
 				.willReturn(objectNode);
-		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new TextNode(TEST_PAN));
-		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new TextNode(TEST_USERNAME));
-		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new TextNode(TEST_ETHNICITY));
+		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new StringNode(TEST_PAN));
+		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new StringNode(TEST_USERNAME));
+		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new StringNode(TEST_ETHNICITY));
 		given(mockedObjectMapper.writeValueAsString(objectNodeArgumentCaptor.capture())).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockCryptoKeyProvider.getCurrentEncryptionKey()).willReturn(TEST_CRYPTO_KEY);
 		given(mockEncryptionService.encrypt(TEST_CRYPTO_KEY, TEST_MOCK_SOURCE_CIPHERTEXT)).willReturn(TEST_CIPHERTEXT_CONTAINER);
@@ -602,15 +602,15 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void encryptWithRetrySuccessOnLastAttempt() throws JsonProcessingException {
+	void encryptWithRetrySuccessOnLastAttempt() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		TransientCryptoException transientCryptoException = new TransientCryptoException("Test Transient Exception", new RuntimeException());
 		given(mockedObjectMapper.createObjectNode())
 				.willThrow(transientCryptoException, transientCryptoException)
 				.willReturn(objectNode);
-		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new TextNode(TEST_PAN));
-		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new TextNode(TEST_USERNAME));
-		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new TextNode(TEST_ETHNICITY));
+		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new StringNode(TEST_PAN));
+		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new StringNode(TEST_USERNAME));
+		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new StringNode(TEST_ETHNICITY));
 		given(mockedObjectMapper.writeValueAsString(objectNodeArgumentCaptor.capture())).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockCryptoKeyProvider.getCurrentEncryptionKey()).willReturn(TEST_CRYPTO_KEY);
 		given(mockEncryptionService.encrypt(TEST_CRYPTO_KEY, TEST_MOCK_SOURCE_CIPHERTEXT)).willReturn(TEST_CIPHERTEXT_CONTAINER);
@@ -876,14 +876,14 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void encryptAndSerialize() throws JsonProcessingException {
+	void encryptAndSerialize() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		given(mockedObjectMapper.createObjectNode()).willReturn(objectNode);
-		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new TextNode(TEST_PAN));
-		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new TextNode(TEST_USERNAME));
-		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new TextNode(TEST_ETHNICITY));
+		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new StringNode(TEST_PAN));
+		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new StringNode(TEST_USERNAME));
+		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new StringNode(TEST_ETHNICITY));
 		ObjectNode highlyConfidentialObjectNode = new ObjectNode(JsonNodeFactory.instance);
-		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new TextNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
+		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new StringNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
 		given(mockedObjectMapper.convertValue(TEST_HIGHLY_CONFIDENTIAL_OBJECT, JsonNode.class)).willReturn(highlyConfidentialObjectNode);
 		given(mockedObjectMapper.writeValueAsString(objectNodeArgumentCaptor.capture())).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockCryptoKeyProvider.getCurrentEncryptionKey()).willReturn(TEST_CRYPTO_KEY);
@@ -944,14 +944,14 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void encryptAndSerializeExceptionResettingSourceFieldValues() throws JsonProcessingException {
+	void encryptAndSerializeExceptionResettingSourceFieldValues() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		given(mockedObjectMapper.createObjectNode()).willReturn(objectNode);
-		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new TextNode(TEST_PAN));
-		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new TextNode(TEST_USERNAME));
-		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new TextNode(TEST_ETHNICITY));
+		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new StringNode(TEST_PAN));
+		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new StringNode(TEST_USERNAME));
+		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new StringNode(TEST_ETHNICITY));
 		ObjectNode highlyConfidentialObjectNode = new ObjectNode(JsonNodeFactory.instance);
-		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new TextNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
+		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new StringNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
 		given(mockedObjectMapper.convertValue(TEST_HIGHLY_CONFIDENTIAL_OBJECT, JsonNode.class)).willReturn(highlyConfidentialObjectNode);
 		given(mockedObjectMapper.writeValueAsString(objectNodeArgumentCaptor.capture())).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockCryptoKeyProvider.getCurrentEncryptionKey()).willReturn(TEST_CRYPTO_KEY);
@@ -983,14 +983,14 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void encryptAndSerializeExceptionResettingSourceFieldValuesIllegalAccess() throws JsonProcessingException {
+	void encryptAndSerializeExceptionResettingSourceFieldValuesIllegalAccess() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		given(mockedObjectMapper.createObjectNode()).willReturn(objectNode);
-		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new TextNode(TEST_PAN));
-		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new TextNode(TEST_USERNAME));
-		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new TextNode(TEST_ETHNICITY));
+		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new StringNode(TEST_PAN));
+		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new StringNode(TEST_USERNAME));
+		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new StringNode(TEST_ETHNICITY));
 		ObjectNode highlyConfidentialObjectNode = new ObjectNode(JsonNodeFactory.instance);
-		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new TextNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
+		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new StringNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
 		given(mockedObjectMapper.convertValue(TEST_HIGHLY_CONFIDENTIAL_OBJECT, JsonNode.class)).willReturn(highlyConfidentialObjectNode);
 		given(mockedObjectMapper.writeValueAsString(objectNodeArgumentCaptor.capture())).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockCryptoKeyProvider.getCurrentEncryptionKey()).willReturn(TEST_CRYPTO_KEY);
@@ -1014,22 +1014,22 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void decryptSuccess() throws JsonProcessingException {
+	void decryptSuccess() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		given(mockEncryptionService.decrypt(TEST_MOCK_ENCRYPTED_DATA)).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockedObjectMapper.readTree(TEST_MOCK_SOURCE_CIPHERTEXT)).willReturn(mockObjectNode);
-		TextNode panNode = new TextNode(TEST_PAN);
+		StringNode panNode = new StringNode(TEST_PAN);
 		given(mockObjectNode.get(TEST_PAN_FIELD_NAME)).willReturn(panNode);
 		given(mockedObjectMapper.treeToValue(panNode, String.class)).willReturn(TEST_PAN);
-		TextNode userNameNode = new TextNode(TEST_USERNAME);
+		StringNode userNameNode = new StringNode(TEST_USERNAME);
 		given(mockObjectNode.get(TEST_USER_NAME_FIELD_NAME)).willReturn(userNameNode);
 		given(mockedObjectMapper.treeToValue(userNameNode, String.class)).willReturn(TEST_USERNAME);
-		TextNode ethnicityNode = new TextNode(TEST_ETHNICITY);
+		StringNode ethnicityNode = new StringNode(TEST_ETHNICITY);
 		given(mockObjectNode.get(TEST_ETHNICITY_FIELD_NAME)).willReturn(ethnicityNode);
 		given(mockedObjectMapper.treeToValue(ethnicityNode, String.class)).willReturn(TEST_ETHNICITY);
 
 		ObjectNode highlyConfidentialObjectNode = new ObjectNode(JsonNodeFactory.instance);
-		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new TextNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
+		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new StringNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
 		given(mockObjectNode.get(TEST_HIGHLY_CONFIDENTIAL_OBJECT_FIELD_NAME)).willReturn(highlyConfidentialObjectNode);
 		given(mockedObjectMapper.treeToValue(highlyConfidentialObjectNode, HighlyConfidentialObject.class)).willReturn(TEST_HIGHLY_CONFIDENTIAL_OBJECT);
 
@@ -1068,7 +1068,7 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void decryptNullFieldSuccess() throws JsonProcessingException {
+	void decryptNullFieldSuccess() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		given(mockEncryptionService.decrypt(TEST_MOCK_ENCRYPTED_DATA)).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockedObjectMapper.readTree(TEST_MOCK_SOURCE_CIPHERTEXT)).willReturn(objectNode);
@@ -1107,7 +1107,7 @@ class CryptoShieldTest {
 
 	@Test
 	@Disabled("Revisit if we want to restrict to certain field types")
-	void decryptExceptionWrongValueType() throws JsonProcessingException {
+	void decryptExceptionWrongValueType() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		given(mockEncryptionService.decrypt(TEST_MOCK_ENCRYPTED_DATA)).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockedObjectMapper.readTree(TEST_MOCK_SOURCE_CIPHERTEXT)).willReturn(new ObjectNode(JsonNodeFactory.instance).put("pan", 234234234L));
@@ -1121,7 +1121,7 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void decryptJsonNodeException() throws JsonProcessingException {
+	void decryptJsonNodeException() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		given(mockEncryptionService.decrypt(TEST_MOCK_ENCRYPTED_DATA)).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockObjectNode.get(TEST_PAN_FIELD_NAME)).willThrow(new RuntimeException());
@@ -1140,25 +1140,25 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void decryptWithRetrySuccessOnLastAttempt() throws JsonProcessingException {
+	void decryptWithRetrySuccessOnLastAttempt() throws JacksonException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		TransientCryptoException transientCryptoException = new TransientCryptoException("Test Transient Exception", new RuntimeException());
 		given(mockEncryptionService.decrypt(TEST_MOCK_ENCRYPTED_DATA))
 				.willThrow(transientCryptoException, transientCryptoException)
 				.willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockedObjectMapper.readTree(TEST_MOCK_SOURCE_CIPHERTEXT)).willReturn(mockObjectNode);
-		TextNode panNode = new TextNode(TEST_PAN);
+		StringNode panNode = new StringNode(TEST_PAN);
 		given(mockObjectNode.get(TEST_PAN_FIELD_NAME)).willReturn(panNode);
 		given(mockedObjectMapper.treeToValue(panNode, String.class)).willReturn(TEST_PAN);
-		TextNode userNameNode = new TextNode(TEST_USERNAME);
+		StringNode userNameNode = new StringNode(TEST_USERNAME);
 		given(mockObjectNode.get(TEST_USER_NAME_FIELD_NAME)).willReturn(userNameNode);
 		given(mockedObjectMapper.treeToValue(userNameNode, String.class)).willReturn(TEST_USERNAME);
-		TextNode ethnicityNode = new TextNode(TEST_ETHNICITY);
+		StringNode ethnicityNode = new StringNode(TEST_ETHNICITY);
 		given(mockObjectNode.get(TEST_ETHNICITY_FIELD_NAME)).willReturn(ethnicityNode);
 		given(mockedObjectMapper.treeToValue(ethnicityNode, String.class)).willReturn(TEST_ETHNICITY);
 
 		ObjectNode highlyConfidentialObjectNode = new ObjectNode(JsonNodeFactory.instance);
-		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new TextNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
+		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new StringNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
 		given(mockObjectNode.get(TEST_HIGHLY_CONFIDENTIAL_OBJECT_FIELD_NAME)).willReturn(highlyConfidentialObjectNode);
 		given(mockedObjectMapper.treeToValue(highlyConfidentialObjectNode, HighlyConfidentialObject.class)).willReturn(TEST_HIGHLY_CONFIDENTIAL_OBJECT);
 
@@ -1401,7 +1401,7 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void cascadeEncryptSuccess() throws JsonProcessingException {
+	void cascadeEncryptSuccess() throws JacksonException {
 		String cascadeTestEntity2PanValue = "cascadeTestEntity2Pan";
 		String cascadeTestEntity2UserNameValue = "cascadeTestEntity2UserName";
 		String cascadeTestEntity2EthnicityValue = "cascadeTestEntity2Ethnicity";
@@ -1413,21 +1413,21 @@ class CryptoShieldTest {
 		given(mockedObjectMapper.createObjectNode()).willAnswer(invocationOnMock -> new ObjectMapper().createObjectNode());
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 
-		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new TextNode(TEST_PAN));
-		given(mockedObjectMapper.convertValue(cascadeTestEntity2PanValue, JsonNode.class)).willReturn(new TextNode(cascadeTestEntity2PanValue));
+		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new StringNode(TEST_PAN));
+		given(mockedObjectMapper.convertValue(cascadeTestEntity2PanValue, JsonNode.class)).willReturn(new StringNode(cascadeTestEntity2PanValue));
 
-		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new TextNode(TEST_USERNAME));
-		given(mockedObjectMapper.convertValue(cascadeTestEntity2UserNameValue, JsonNode.class)).willReturn(new TextNode(cascadeTestEntity2UserNameValue));
+		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new StringNode(TEST_USERNAME));
+		given(mockedObjectMapper.convertValue(cascadeTestEntity2UserNameValue, JsonNode.class)).willReturn(new StringNode(cascadeTestEntity2UserNameValue));
 
-		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new TextNode(TEST_ETHNICITY));
-		given(mockedObjectMapper.convertValue(cascadeTestEntity2EthnicityValue, JsonNode.class)).willReturn(new TextNode(cascadeTestEntity2EthnicityValue));
+		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new StringNode(TEST_ETHNICITY));
+		given(mockedObjectMapper.convertValue(cascadeTestEntity2EthnicityValue, JsonNode.class)).willReturn(new StringNode(cascadeTestEntity2EthnicityValue));
 
 		ObjectNode highlyConfidentialObjectNode = new ObjectNode(JsonNodeFactory.instance);
-		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new TextNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
+		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new StringNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
 		given(mockedObjectMapper.convertValue(TEST_HIGHLY_CONFIDENTIAL_OBJECT, JsonNode.class)).willReturn(highlyConfidentialObjectNode);
 
 		ObjectNode cascadeTestEntity2HighlyConfidentialObjectNode = new ObjectNode(JsonNodeFactory.instance);
-		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new TextNode(cascadeTestEntity2HighlyConfidentialObjectTestValue));
+		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new StringNode(cascadeTestEntity2HighlyConfidentialObjectTestValue));
 		given(mockedObjectMapper.convertValue(cascadeTestEntity2HighlyConfidentialObject, JsonNode.class)).willReturn(cascadeTestEntity2HighlyConfidentialObjectNode);
 
 		given(mockedObjectMapper.writeValueAsString(objectNodeArgumentCaptor.capture())).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
@@ -1492,7 +1492,7 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void cascadeEncryptCollectionSuccess() throws JsonProcessingException {
+	void cascadeEncryptCollectionSuccess() throws JacksonException {
 		String cascadeTestEntity2PanValue = "cascadeTestEntity2Pan";
 		String cascadeTestEntity2UserNameValue = "cascadeTestEntity2UserName";
 		String cascadeTestEntity2EthnicityValue = "cascadeTestEntity2Ethnicity";
@@ -1504,21 +1504,21 @@ class CryptoShieldTest {
 		given(mockedObjectMapper.createObjectNode()).willAnswer(invocationOnMock -> new ObjectMapper().createObjectNode());
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 
-		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new TextNode(TEST_PAN));
-		given(mockedObjectMapper.convertValue(cascadeTestEntity2PanValue, JsonNode.class)).willReturn(new TextNode(cascadeTestEntity2PanValue));
+		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new StringNode(TEST_PAN));
+		given(mockedObjectMapper.convertValue(cascadeTestEntity2PanValue, JsonNode.class)).willReturn(new StringNode(cascadeTestEntity2PanValue));
 
-		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new TextNode(TEST_USERNAME));
-		given(mockedObjectMapper.convertValue(cascadeTestEntity2UserNameValue, JsonNode.class)).willReturn(new TextNode(cascadeTestEntity2UserNameValue));
+		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new StringNode(TEST_USERNAME));
+		given(mockedObjectMapper.convertValue(cascadeTestEntity2UserNameValue, JsonNode.class)).willReturn(new StringNode(cascadeTestEntity2UserNameValue));
 
-		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new TextNode(TEST_ETHNICITY));
-		given(mockedObjectMapper.convertValue(cascadeTestEntity2EthnicityValue, JsonNode.class)).willReturn(new TextNode(cascadeTestEntity2EthnicityValue));
+		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new StringNode(TEST_ETHNICITY));
+		given(mockedObjectMapper.convertValue(cascadeTestEntity2EthnicityValue, JsonNode.class)).willReturn(new StringNode(cascadeTestEntity2EthnicityValue));
 
 		ObjectNode highlyConfidentialObjectNode = new ObjectNode(JsonNodeFactory.instance);
-		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new TextNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
+		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new StringNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
 		given(mockedObjectMapper.convertValue(TEST_HIGHLY_CONFIDENTIAL_OBJECT, JsonNode.class)).willReturn(highlyConfidentialObjectNode);
 
 		ObjectNode cascadeTestEntity2HighlyConfidentialObjectNode = new ObjectNode(JsonNodeFactory.instance);
-		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new TextNode(cascadeTestEntity2HighlyConfidentialObjectTestValue));
+		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new StringNode(cascadeTestEntity2HighlyConfidentialObjectTestValue));
 		given(mockedObjectMapper.convertValue(cascadeTestEntity2HighlyConfidentialObject, JsonNode.class)).willReturn(cascadeTestEntity2HighlyConfidentialObjectNode);
 
 		given(mockedObjectMapper.writeValueAsString(objectNodeArgumentCaptor.capture())).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
@@ -1587,7 +1587,7 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void cascadeEncryptExceptionGettingCascadedField() throws JsonProcessingException, NoSuchFieldException, IllegalAccessException {
+	void cascadeEncryptExceptionGettingCascadedField() throws JacksonException, NoSuchFieldException, IllegalAccessException {
 		String cascadeTestEntity2PanValue = "cascadeTestEntity2Pan";
 		String cascadeTestEntity2UserNameValue = "cascadeTestEntity2UserName";
 		String cascadeTestEntity2EthnicityValue = "cascadeTestEntity2Ethnicity";
@@ -1598,11 +1598,11 @@ class CryptoShieldTest {
 
 		given(mockedObjectMapper.createObjectNode()).willAnswer(invocationOnMock -> new ObjectMapper().createObjectNode());
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
-		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new TextNode(TEST_PAN));
-		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new TextNode(TEST_USERNAME));
-		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new TextNode(TEST_ETHNICITY));
+		given(mockedObjectMapper.convertValue(TEST_PAN, JsonNode.class)).willReturn(new StringNode(TEST_PAN));
+		given(mockedObjectMapper.convertValue(TEST_USERNAME, JsonNode.class)).willReturn(new StringNode(TEST_USERNAME));
+		given(mockedObjectMapper.convertValue(TEST_ETHNICITY, JsonNode.class)).willReturn(new StringNode(TEST_ETHNICITY));
 		ObjectNode highlyConfidentialObjectNode = new ObjectNode(JsonNodeFactory.instance);
-		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new TextNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
+		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new StringNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
 		given(mockedObjectMapper.convertValue(TEST_HIGHLY_CONFIDENTIAL_OBJECT, JsonNode.class)).willReturn(highlyConfidentialObjectNode);
 
 		given(mockedObjectMapper.writeValueAsString(objectNodeArgumentCaptor.capture())).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
@@ -1648,7 +1648,7 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void decryptCascadeSuccess() throws JsonProcessingException {
+	void decryptCascadeSuccess() throws JacksonException {
 		String cascadeTestEntity2PanValue = "cascadeTestEntity2Pan";
 		String cascadeTestEntity2UserNameValue = "cascadeTestEntity2UserName";
 		String cascadeTestEntity2EthnicityValue = "cascadeTestEntity2Ethnicity";
@@ -1661,25 +1661,25 @@ class CryptoShieldTest {
 
 		given(mockedObjectMapper.readTree(TEST_MOCK_SOURCE_CIPHERTEXT)).willReturn(mockObjectNode);
 		ObjectNode cascadeTestEntity2SourceCipherTextDataObjectNode = new ObjectMapper().createObjectNode();
-		cascadeTestEntity2SourceCipherTextDataObjectNode.set(TEST_PAN_FIELD_NAME, new TextNode(cascadeTestEntity2PanValue));
-		cascadeTestEntity2SourceCipherTextDataObjectNode.set(TEST_USER_NAME_FIELD_NAME, new TextNode(cascadeTestEntity2UserNameValue));
-		cascadeTestEntity2SourceCipherTextDataObjectNode.set(TEST_ETHNICITY_FIELD_NAME, new TextNode(cascadeTestEntity2EthnicityValue));
+		cascadeTestEntity2SourceCipherTextDataObjectNode.set(TEST_PAN_FIELD_NAME, new StringNode(cascadeTestEntity2PanValue));
+		cascadeTestEntity2SourceCipherTextDataObjectNode.set(TEST_USER_NAME_FIELD_NAME, new StringNode(cascadeTestEntity2UserNameValue));
+		cascadeTestEntity2SourceCipherTextDataObjectNode.set(TEST_ETHNICITY_FIELD_NAME, new StringNode(cascadeTestEntity2EthnicityValue));
 		given(mockedObjectMapper.readTree(cascadeTestEntity2SourceCipherTextData)).willReturn(cascadeTestEntity2SourceCipherTextDataObjectNode);
 
-		TextNode panNode = new TextNode(TEST_PAN);
+		StringNode panNode = new StringNode(TEST_PAN);
 		given(mockObjectNode.get(TEST_PAN_FIELD_NAME)).willReturn(panNode);
-		TextNode cascadeTestEntity2PanNode = new TextNode(cascadeTestEntity2PanValue);
+		StringNode cascadeTestEntity2PanNode = new StringNode(cascadeTestEntity2PanValue);
 		given(mockedObjectMapper.treeToValue(panNode, String.class)).willReturn(TEST_PAN);
 		given(mockedObjectMapper.treeToValue(cascadeTestEntity2PanNode, String.class)).willReturn(cascadeTestEntity2PanValue);
-		TextNode userNameNode = new TextNode(TEST_USERNAME);
+		StringNode userNameNode = new StringNode(TEST_USERNAME);
 		given(mockObjectNode.get(TEST_USER_NAME_FIELD_NAME)).willReturn(userNameNode);
 		given(mockedObjectMapper.treeToValue(userNameNode, String.class)).willReturn(TEST_USERNAME);
-		TextNode ethnicityNode = new TextNode(TEST_ETHNICITY);
+		StringNode ethnicityNode = new StringNode(TEST_ETHNICITY);
 		given(mockObjectNode.get(TEST_ETHNICITY_FIELD_NAME)).willReturn(ethnicityNode);
 		given(mockedObjectMapper.treeToValue(ethnicityNode, String.class)).willReturn(TEST_ETHNICITY);
 
 		ObjectNode highlyConfidentialObjectNode = new ObjectNode(JsonNodeFactory.instance);
-		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new TextNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
+		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new StringNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
 		given(mockObjectNode.get(TEST_HIGHLY_CONFIDENTIAL_OBJECT_FIELD_NAME)).willReturn(highlyConfidentialObjectNode);
 		given(mockedObjectMapper.treeToValue(highlyConfidentialObjectNode, HighlyConfidentialObject.class)).willReturn(TEST_HIGHLY_CONFIDENTIAL_OBJECT);
 
@@ -1706,7 +1706,7 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void decryptCollectionCascadeSuccess() throws JsonProcessingException {
+	void decryptCollectionCascadeSuccess() throws JacksonException {
 		String cascadeTestEntity2PanValue = "cascadeTestEntity2Pan";
 		String cascadeTestEntity2UserNameValue = "cascadeTestEntity2UserName";
 		String cascadeTestEntity2EthnicityValue = "cascadeTestEntity2Ethnicity";
@@ -1719,25 +1719,25 @@ class CryptoShieldTest {
 
 		given(mockedObjectMapper.readTree(TEST_MOCK_SOURCE_CIPHERTEXT)).willReturn(mockObjectNode);
 		ObjectNode cascadeTestEntity2SourceCipherTextDataObjectNode = new ObjectMapper().createObjectNode();
-		cascadeTestEntity2SourceCipherTextDataObjectNode.set(TEST_PAN_FIELD_NAME, new TextNode(cascadeTestEntity2PanValue));
-		cascadeTestEntity2SourceCipherTextDataObjectNode.set(TEST_USER_NAME_FIELD_NAME, new TextNode(cascadeTestEntity2UserNameValue));
-		cascadeTestEntity2SourceCipherTextDataObjectNode.set(TEST_ETHNICITY_FIELD_NAME, new TextNode(cascadeTestEntity2EthnicityValue));
+		cascadeTestEntity2SourceCipherTextDataObjectNode.set(TEST_PAN_FIELD_NAME, new StringNode(cascadeTestEntity2PanValue));
+		cascadeTestEntity2SourceCipherTextDataObjectNode.set(TEST_USER_NAME_FIELD_NAME, new StringNode(cascadeTestEntity2UserNameValue));
+		cascadeTestEntity2SourceCipherTextDataObjectNode.set(TEST_ETHNICITY_FIELD_NAME, new StringNode(cascadeTestEntity2EthnicityValue));
 		given(mockedObjectMapper.readTree(cascadeTestEntity2SourceCipherTextData)).willReturn(cascadeTestEntity2SourceCipherTextDataObjectNode);
 
-		TextNode panNode = new TextNode(TEST_PAN);
+		StringNode panNode = new StringNode(TEST_PAN);
 		given(mockObjectNode.get(TEST_PAN_FIELD_NAME)).willReturn(panNode);
-		TextNode cascadeTestEntity2PanNode = new TextNode(cascadeTestEntity2PanValue);
+		StringNode cascadeTestEntity2PanNode = new StringNode(cascadeTestEntity2PanValue);
 		given(mockedObjectMapper.treeToValue(panNode, String.class)).willReturn(TEST_PAN);
 		given(mockedObjectMapper.treeToValue(cascadeTestEntity2PanNode, String.class)).willReturn(cascadeTestEntity2PanValue);
-		TextNode userNameNode = new TextNode(TEST_USERNAME);
+		StringNode userNameNode = new StringNode(TEST_USERNAME);
 		given(mockObjectNode.get(TEST_USER_NAME_FIELD_NAME)).willReturn(userNameNode);
 		given(mockedObjectMapper.treeToValue(userNameNode, String.class)).willReturn(TEST_USERNAME);
-		TextNode ethnicityNode = new TextNode(TEST_ETHNICITY);
+		StringNode ethnicityNode = new StringNode(TEST_ETHNICITY);
 		given(mockObjectNode.get(TEST_ETHNICITY_FIELD_NAME)).willReturn(ethnicityNode);
 		given(mockedObjectMapper.treeToValue(ethnicityNode, String.class)).willReturn(TEST_ETHNICITY);
 
 		ObjectNode highlyConfidentialObjectNode = new ObjectNode(JsonNodeFactory.instance);
-		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new TextNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
+		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new StringNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
 		given(mockObjectNode.get(TEST_HIGHLY_CONFIDENTIAL_OBJECT_FIELD_NAME)).willReturn(highlyConfidentialObjectNode);
 		given(mockedObjectMapper.treeToValue(highlyConfidentialObjectNode, HighlyConfidentialObject.class)).willReturn(TEST_HIGHLY_CONFIDENTIAL_OBJECT);
 
@@ -1783,22 +1783,22 @@ class CryptoShieldTest {
 	}
 
 	@Test
-	void decryptCascadeExceptionGettingCascadedField() throws JsonProcessingException, NoSuchFieldException, IllegalAccessException {
+	void decryptCascadeExceptionGettingCascadedField() throws JacksonException, NoSuchFieldException, IllegalAccessException {
 		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 		given(mockEncryptionService.decrypt(TEST_MOCK_ENCRYPTED_DATA)).willReturn(TEST_MOCK_SOURCE_CIPHERTEXT);
 		given(mockedObjectMapper.readTree(TEST_MOCK_SOURCE_CIPHERTEXT)).willReturn(mockObjectNode);
-		TextNode panNode = new TextNode(TEST_PAN);
+		StringNode panNode = new StringNode(TEST_PAN);
 		given(mockObjectNode.get(TEST_PAN_FIELD_NAME)).willReturn(panNode);
 		given(mockedObjectMapper.treeToValue(panNode, String.class)).willReturn(TEST_PAN);
-		TextNode userNameNode = new TextNode(TEST_USERNAME);
+		StringNode userNameNode = new StringNode(TEST_USERNAME);
 		given(mockObjectNode.get(TEST_USER_NAME_FIELD_NAME)).willReturn(userNameNode);
 		given(mockedObjectMapper.treeToValue(userNameNode, String.class)).willReturn(TEST_USERNAME);
-		TextNode ethnicityNode = new TextNode(TEST_ETHNICITY);
+		StringNode ethnicityNode = new StringNode(TEST_ETHNICITY);
 		given(mockObjectNode.get(TEST_ETHNICITY_FIELD_NAME)).willReturn(ethnicityNode);
 		given(mockedObjectMapper.treeToValue(ethnicityNode, String.class)).willReturn(TEST_ETHNICITY);
 
 		ObjectNode highlyConfidentialObjectNode = new ObjectNode(JsonNodeFactory.instance);
-		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new TextNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
+		highlyConfidentialObjectNode.set(TEST_HIGHLY_CONFIDENTIAL_FIELD_NAME, new StringNode(SOME_HIGHLY_CONFIDENTIAL_OBJECT_TEST_VALUE));
 		given(mockObjectNode.get(TEST_HIGHLY_CONFIDENTIAL_OBJECT_FIELD_NAME)).willReturn(highlyConfidentialObjectNode);
 		given(mockedObjectMapper.treeToValue(highlyConfidentialObjectNode, HighlyConfidentialObject.class)).willReturn(TEST_HIGHLY_CONFIDENTIAL_OBJECT);
 

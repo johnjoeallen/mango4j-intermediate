@@ -5,8 +5,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Helper for extracting evolved payload shapes from durable JSON task payloads.
@@ -56,7 +57,7 @@ public final class PayloadReader {
 			if (node != null && !node.isNull() && !node.isMissingNode()) {
 				try {
 					return Optional.of(objectMapper.convertValue(node, type));
-				} catch (IllegalArgumentException ex) {
+				} catch (IllegalArgumentException | JacksonException ex) {
 					throw new PayloadExtractionException(
 							"Payload field '" + path + "' cannot be converted to " + type.getSimpleName(), ex);
 				}

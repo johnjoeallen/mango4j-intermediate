@@ -6,8 +6,8 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import ie.bitstep.mango.swarm.config.MangoSwarmProperties;
 import ie.bitstep.mango.swarm.db.TaskRepository;
 import ie.bitstep.mango.swarm.executor.TaskWakeSignal;

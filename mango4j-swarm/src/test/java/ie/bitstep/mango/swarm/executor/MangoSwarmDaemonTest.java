@@ -16,8 +16,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.JsonNodeFactory;
 import org.junit.jupiter.api.Test;
 import ie.bitstep.mango.swarm.TaskExecutionContext;
 import ie.bitstep.mango.swarm.TaskExecutionResult;
@@ -1437,12 +1437,12 @@ class MangoSwarmDaemonTest {
 		}
 
 		private record QueuedCall(
-				String taskType, com.fasterxml.jackson.databind.JsonNode payload, Instant availableAt, UUID seriesId) {}
+				String taskType, tools.jackson.databind.JsonNode payload, Instant availableAt, UUID seriesId) {}
 
 		@Override
 		public UUID queue(
 				String taskType,
-				com.fasterxml.jackson.databind.JsonNode payload,
+				tools.jackson.databind.JsonNode payload,
 				Instant availableAt,
 				UUID seriesId) {
 			queueCalls.add(new QueuedCall(taskType, payload, availableAt, seriesId));

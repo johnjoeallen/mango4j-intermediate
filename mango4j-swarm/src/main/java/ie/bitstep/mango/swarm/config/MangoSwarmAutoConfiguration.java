@@ -3,7 +3,9 @@ package ie.bitstep.mango.swarm.config;
 import java.time.Clock;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -33,7 +35,9 @@ public class MangoSwarmAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	ObjectMapper mangoObjectMapper() {
-		return new ObjectMapper();
+		return JsonMapper.builder()
+				.disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+				.build();
 	}
 
 	@Bean
