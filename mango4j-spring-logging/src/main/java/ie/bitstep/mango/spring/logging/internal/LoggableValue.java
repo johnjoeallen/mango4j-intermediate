@@ -1,7 +1,7 @@
 package ie.bitstep.mango.spring.logging.internal;
 
 import ie.bitstep.mango.spring.logging.annotations.LoggableView;
-import ie.bitstep.mango.spring.logging.masking.Masker;
+import ie.bitstep.mango.utils.masking.Masker;
 
 import java.util.function.UnaryOperator;
 

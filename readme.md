@@ -20,7 +20,7 @@ Newest entries go at the bottom of the [log](#progress-log). Detail lives in
 | `mango4j-crypto` | `mango4j-crypto/` | crypto-core, crypto, aws-kms-delegate | yes | n/a | yes | yes (upstream is public) | not yet |
 | `mango4j-flowsink` | `mango4j-flowsink/` | annotations, core, spring, spring-boot | yes | yes | n/a (no Jackson) | yes (upstream is public) | not yet |
 | `mango4j-swarm` | `mango4j-swarm/` | single module | yes | yes | yes | yes (upstream is public) | not yet |
-| `mango4j-spring` | `mango4j-spring-parent/` | aop, logging, insights, observe, data, crypto-caas-delegate | yes | yes | yes | yes, one open question | five modules: yes. CaaS delegate: needs `crypto-core` |
+| `mango4j-spring` | `mango4j-spring-parent/` | aop, logging, insights, observe, data, crypto-caas-delegate | yes | yes | yes | yes, one open question | needs `mango4j-utils` (logging) and `crypto-core` (CaaS delegate) |
 
 "Ready to split" stays "not yet" until the cross-group dependencies are broken and each group
 builds standalone from a fresh clone (see [Next](#next)).
@@ -90,8 +90,8 @@ Maven project.
 
 ### Breaking spring's dependencies on core
 - Spring depended on four core modules (`reflection`, `collections`, `utils`, `validation`) and on
-  `crypto-core`. After analysing real usage, spring now depends on **no** core module, and
-  only the CaaS delegate still depends on `crypto-core`.
+  `crypto-core`. After analysing real usage, spring now depends only on `mango4j-utils` (logging,
+  for masking and converters) and, in the CaaS delegate, on `crypto-core`.
   - `validation`: declared, never used. Removed.
   - `reflection`: test-only. `MDCTestUtils` is now a plain-reflection helper in
     `mango4j-spring-logging`'s test sources; `ReflectionUtils.getMethod` became a three-line
@@ -100,20 +100,18 @@ Maven project.
     `LinkedHashMap`/`HashMap` (values can be null, so `Map.of` was not an option). Tests use slim
     `MapBuilder`/`ListBuilder` helpers from the logging test-jar, which insights and observe
     consume (test scope).
-  - `utils`: only the `masking` and `converters` packages (about 720 lines, self-contained) were
-    used, and they are part of logging's public annotation API
-    (`@LoggableField(masker = ...)`). They were **copied** into
-    `ie.bitstep.mango.spring.logging.masking` / `.converters` with their tests. Core's copy was
-    left alone; whether core should keep or drop it is a separate decision about core's public API.
-- The copied `MaskerFactoryTest` failed once inside logging: it cleared two of the factory's three
-  static caches, which was invisible in `utils` where nothing else populated the third. Fixed.
-- Proof: `mvn -f mango4j-spring-parent/pom.xml verify -pl '!../mango4j-spring-crypto-caas-delegate'`
-  builds and tests the other five spring modules with no other group in the reactor.
+  - `utils`: only the `masking` and `converters` packages are used. First attempt: copy them
+    into logging. **Reversed**: masking is reusable beyond logging (API responses can use it too),
+    so it stays in `mango4j-utils` as its own reusable code and logging keeps a versioned
+    dependency on it. The copy was deleted.
 
 ## Next
-1. Break remaining cross-group dependencies: `crypto-core` depends on `mango4j-collections`
-   (`ConcurrentCache`), `mango4j-crypto` on `mango4j-utils`; the CaaS delegate needs `crypto-core`.
-   Decide per case: depend, or inline.
+1. Break remaining cross-group dependencies where it makes sense: `crypto-core` depends on
+   `mango4j-collections` (only for `ConcurrentCache`, which backs the grace-period close of cached
+   key material), `mango4j-crypto` on `mango4j-utils`. Options for `ConcurrentCache`: move it into
+   crypto-core, replace it with a smaller purpose-built holder, use Caffeine, or keep the
+   dependency. Masking stays in `mango4j-utils` (reusable for API responses); worth considering
+   whether it deserves its own small module so consumers do not pull the rest of utils.
 2. Confirm the CaaS delegate is publishable.
 3. Make each group build standalone from a clean clone against published (or `-SNAPSHOT`)
    artifacts of the others, not the reactor.

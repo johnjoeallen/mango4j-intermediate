@@ -19,8 +19,9 @@ break it and implement the needed part inside the dependant.
 
 ## Dependency analysis: `mango4j-spring-*` modules
 
-**Status: done** (see readme log). Only `crypto-caas-delegate -> crypto-core` remains. The table below is
-the original analysis; `utils` masking/converters were copied into logging rather than depended on.
+**Status: done** (see readme log). Spring now depends on `mango4j-utils` (logging) and `crypto-core` (CaaS delegate) only. The
+table below is the original analysis; masking stays in `mango4j-utils` because it is reusable
+outside logging (API responses).
 
 Counts are import statements of the external class in that module, from
 `src/main` / `src/test`. These were the old `com.mastercard.commons.mango.*` names; they are now `ie.bitstep.mango.*`.

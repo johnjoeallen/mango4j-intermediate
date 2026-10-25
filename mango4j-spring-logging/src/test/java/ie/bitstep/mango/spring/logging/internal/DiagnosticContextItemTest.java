@@ -8,10 +8,10 @@ import ie.bitstep.mango.spring.logging.LogUtils;
 import ie.bitstep.mango.spring.logging.annotations.LoggableClass;
 import ie.bitstep.mango.spring.logging.annotations.LoggableField;
 import ie.bitstep.mango.spring.logging.annotations.LoggableView;
-import ie.bitstep.mango.spring.logging.converters.CollectionToSize;
-import ie.bitstep.mango.spring.logging.converters.ConverterFactory;
-import ie.bitstep.mango.spring.logging.masking.FullMasker;
-import ie.bitstep.mango.spring.logging.masking.PanMasker;
+import ie.bitstep.mango.utils.converters.CollectionToSize;
+import ie.bitstep.mango.utils.converters.ConverterFactory;
+import ie.bitstep.mango.utils.masking.FullMasker;
+import ie.bitstep.mango.utils.masking.PanMasker;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
