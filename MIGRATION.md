@@ -150,6 +150,11 @@ Not done:
 - Core and crypto have no Spring dependency; they were only moved to `java.version` 25.
 - Pitest and Sonar profiles were not exercised.
 
+## Crypto dependencies on core
+
+`mango4j-crypto`'s use of `mango4j-utils` (one executor builder) and `mango4j-reflection` (one test helper)
+was removed. `crypto-core -> collections` (`ConcurrentCache`) stays by decision.
+
 ## Status
 
 Next: break `reflection`, `collections` and `utils` dependencies per the analysis table; decide

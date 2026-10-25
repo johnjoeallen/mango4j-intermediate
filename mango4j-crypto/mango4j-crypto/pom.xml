@@ -26,12 +26,6 @@
             <artifactId>mango4j-crypto-core</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>ie.bitstep.mango</groupId>
-            <artifactId>mango4j-utils</artifactId>
-            <version>${mango4j.version}</version>
-            <scope>compile</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>

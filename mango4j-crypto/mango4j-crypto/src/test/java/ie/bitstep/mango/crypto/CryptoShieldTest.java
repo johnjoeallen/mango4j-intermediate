@@ -30,8 +30,6 @@ import ie.bitstep.mango.crypto.testdata.entities.hmacstrategies.cascade.TestEnti
 import ie.bitstep.mango.crypto.testdata.entities.hmacstrategies.custom.NothingAnnotatedEntity;
 import ie.bitstep.mango.crypto.testdata.entities.hmacstrategies.list.TestAnnotatedEntityForListHmacFieldStrategy;
 import ie.bitstep.mango.crypto.testdata.implementations.hmacstrategies.MockHmacStrategyImpl;
-import ie.bitstep.mango.reflection.utils.ReflectionUtils;
-import ie.bitstep.mango.utils.thread.NamedScheduledExecutorBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -39,7 +37,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -49,6 +46,7 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -81,9 +79,6 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -326,7 +321,9 @@ class CryptoShieldTest {
 
 	private void overrideFieldWithMock(CryptoShield cryptoShield, String fieldName, Object mock) {
 		try {
-			ReflectionUtils.forceSetField(cryptoShield, fieldName, mock);
+			Field field = CryptoShield.class.getDeclaredField(fieldName);
+			field.setAccessible(true);
+			field.set(cryptoShield, mock);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -748,33 +745,31 @@ class CryptoShieldTest {
 		then(mockedObjectMapper).should(times(0)).createObjectNode();
 	}
 
-	@SuppressWarnings("InstantiatingAThreadWithDefaultRunMethod")
 	@Test
 	void testSchedulerServiceUncaughtExceptionHandler() {
-		try (MockedStatic<NamedScheduledExecutorBuilder> mockedBuilder = org.mockito.Mockito.mockStatic(NamedScheduledExecutorBuilder.class)) {
-			NamedScheduledExecutorBuilder builderMock = mock(NamedScheduledExecutorBuilder.class);
-			mockedBuilder.when(NamedScheduledExecutorBuilder::builder).thenReturn(builderMock);
-			given(builderMock.poolSize(anyInt())).willReturn(builderMock);
-			given(builderMock.threadNamePrefix(anyString())).willReturn(builderMock);
-			given(builderMock.removeOnCancelPolicy(anyBoolean())).willReturn(builderMock);
-			given(builderMock.build()).willReturn(mockScheduledExecutorService);
-			ArgumentCaptor<Thread.UncaughtExceptionHandler> captor = ArgumentCaptor.forClass(Thread.UncaughtExceptionHandler.class);
-			given(builderMock.uncaughtExceptionHandler(captor.capture())).willReturn(builderMock);
+		given(mockRetryConfiguration.poolSize()).willReturn(TEST_POOL_SIZE);
+		given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
 
-			given(mockRetryConfiguration.poolSize()).willReturn(TEST_POOL_SIZE);
+		cryptoShield = new CryptoShield(List.of(TestMockHmacEntity.class), mockObjectMapperFactory, mockCryptoKeyProvider, List.of(mockEncryptionServiceDelegate), mockRetryConfiguration);
 
-			given(mockObjectMapperFactory.objectMapper()).willReturn(mockedObjectMapper);
+		try {
+			ScheduledThreadPoolExecutor executor = (ScheduledThreadPoolExecutor) cryptoShield.scheduler;
+			assertThat(executor.getCorePoolSize()).isEqualTo(TEST_POOL_SIZE);
+			assertThat(executor.getRemoveOnCancelPolicy()).isTrue();
 
-			cryptoShield = new CryptoShield(List.of(TestMockHmacEntity.class), mockObjectMapperFactory, mockCryptoKeyProvider, List.of(mockEncryptionServiceDelegate), mockRetryConfiguration);
+			Thread retryThread = executor.getThreadFactory().newThread(() -> { });
+			assertThat(retryThread.getName()).isEqualTo(CryptoShield.RETRY_THREAD_NAME_PREFIX + "1");
 
 			System.Logger mockLogger = mock(System.Logger.class);
 			overrideFieldWithMock(cryptoShield, "logger", mockLogger);
 
 			Thread testThread = new Thread("test-thread");
 			RuntimeException thrown = new RuntimeException("Uncaught boom");
-			captor.getValue().uncaughtException(testThread, thrown);
+			retryThread.getUncaughtExceptionHandler().uncaughtException(testThread, thrown);
 
 			then(mockLogger).should().log(eq(System.Logger.Level.ERROR), eq("Uncaught in {0}: {1}"), eq("test-thread"), eq(thrown));
+		} finally {
+			cryptoShield.scheduler.shutdownNow();
 		}
 	}
 

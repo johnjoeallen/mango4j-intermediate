@@ -127,15 +127,29 @@ Maven project.
   per field or parameter (for example logging the size of one particular `List<String>`).
 - `mango4j-utils` 1.1.0 therefore also loses `converters`; release notes should say so.
 
+### Breaking crypto's dependencies on core
+- `mango4j-crypto` depended on `mango4j-utils` for one class, `NamedScheduledExecutorBuilder`, used
+  once in `CryptoShield` with four settings (pool size, thread name prefix, uncaught-exception
+  handler, remove-on-cancel). That is a few lines of plain JDK, so it is inlined as a private
+  method using `ScheduledThreadPoolExecutor`; the test that mocked the static builder now checks the
+  real executor (pool size, remove-on-cancel, thread name, uncaught-exception logging).
+- `mango4j-crypto` tests also used `mango4j-reflection`'s `ReflectionUtils`, which only arrived
+  transitively through utils. One test helper now uses plain reflection. Crypto's main code already
+  has its own `ReflectionUtils`.
+- **Decision: `ConcurrentCache` stays in `mango4j-collections`**, so `crypto-core -> collections`
+  remains the one core dependency of the crypto group. Its class Javadoc explains why it is not a
+  plain cache (current entry, sliding expiry, grace-period close of key material).
+- Note: the crypto parent pins `mango4j.version` to the *released* `1.0.0`, so crypto currently
+  builds against the published `mango4j-collections`, not the one in this repo. Revisit when
+  collections 1.1.0 is cut (bump the property, release collections first).
+
 ## Next
-1. Break remaining cross-group dependencies where it makes sense: `crypto-core` depends on
-   `mango4j-collections` (only for `ConcurrentCache`, which backs the grace-period close of cached
-   key material; now documented in its Javadoc), `mango4j-crypto` on `mango4j-utils`. Options for `ConcurrentCache`: move it into
-   crypto-core, replace it with a smaller purpose-built holder, use Caffeine, or keep the
-   dependency.
+1. Cross-group dependencies that remain, all deliberate:
+   `crypto-core -> collections` (`ConcurrentCache`), `spring-logging -> masking`,
+   `spring-crypto-caas-delegate -> crypto-core`.
 2. Confirm the CaaS delegate is publishable.
 3. Make each group build standalone from a clean clone against published (or `-SNAPSHOT`)
-   artifacts of the others, not the reactor.
+   artifacts of the others, not the reactor; align the crypto parent's `mango4j.version` pin.
 4. Per-group open-source hygiene: README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, `.github`
    workflows, changelog (the spring one is still the old internal history).
 5. Split each group into its own repo, publish, then bump versions in dependants.

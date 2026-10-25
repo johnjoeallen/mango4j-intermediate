@@ -21,7 +21,6 @@ import ie.bitstep.mango.crypto.core.factories.ObjectMapperFactory;
 import ie.bitstep.mango.crypto.core.formatters.CiphertextFormatter;
 import ie.bitstep.mango.crypto.core.providers.CryptoKeyProvider;
 import ie.bitstep.mango.crypto.hmac.HmacStrategy;
-import ie.bitstep.mango.utils.thread.NamedScheduledExecutorBuilder;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -34,6 +33,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.UnaryOperator;
@@ -53,6 +54,8 @@ import static java.lang.System.Logger.Level.ERROR;
  * for this class to work.
  */
 public class CryptoShield {
+	static final String RETRY_THREAD_NAME_PREFIX = "crypto-retry-task-";
+
 	private final System.Logger logger = System.getLogger(CryptoShield.class.getName());
 	protected final ObjectMapper objectMapper;
 	protected final AnnotatedEntityManager annotatedEntityManager;
@@ -131,16 +134,7 @@ public class CryptoShield {
 		this.retryConfiguration = retryConfiguration;
 
 		if (this.retryConfiguration != null) {
-			this.scheduler =
-					NamedScheduledExecutorBuilder.builder()
-							.poolSize(retryConfiguration.poolSize())
-							.threadNamePrefix("crypto-retry-task")
-							.uncaughtExceptionHandler((t, e) ->
-									// log or handle uncaught exceptions
-									logger.log(ERROR, "Uncaught in {0}: {1}", t.getName(), e)
-							)
-							.removeOnCancelPolicy(true)
-							.build();
+			this.scheduler = newRetryScheduler(retryConfiguration.poolSize());
 		} else {
 			this.scheduler = null;
 		}
@@ -553,5 +547,17 @@ public class CryptoShield {
 
 	public CryptoKeyProvider getCryptoKeyProvider() {
 		return cryptoKeyProvider;
+	}
+
+	private ScheduledExecutorService newRetryScheduler(int poolSize) {
+		AtomicInteger threadCounter = new AtomicInteger(1);
+		ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(poolSize, runnable -> {
+			Thread thread = new Thread(runnable, RETRY_THREAD_NAME_PREFIX + threadCounter.getAndIncrement());
+			thread.setUncaughtExceptionHandler((t, e) ->
+					logger.log(ERROR, "Uncaught in {0}: {1}", t.getName(), e));
+			return thread;
+		});
+		executor.setRemoveOnCancelPolicy(true);
+		return executor;
 	}
 }
