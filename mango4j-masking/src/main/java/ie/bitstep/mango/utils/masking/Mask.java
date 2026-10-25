@@ -28,7 +28,7 @@ public @interface Mask {
 	 * The character(s) to use for masking. When not supplied (empty), the masker's own default is used, for
 	 * example {@code X} for {@link IdMasker}; if the masker has no default of its own, {@link #DEFAULT_MASKING_CHARS}
 	 * is used. Custom {@link Masker} implementations should resolve this with
-	 * {@link MaskingUtils#resolveMaskingChars(String, String)} rather than use the raw value.
+	 * {@link MaskingUtils#resolveMaskingChars(Mask, String)} rather than use the raw value.
 	 *
 	 * @return the masking characters, or empty when not supplied
 	 */

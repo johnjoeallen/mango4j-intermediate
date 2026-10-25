@@ -31,7 +31,7 @@ public class FullMasker extends ParameterisedMasker {
 	 * @param mask the mask annotation
 	 */
 	public FullMasker(Mask mask) {
-		this(MaskingUtils.resolveMaskingChars(mask.maskingChars(), DEFAULT_FULL_MASKING_CHARACTERS));
+		this(MaskingUtils.resolveMaskingChars(mask, DEFAULT_FULL_MASKING_CHARACTERS));
 	}
 
 	/**

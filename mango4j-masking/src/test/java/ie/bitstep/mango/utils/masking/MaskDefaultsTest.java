@@ -87,9 +87,59 @@ class MaskDefaultsTest {
 	void resolveMaskingChars() {
 		assertThat(MaskingUtils.resolveMaskingChars("#", "X")).isEqualTo("#");
 		assertThat(MaskingUtils.resolveMaskingChars("", "X")).isEqualTo("X");
-		assertThat(MaskingUtils.resolveMaskingChars(null, "X")).isEqualTo("X");
+		assertThat(MaskingUtils.resolveMaskingChars((String) null, "X")).isEqualTo("X");
 		assertThat(MaskingUtils.resolveMaskingChars("", "")).isEqualTo(Mask.DEFAULT_MASKING_CHARS);
-		assertThat(MaskingUtils.resolveMaskingChars(null, null)).isEqualTo("*");
+		assertThat(MaskingUtils.resolveMaskingChars((String) null, null)).isEqualTo("*");
 		assertThat(MaskingUtils.resolveMaskingChars("", null)).isEqualTo("*");
+	}
+
+	@Test
+	void resolveMaskingCharsFromMask() throws NoSuchFieldException {
+		assertThat(MaskingUtils.resolveMaskingChars(mask("id"), "X")).isEqualTo("X");
+		assertThat(MaskingUtils.resolveMaskingChars(mask("id"), null)).isEqualTo("*");
+		assertThat(MaskingUtils.resolveMaskingChars(mask("explicitId"), "X")).isEqualTo("#");
+		assertThat(MaskingUtils.resolveMaskingChars(mask("emptyId"), "X")).isEqualTo("X");
+	}
+
+	@Test
+	void resolveMaskingCharsFromNullMask() {
+		assertThat(MaskingUtils.resolveMaskingChars((Mask) null, "X")).isEqualTo("X");
+		assertThat(MaskingUtils.resolveMaskingChars((Mask) null, null)).isEqualTo("*");
+	}
+
+	@Test
+	void resolveMaskingCharsFromMaskThatReturnsNull() throws NoSuchFieldException {
+		Mask real = mask("id");
+		Mask nullChars = new Mask() {
+			@Override
+			public Class<? extends Masker> masker() {
+				return real.masker();
+			}
+
+			@Override
+			public String maskingChars() {
+				return null;
+			}
+
+			@Override
+			public int prefix() {
+				return 0;
+			}
+
+			@Override
+			public int postfix() {
+				return 0;
+			}
+
+			@Override
+			public Class<? extends java.lang.annotation.Annotation> annotationType() {
+				return Mask.class;
+			}
+		};
+
+		assertThat(MaskingUtils.resolveMaskingChars(nullChars, "X")).isEqualTo("X");
+		assertThat(MaskingUtils.resolveMaskingChars(nullChars, null)).isEqualTo("*");
+		assertThat(new IdMasker(nullChars).mask("1234567890")).contains("X");
+		assertThat(new ParameterisedMasker(nullChars).mask("1234567890")).isEqualTo("**********");
 	}
 }

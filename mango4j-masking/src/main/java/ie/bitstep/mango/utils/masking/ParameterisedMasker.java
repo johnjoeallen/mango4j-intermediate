@@ -25,7 +25,7 @@ public class ParameterisedMasker implements Masker {
 	 * @param mask the mask annotation
 	 */
 	public ParameterisedMasker(Mask mask) {
-		this(MaskingUtils.resolveMaskingChars(mask.maskingChars(), null), mask.prefix(), mask.postfix());
+		this(MaskingUtils.resolveMaskingChars(mask, null), mask.prefix(), mask.postfix());
 	}
 
 	/**

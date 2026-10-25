@@ -22,6 +22,20 @@ public final class MaskingUtils {
 	}
 
 	/**
+	 * Resolves the masking characters for a {@link Mask} annotation, see
+	 * {@link #resolveMaskingChars(String, String)}. A null mask counts as nothing supplied. This is the method
+	 * custom {@link Masker} implementations should use in their {@code (Mask)} constructor rather than reading
+	 * {@link Mask#maskingChars()} directly, which is empty when the characters were not supplied.
+	 *
+	 * @param mask the mask annotation, may be null
+	 * @param maskerDefault the masker's own default, may be null or empty if it has none
+	 * @return the masking characters to use, never null or empty
+	 */
+	public static String resolveMaskingChars(Mask mask, String maskerDefault) {
+		return resolveMaskingChars(mask == null ? null : mask.maskingChars(), maskerDefault);
+	}
+
+	/**
 	 * Prevents instantiation.
 	 */
 	private MaskingUtils() { // NOSONAR

@@ -155,7 +155,11 @@ Maven project.
   `IdMasker`, `PanMasker` and the comma-separated list maskers, `***` for `FullMasker`), else
   `Mask.DEFAULT_MASKING_CHARS` (`*`, which is what `ParameterisedMasker` and any masker without a
   default use). Null and empty both count as not supplied. `MaskingUtils.resolveMaskingChars` does
-  the resolving; custom maskers should use it instead of reading `maskingChars()` raw.
+  the resolving, with an overload that takes the `Mask` itself
+  (`resolveMaskingChars(mask, maskerDefault)`, null-safe for the mask and for a custom `Mask`
+  that returns null). `Mask.maskingChars()` itself still returns the empty "not supplied" value,
+  since an annotation cannot be changed, so custom maskers should call the resolver in their
+  `(Mask)` constructor instead of reading `maskingChars()` raw.
 - Behaviour change versus `mango4j-utils` 1.0.0, for the release notes: `@Mask` without
   `maskingChars` on `IdMasker`, `PanMasker`, `FullMasker` or the list maskers now yields the
   masker's own default instead of `*`. Explicit `maskingChars` is unaffected.
