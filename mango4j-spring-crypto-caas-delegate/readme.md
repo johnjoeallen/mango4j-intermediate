@@ -10,9 +10,9 @@ Make sure you've followed the steps documented in the [mango4j-crypto](https://g
 Add this dependency to your application POM file
 ~~~xml
     <dependency>
-        <groupId>ie.bitstep.mango.spring</groupId>
+        <groupId>ie.bitstep.mango</groupId>
         <artifactId>mango4j-spring-crypto-caas-delegate</artifactId>
-        <version>2.4.0</version>
+        <version>4.0.0-SNAPSHOT</version>
     </dependency>
 ~~~
 

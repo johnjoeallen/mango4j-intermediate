@@ -139,9 +139,9 @@ Maven project.
 - **Decision: `ConcurrentCache` stays in `mango4j-collections`**, so `crypto-core -> collections`
   remains the one core dependency of the crypto group. Its class Javadoc explains why it is not a
   plain cache (current entry, sliding expiry, grace-period close of key material).
-- Note: the crypto parent pins `mango4j.version` to the *released* `1.0.0`, so crypto currently
-  builds against the published `mango4j-collections`, not the one in this repo. Revisit when
-  collections 1.1.0 is cut (bump the property, release collections first).
+- Note: the crypto parent used to pin `mango4j.version` to the *released* `1.0.0`, so crypto built
+  against the published `mango4j-collections`, not the one in this repo. Fixed by the version bump
+  below.
 
 ### Removing the deprecated `mask =`
 - Removed the deprecated `mask =` attribute from `@LoggableField` and `@LoggableParam`; use
@@ -155,13 +155,24 @@ Maven project.
 - Open question for `mango4j-masking`: should `@Mask.maskingChars` default to "use the masker's
   own default" instead of `*`? That would remove the trap but changes released behaviour.
 
+### Versions: everything is 4.0.0-SNAPSHOT
+- Every module in every group is now `4.0.0-SNAPSHOT` (core was 1.1.0, crypto 1.0.1, flowsink 0.1.6,
+  swarm 0.1.9, spring 1.0.0), and every cross-group dependency (`mango4j.version`,
+  `mango4j-crypto.version`) points at `4.0.0-SNAPSHOT`, so the family releases in lockstep and
+  nothing resolves a stale published artifact any more.
+- The dependency snippets in the spring docs and the CaaS delegate readme use the real groupId
+  `ie.bitstep.mango` and this version (an earlier rename had left `ie.bitstep.mango.spring` there).
+- Consequence: a group built on its own (`mvn -f mango4j-crypto/pom.xml ...`) needs the groups it
+  depends on installed first, in this order: core, crypto, then spring. In the root reactor this is
+  automatic.
+
 ## Next
 1. Cross-group dependencies that remain, all deliberate:
    `crypto-core -> collections` (`ConcurrentCache`), `spring-logging -> masking`,
    `spring-crypto-caas-delegate -> crypto-core`.
 2. Confirm the CaaS delegate is publishable.
 3. Make each group build standalone from a clean clone against published (or `-SNAPSHOT`)
-   artifacts of the others, not the reactor; align the crypto parent's `mango4j.version` pin.
+   artifacts of the others, not the reactor.
 4. Per-group open-source hygiene: README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, `.github`
    workflows, changelog (the spring one is still the old internal history).
 5. Split each group into its own repo, publish, then bump versions in dependants.

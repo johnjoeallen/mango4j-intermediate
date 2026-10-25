@@ -50,7 +50,7 @@ commons-lang3, httpclient5) for Boot 4 compatibility.
 
 ## Identity (resolved)
 
-Spring modules are now groupId `ie.bitstep.mango`, version `1.0.0-SNAPSHOT`, packages
+Spring modules are now groupId `ie.bitstep.mango`, version `4.0.0-SNAPSHOT` (the whole family is 4.0.0-SNAPSHOT), packages
 `ie.bitstep.mango.spring.*` (crypto delegate: `ie.bitstep.mango.spring.crypto.caas.delegate`).
 Imports of core and crypto-core use `ie.bitstep.mango.*`; versions come from the
 `mango4j.version` and `mango4j-crypto.version` root properties.

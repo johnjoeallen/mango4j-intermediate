@@ -18,9 +18,9 @@ implementation("ie.bitstep.mango.spring:mango4j-spring-insights:1.0.0")
 
 ```xml language=xml
 <dependency>
-    <groupId>ie.bitstep.mango.spring</groupId>
+    <groupId>ie.bitstep.mango</groupId>
     <artifactId>mango4j-spring-insights</artifactId>
-    <version>1.0.0</version>
+    <version>4.0.0-SNAPSHOT</version>
 </dependency>
 ```
 
