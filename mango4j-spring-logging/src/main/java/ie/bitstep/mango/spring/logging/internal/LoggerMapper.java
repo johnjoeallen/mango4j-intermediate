@@ -21,7 +21,6 @@ import ie.bitstep.mango.spring.logging.converters.ConverterFactory;
 import ie.bitstep.mango.utils.masking.Mask;
 import ie.bitstep.mango.utils.masking.Masker;
 import ie.bitstep.mango.utils.masking.MaskerFactory;
-import ie.bitstep.mango.utils.masking.NoMasker;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -340,7 +339,7 @@ public class LoggerMapper {
 
 			Masker valueMasker = null;
 			if (loggableField != null) {
-				valueMasker = getMasker(loggableField, mask);
+				valueMasker = getMasker(mask);
 			}
 
 			UnaryOperator<Object> valueConverter = null;
@@ -373,15 +372,8 @@ public class LoggerMapper {
 		return converter != null ? ConverterFactory.getConverter(converter.converter()) : null;
 	}
 
-	@SuppressWarnings({"deprecation", "squid:CallToDeprecatedMethod"})
-	private static Masker getMasker(LoggableField loggableField, Mask mask) {
-		if (mask != null) {
-			return MaskerFactory.getMasker(mask);
-		} else if (loggableField.mask() != NoMasker.class) {
-			return MaskerFactory.getMasker(loggableField.mask());
-		}
-
-		return null;
+	private static Masker getMasker(Mask mask) {
+		return mask != null ? MaskerFactory.getMasker(mask) : null;
 	}
 
 	static boolean isValidJsonProperty(JsonProperty jsonProperty) {

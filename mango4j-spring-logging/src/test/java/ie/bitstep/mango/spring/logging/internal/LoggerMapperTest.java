@@ -713,9 +713,11 @@ class LoggerMapperTest {
 		@LoggableField
 		@JsonProperty("jsonName")                 // use json name
 		private String nameJson = "jsonName55";
-		@LoggableField(mask = IdMasker.class)     // with masking
+		@LoggableField
+		@Mask(masker = IdMasker.class, maskingChars = "X")     // with masking
 		private String account = "2345345765";
-		@LoggableField(mask = PanMasker.class)    // with masking of collections
+		@LoggableField
+		@Mask(masker = PanMasker.class, maskingChars = "X")    // with masking of collections
 		private List<String> pans = Arrays.asList("5432234534576562", "5432558257356834");
 		@LoggableField
 		@Converter(converter = CollectionToSize.class)     // with converter
@@ -795,7 +797,8 @@ class LoggerMapperTest {
 		private String nullLog = null;
 		@JsonProperty("jsonName")                // use json name
 		private String nameJson = "jsonName55";
-		@LoggableField(mask = IdMasker.class)    // with masking
+		@LoggableField
+		@Mask(masker = IdMasker.class, maskingChars = "X")    // with masking
 		private String account = "2345345765";
 		@LoggableField
 		@Converter(converter = CollectionToSize.class)     // with converter
@@ -1075,7 +1078,8 @@ class LoggerMapperTest {
 		// Target: Lines 337-339 - masker handling (SURVIVED)
 		@LoggableClass
 		class TestMasker {
-			@LoggableField(mask = FullMasker.class)
+			@LoggableField
+			@Mask(masker = FullMasker.class, maskingChars = "***")
 			private String secret = "12345";
 		}
 
@@ -1218,7 +1222,8 @@ class LoggerMapperTest {
 		// Target: Lines 382-383 - loggableField.mask handling (SURVIVED)
 		@LoggableClass
 		class TestLoggableMask {
-			@LoggableField(mask = PanMasker.class)
+			@LoggableField
+			@Mask(masker = PanMasker.class, maskingChars = "X")
 			private String pan = "1234567890123456";
 		}
 

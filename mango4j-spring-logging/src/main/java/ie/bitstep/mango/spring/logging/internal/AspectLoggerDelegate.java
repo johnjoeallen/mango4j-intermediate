@@ -16,7 +16,6 @@ import ie.bitstep.mango.spring.logging.converters.ConverterFactory;
 import ie.bitstep.mango.utils.masking.Mask;
 import ie.bitstep.mango.utils.masking.Masker;
 import ie.bitstep.mango.utils.masking.MaskerFactory;
-import ie.bitstep.mango.utils.masking.NoMasker;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -118,7 +117,7 @@ public class AspectLoggerDelegate {
 
 		if (loggableParam != null) {
 			String paramName = getParamName(parameterHolder, loggableParam);
-			params.put(paramName, new LoggableValue(arg, getMasker(loggableParam, mask), getConverter(converter), loggableParam.truncateLen(), loggableParam.view()));
+			params.put(paramName, new LoggableValue(arg, getMasker(mask), getConverter(converter), loggableParam.truncateLen(), loggableParam.view()));
 		}
 	}
 
@@ -134,15 +133,8 @@ public class AspectLoggerDelegate {
 		return converter != null ? ConverterFactory.getConverter(converter.converter()) : null;
 	}
 
-	@SuppressWarnings({"deprecation", "squid:CallToDeprecatedMethod"})
-	private static Masker getMasker(LoggableParam loggableParam, Mask mask) {
-		if (mask != null) {
-			return MaskerFactory.getMasker(mask);
-		} else if (loggableParam.mask() != NoMasker.class) {
-			return MaskerFactory.getMasker(loggableParam.mask());
-		}
-
-		return null;
+	private static Masker getMasker(Mask mask) {
+		return mask != null ? MaskerFactory.getMasker(mask) : null;
 	}
 
 	void putReturn(DiagnosticContextItem dci, Object returnedValue) {

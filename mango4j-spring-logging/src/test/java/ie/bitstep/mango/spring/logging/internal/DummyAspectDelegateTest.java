@@ -112,7 +112,7 @@ class DummyAspectDelegateTest {
 
 		@LoggableMethod(logReturn = true)
 		public TestLoggable perform(@LoggableParam(name = "p1") TestLoggable p1,
-									@LoggableParam(name = "accId", mask = IdMasker.class) String accId,
+									@LoggableParam(name = "accId") @Mask(masker = IdMasker.class, maskingChars = "X") String accId,
 									@LoggableParam(name = "list")
 									@Converter(converter = CollectionToSize.class) List<String> list,
 									String someOther /*shouldn't be logged*/) {
@@ -129,7 +129,7 @@ class DummyAspectDelegateTest {
 
 		@LoggableMethod(logReturn = false)
 		public TestLoggable performNoLogReturn(@LoggableParam(name = "p1") TestLoggable p1,
-											   @LoggableParam(name = "accId", mask = IdMasker.class) String accId,
+											   @LoggableParam(name = "accId") @Mask(masker = IdMasker.class, maskingChars = "X") String accId,
 											   @LoggableParam(name = "list") @Converter(converter = CollectionToSize.class) List<String> list,
 											   String someOther /*shouldn't be logged*/) {
 			return null;
@@ -146,7 +146,7 @@ class DummyAspectDelegateTest {
 
 		@LoggableMethod(logReturn = true, tracking = TrackingType.SPLIT)
 		public TestLoggable trackSplit(@LoggableParam(name = "p1") TestLoggable p1,
-									   @LoggableParam(name = "accId", mask = IdMasker.class) String accId,
+									   @LoggableParam(name = "accId") @Mask(masker = IdMasker.class, maskingChars = "X") String accId,
 									   @LoggableParam(name = "list") @Converter(converter = CollectionToSize.class) List<String> list,
 									   String someOther /*shouldn't be logged*/) {
 			return null;
@@ -154,7 +154,7 @@ class DummyAspectDelegateTest {
 
 		@LoggableMethod(logReturn = true, tracking = TrackingType.TRACK)
 		public TestLoggable trackTrack(@LoggableParam(name = "p1") TestLoggable p1,
-									   @LoggableParam(name = "accId", mask = IdMasker.class) String accId,
+									   @LoggableParam(name = "accId") @Mask(masker = IdMasker.class, maskingChars = "X") String accId,
 									   @LoggableParam(name = "list") @Converter(converter = CollectionToSize.class) List<String> list,
 									   String someOther /*shouldn't be logged*/) {
 			return null;
@@ -162,7 +162,7 @@ class DummyAspectDelegateTest {
 
 		@LoggableMethod(logReturn = true, tracking = TrackingType.DONT_TRACK)
 		public TestLoggable trackDontTrack(@LoggableParam(name = "p1") TestLoggable p1,
-										   @LoggableParam(name = "accId", mask = IdMasker.class) String accId,
+										   @LoggableParam(name = "accId") @Mask(masker = IdMasker.class, maskingChars = "X") String accId,
 										   @LoggableParam(name = "list") @Converter(converter = CollectionToSize.class) List<String> list,
 										   String someOther /*shouldn't be logged*/) {
 			return null;
@@ -170,7 +170,7 @@ class DummyAspectDelegateTest {
 
 		@LoggableMethod(logReturn = true, tracking = TrackingType.TRAIL)
 		public TestLoggable trackTrail(@LoggableParam(name = "p1") TestLoggable p1,
-									   @LoggableParam(name = "accId", mask = IdMasker.class) String accId,
+									   @LoggableParam(name = "accId") @Mask(masker = IdMasker.class, maskingChars = "X") String accId,
 									   @LoggableParam(name = "list") @Converter(converter = CollectionToSize.class) List<String> list,
 									   String someOther /*shouldn't be logged*/) {
 			return null;

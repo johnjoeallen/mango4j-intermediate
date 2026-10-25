@@ -122,7 +122,7 @@ Maven project.
   from `mango4j-utils` into spring-logging (`ie.bitstep.mango.spring.logging.converters`) with their
   tests (11 tests). Spring logging no longer depends on `mango4j-utils` at all.
 - Removed the deprecated `convert =` attribute from `@LoggableField` and `@LoggableParam`; use
-  `@Converter(converter = ...)` instead. (The deprecated `mask =` attribute is still there.)
+  `@Converter(converter = ...)` instead. 
 - Projections (`LogProjection`) do not replace converters: they are type-level, converters are
   per field or parameter (for example logging the size of one particular `List<String>`).
 - `mango4j-utils` 1.1.0 therefore also loses `converters`; release notes should say so.
@@ -142,6 +142,18 @@ Maven project.
 - Note: the crypto parent pins `mango4j.version` to the *released* `1.0.0`, so crypto currently
   builds against the published `mango4j-collections`, not the one in this repo. Revisit when
   collections 1.1.0 is cut (bump the property, release collections first).
+
+### Removing the deprecated `mask =`
+- Removed the deprecated `mask =` attribute from `@LoggableField` and `@LoggableParam`; use
+  `@Mask(masker = ...)`. (`InsightVariable.mask()` is not deprecated and was left alone; the insights
+  processor does not read it.)
+- **Migration trap, found by the tests:** `mask = IdMasker.class` used the masker's own default
+  masking characters, but `@Mask` always applies `maskingChars`, which defaults to `"*"`. A naive
+  switch to `@Mask(masker = IdMasker.class)` silently changes output (`12345XXXXX` becomes
+  `12345*****`; `FullMasker` goes from `***` to `*`). To keep the same output, set it explicitly:
+  `IdMasker` and `PanMasker` default to `X`, `FullMasker` to `***`. The migrated tests do that.
+- Open question for `mango4j-masking`: should `@Mask.maskingChars` default to "use the masker's
+  own default" instead of `*`? That would remove the trap but changes released behaviour.
 
 ## Next
 1. Cross-group dependencies that remain, all deliberate:
