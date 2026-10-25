@@ -11,9 +11,8 @@ import ie.bitstep.mango.spring.logging.dc.DiagnosticContext;
 import ie.bitstep.mango.spring.logging.dc.DiagnosticContextThreadLocal;
 import ie.bitstep.mango.spring.logging.holders.ParameterHolder;
 import ie.bitstep.mango.spring.logging.web.WebMDCField;
-import ie.bitstep.mango.utils.converters.Converter;
-import ie.bitstep.mango.utils.converters.ConverterFactory;
-import ie.bitstep.mango.utils.converters.NoConverter;
+import ie.bitstep.mango.spring.logging.converters.Converter;
+import ie.bitstep.mango.spring.logging.converters.ConverterFactory;
 import ie.bitstep.mango.utils.masking.Mask;
 import ie.bitstep.mango.utils.masking.Masker;
 import ie.bitstep.mango.utils.masking.MaskerFactory;
@@ -119,7 +118,7 @@ public class AspectLoggerDelegate {
 
 		if (loggableParam != null) {
 			String paramName = getParamName(parameterHolder, loggableParam);
-			params.put(paramName, new LoggableValue(arg, getMasker(loggableParam, mask), getConverter(loggableParam, converter), loggableParam.truncateLen(), loggableParam.view()));
+			params.put(paramName, new LoggableValue(arg, getMasker(loggableParam, mask), getConverter(converter), loggableParam.truncateLen(), loggableParam.view()));
 		}
 	}
 
@@ -131,15 +130,8 @@ public class AspectLoggerDelegate {
 		}
 	}
 
-	@SuppressWarnings({"deprecation", "squid:CallToDeprecatedMethod"})
-	private UnaryOperator<Object> getConverter(LoggableParam loggableParam, Converter converter) {
-		if (converter != null) {
-			return ConverterFactory.getConverter(converter.converter());
-		} else if (loggableParam.convert() != NoConverter.class) {
-			return ConverterFactory.getConverter(loggableParam.convert());
-		}
-
-		return null;
+	private UnaryOperator<Object> getConverter(Converter converter) {
+		return converter != null ? ConverterFactory.getConverter(converter.converter()) : null;
 	}
 
 	@SuppressWarnings({"deprecation", "squid:CallToDeprecatedMethod"})

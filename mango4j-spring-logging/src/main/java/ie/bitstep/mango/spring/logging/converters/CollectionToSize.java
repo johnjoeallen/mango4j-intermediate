@@ -1,4 +1,4 @@
-package ie.bitstep.mango.utils.converters;
+package ie.bitstep.mango.spring.logging.converters;
 
 
 import org.apache.commons.collections4.CollectionUtils;

@@ -13,8 +13,8 @@ import ie.bitstep.mango.spring.logging.internal.accessors.GetterAccessor;
 import ie.bitstep.mango.spring.logging.test.data.SecretData;
 import ie.bitstep.mango.spring.logging.test.data.SecretDataLogProjection;
 import ie.bitstep.mango.spring.logging.test.data.SecretDataLogProjectionToMap;
-import ie.bitstep.mango.utils.converters.CollectionToSize;
-import ie.bitstep.mango.utils.converters.Converter;
+import ie.bitstep.mango.spring.logging.converters.CollectionToSize;
+import ie.bitstep.mango.spring.logging.converters.Converter;
 import ie.bitstep.mango.utils.masking.FullMasker;
 import ie.bitstep.mango.utils.masking.IdMasker;
 import ie.bitstep.mango.utils.masking.Mask;
@@ -717,7 +717,8 @@ class LoggerMapperTest {
 		private String account = "2345345765";
 		@LoggableField(mask = PanMasker.class)    // with masking of collections
 		private List<String> pans = Arrays.asList("5432234534576562", "5432558257356834");
-		@LoggableField(convert = CollectionToSize.class)     // with converter
+		@LoggableField
+		@Converter(converter = CollectionToSize.class)     // with converter
 		private List<String> list = Arrays.asList("ONE", "TWO", "THREE");
 		@LoggableField(truncateLen = 10)
 		private String str10 = "123456789012345";
@@ -796,7 +797,8 @@ class LoggerMapperTest {
 		private String nameJson = "jsonName55";
 		@LoggableField(mask = IdMasker.class)    // with masking
 		private String account = "2345345765";
-		@LoggableField(convert = CollectionToSize.class)     // with converter
+		@LoggableField
+		@Converter(converter = CollectionToSize.class)     // with converter
 		private List<String> list = Arrays.asList("ONE", "TWO", "THREE");
 		@LoggableField
 		@Converter(converter = CollectionToSize.class)// with converter
@@ -1089,7 +1091,8 @@ class LoggerMapperTest {
 		// Target: Lines 342-344 - converter handling (SURVIVED)
 		@LoggableClass
 		class TestConverter {
-			@LoggableField(convert = CollectionToSize.class)
+			@LoggableField
+			@Converter(converter = CollectionToSize.class)
 			private List<String> list = Arrays.asList("a", "b", "c");
 		}
 
@@ -1180,7 +1183,8 @@ class LoggerMapperTest {
 		// Target: Lines 371-372 - loggableField.convert handling (SURVIVED)
 		@LoggableClass
 		class TestLoggableConvert {
-			@LoggableField(convert = CollectionToSize.class)
+			@LoggableField
+			@Converter(converter = CollectionToSize.class)
 			private List<String> list = Arrays.asList("a", "b", "c");
 		}
 

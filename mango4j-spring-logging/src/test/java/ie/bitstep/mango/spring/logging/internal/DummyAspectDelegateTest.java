@@ -15,8 +15,8 @@ import ie.bitstep.mango.spring.logging.enums.TrackingType;
 import ie.bitstep.mango.spring.logging.holders.ParameterHolder;
 import ie.bitstep.mango.spring.logging.web.WebMDCField;
 import ie.bitstep.mango.spring.logging.test.MDCTestUtils;
-import ie.bitstep.mango.utils.converters.CollectionToSize;
-import ie.bitstep.mango.utils.converters.Converter;
+import ie.bitstep.mango.spring.logging.converters.CollectionToSize;
+import ie.bitstep.mango.spring.logging.converters.Converter;
 import ie.bitstep.mango.utils.masking.IdMasker;
 import ie.bitstep.mango.utils.masking.Mask;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -130,7 +130,7 @@ class DummyAspectDelegateTest {
 		@LoggableMethod(logReturn = false)
 		public TestLoggable performNoLogReturn(@LoggableParam(name = "p1") TestLoggable p1,
 											   @LoggableParam(name = "accId", mask = IdMasker.class) String accId,
-											   @LoggableParam(name = "list", convert = CollectionToSize.class) List<String> list,
+											   @LoggableParam(name = "list") @Converter(converter = CollectionToSize.class) List<String> list,
 											   String someOther /*shouldn't be logged*/) {
 			return null;
 		}
@@ -139,7 +139,7 @@ class DummyAspectDelegateTest {
 		public TestLoggable performIsolated(@LoggableParam(name = "p1") TestLoggable p1,
 											@LoggableParam(name = "accId")
 											@Mask(maskingChars = "@", prefix = 2, postfix = 2) String accId,
-											@LoggableParam(name = "list", convert = CollectionToSize.class) List<String> list,
+											@LoggableParam(name = "list") @Converter(converter = CollectionToSize.class) List<String> list,
 											String someOther /*shouldn't be logged*/) {
 			return null;
 		}
@@ -147,7 +147,7 @@ class DummyAspectDelegateTest {
 		@LoggableMethod(logReturn = true, tracking = TrackingType.SPLIT)
 		public TestLoggable trackSplit(@LoggableParam(name = "p1") TestLoggable p1,
 									   @LoggableParam(name = "accId", mask = IdMasker.class) String accId,
-									   @LoggableParam(name = "list", convert = CollectionToSize.class) List<String> list,
+									   @LoggableParam(name = "list") @Converter(converter = CollectionToSize.class) List<String> list,
 									   String someOther /*shouldn't be logged*/) {
 			return null;
 		}
@@ -155,7 +155,7 @@ class DummyAspectDelegateTest {
 		@LoggableMethod(logReturn = true, tracking = TrackingType.TRACK)
 		public TestLoggable trackTrack(@LoggableParam(name = "p1") TestLoggable p1,
 									   @LoggableParam(name = "accId", mask = IdMasker.class) String accId,
-									   @LoggableParam(name = "list", convert = CollectionToSize.class) List<String> list,
+									   @LoggableParam(name = "list") @Converter(converter = CollectionToSize.class) List<String> list,
 									   String someOther /*shouldn't be logged*/) {
 			return null;
 		}
@@ -163,7 +163,7 @@ class DummyAspectDelegateTest {
 		@LoggableMethod(logReturn = true, tracking = TrackingType.DONT_TRACK)
 		public TestLoggable trackDontTrack(@LoggableParam(name = "p1") TestLoggable p1,
 										   @LoggableParam(name = "accId", mask = IdMasker.class) String accId,
-										   @LoggableParam(name = "list", convert = CollectionToSize.class) List<String> list,
+										   @LoggableParam(name = "list") @Converter(converter = CollectionToSize.class) List<String> list,
 										   String someOther /*shouldn't be logged*/) {
 			return null;
 		}
@@ -171,7 +171,7 @@ class DummyAspectDelegateTest {
 		@LoggableMethod(logReturn = true, tracking = TrackingType.TRAIL)
 		public TestLoggable trackTrail(@LoggableParam(name = "p1") TestLoggable p1,
 									   @LoggableParam(name = "accId", mask = IdMasker.class) String accId,
-									   @LoggableParam(name = "list", convert = CollectionToSize.class) List<String> list,
+									   @LoggableParam(name = "list") @Converter(converter = CollectionToSize.class) List<String> list,
 									   String someOther /*shouldn't be logged*/) {
 			return null;
 		}

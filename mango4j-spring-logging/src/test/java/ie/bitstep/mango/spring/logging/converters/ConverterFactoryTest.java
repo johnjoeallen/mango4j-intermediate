@@ -1,4 +1,4 @@
-package ie.bitstep.mango.utils.converters;
+package ie.bitstep.mango.spring.logging.converters;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -47,10 +47,10 @@ class ConverterFactoryTest {
 
 	@Test
 	void getConverter_whenException() {
-		IllegalStateException thrown = Assertions.assertThrows(IllegalStateException.class, () -> ConverterFactory.getConverter(BadConverter.class), "ie.bitstep.mango.utils.converter.ConverterFactoryTest$IllegalConverter.<init>()");
+		IllegalStateException thrown = Assertions.assertThrows(IllegalStateException.class, () -> ConverterFactory.getConverter(BadConverter.class), "ie.bitstep.mango.spring.logging.converters.ConverterFactoryTest$IllegalConverter.<init>()");
 
 		assertThat(thrown).isNotNull(); // lazy man's check
-		assertThat(thrown.getMessage()).isEqualTo("java.lang.NoSuchMethodException: ie.bitstep.mango.utils.converters.ConverterFactoryTest$BadConverter.<init>()");
+		assertThat(thrown.getMessage()).isEqualTo("java.lang.NoSuchMethodException: ie.bitstep.mango.spring.logging.converters.ConverterFactoryTest$BadConverter.<init>()");
 	}
 
 	@Test

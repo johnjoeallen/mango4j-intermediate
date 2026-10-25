@@ -1,4 +1,4 @@
-package ie.bitstep.mango.utils.converters;
+package ie.bitstep.mango.spring.logging.converters;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

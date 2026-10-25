@@ -20,7 +20,7 @@ Newest entries go at the bottom of the [log](#progress-log). Detail lives in
 | `mango4j-crypto` | `mango4j-crypto/` | crypto-core, crypto, aws-kms-delegate | yes | n/a | yes | yes (upstream is public) | not yet |
 | `mango4j-flowsink` | `mango4j-flowsink/` | annotations, core, spring, spring-boot | yes | yes | n/a (no Jackson) | yes (upstream is public) | not yet |
 | `mango4j-swarm` | `mango4j-swarm/` | single module | yes | yes | yes | yes (upstream is public) | not yet |
-| `mango4j-spring` | `mango4j-spring-parent/` | aop, logging, insights, observe, data, crypto-caas-delegate | yes | yes | yes | yes, one open question | needs `mango4j-masking` and `mango4j-utils` (logging), `crypto-core` (CaaS delegate) |
+| `mango4j-spring` | `mango4j-spring-parent/` | aop, logging, insights, observe, data, crypto-caas-delegate | yes | yes | yes | yes, one open question | needs `mango4j-masking` (logging), `crypto-core` (CaaS delegate) |
 
 "Ready to split" stays "not yet" until the cross-group dependencies are broken and each group
 builds standalone from a fresh clone (see [Next](#next)).
@@ -103,7 +103,7 @@ Maven project.
   - `utils`: only the `masking` and `converters` packages are used. First attempt: copy them
     into logging. **Reversed**: masking is reusable beyond logging (API responses can use it too),
     so it was instead extracted from `mango4j-utils` into its own module, `mango4j-masking`
-    (see below). `converters` (four small classes that exist for logging) stays in utils for now.
+    (see below). `converters` was moved into spring-logging (see "Converters move to logging").
 
 ### Masking becomes its own module
 - New core module `mango4j-masking`: the `masking` package moved out of `mango4j-utils` with its
@@ -114,14 +114,25 @@ Maven project.
   1.1.0 add the `mango4j-masking` dependency and keep their imports. Renaming the package to
   `ie.bitstep.mango.masking` is a possible follow-up, but a breaking one.
 - Consequence for 1.1.0 release notes: utils 1.1.0 no longer contains masking.
-- Spring logging now depends on `mango4j-masking` and `mango4j-utils` (for converters).
+- Spring logging depends on `mango4j-masking`.
+
+### Converters move to logging
+- Converters (`@Converter`, `Converter`, `ConverterFactory`, `NoConverter`, `CollectionToSize`) only
+  exist to transform values for logging, and nothing else in the repo used them, so they moved
+  from `mango4j-utils` into spring-logging (`ie.bitstep.mango.spring.logging.converters`) with their
+  tests (11 tests). Spring logging no longer depends on `mango4j-utils` at all.
+- Removed the deprecated `convert =` attribute from `@LoggableField` and `@LoggableParam`; use
+  `@Converter(converter = ...)` instead. (The deprecated `mask =` attribute is still there.)
+- Projections (`LogProjection`) do not replace converters: they are type-level, converters are
+  per field or parameter (for example logging the size of one particular `List<String>`).
+- `mango4j-utils` 1.1.0 therefore also loses `converters`; release notes should say so.
 
 ## Next
 1. Break remaining cross-group dependencies where it makes sense: `crypto-core` depends on
    `mango4j-collections` (only for `ConcurrentCache`, which backs the grace-period close of cached
    key material; now documented in its Javadoc), `mango4j-crypto` on `mango4j-utils`. Options for `ConcurrentCache`: move it into
    crypto-core, replace it with a smaller purpose-built holder, use Caffeine, or keep the
-   dependency. Decide whether logging's `converters` should stay in utils or move into logging.
+   dependency.
 2. Confirm the CaaS delegate is publishable.
 3. Make each group build standalone from a clean clone against published (or `-SNAPSHOT`)
    artifacts of the others, not the reactor.

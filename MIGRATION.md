@@ -19,7 +19,7 @@ break it and implement the needed part inside the dependant.
 
 ## Dependency analysis: `mango4j-spring-*` modules
 
-**Status: done** (see readme log). Spring now depends on `mango4j-masking` and `mango4j-utils` (logging) and `crypto-core` (CaaS delegate) only. The
+**Status: done** (see readme log). Spring now depends on `mango4j-masking` (logging) and `crypto-core` (CaaS delegate) only. The
 table below is the original analysis; masking was extracted into its own core module,
 `mango4j-masking`, because it is reusable outside logging (API responses).
 
@@ -70,7 +70,7 @@ Still to review before publishing: `mango4j-spring-crypto-caas-delegate` talks t
 
 1. Remove the zero-use dependencies (`validation`, `logging-rest`) and confirm it builds.
 2. Break the test-only and trivial ones (`reflection`, `collections`).
-3. Masking extracted into `mango4j-masking` (done); decide whether `converters` stays in utils.
+3. Masking extracted into `mango4j-masking` (done); converters moved into spring-logging (done).
 4. Make the root pom self-contained (no internal parent or finicity profile).
 5. Rename groupId/packages.
 6. Upgrade to Java 25 and Spring Boot 4 (single `spring-boot.version`, import the

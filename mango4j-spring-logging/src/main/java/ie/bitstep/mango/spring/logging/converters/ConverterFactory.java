@@ -1,4 +1,4 @@
-package ie.bitstep.mango.utils.converters;
+package ie.bitstep.mango.spring.logging.converters;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;

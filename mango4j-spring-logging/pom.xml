@@ -38,11 +38,6 @@
             <version>${mango4j.version}</version>
         </dependency>
         <dependency>
-            <groupId>ie.bitstep.mango</groupId>
-            <artifactId>mango4j-utils</artifactId>
-            <version>${mango4j.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
             <scope>provided</scope>

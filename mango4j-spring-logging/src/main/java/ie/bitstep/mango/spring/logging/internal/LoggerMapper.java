@@ -16,9 +16,8 @@ import ie.bitstep.mango.spring.logging.annotations.LoggableView;
 import ie.bitstep.mango.spring.logging.internal.accessors.FieldAccessor;
 import ie.bitstep.mango.spring.logging.internal.accessors.GetterAccessor;
 import ie.bitstep.mango.spring.logging.internal.accessors.PropertyAccessor;
-import ie.bitstep.mango.utils.converters.Converter;
-import ie.bitstep.mango.utils.converters.ConverterFactory;
-import ie.bitstep.mango.utils.converters.NoConverter;
+import ie.bitstep.mango.spring.logging.converters.Converter;
+import ie.bitstep.mango.spring.logging.converters.ConverterFactory;
 import ie.bitstep.mango.utils.masking.Mask;
 import ie.bitstep.mango.utils.masking.Masker;
 import ie.bitstep.mango.utils.masking.MaskerFactory;
@@ -346,7 +345,7 @@ public class LoggerMapper {
 
 			UnaryOperator<Object> valueConverter = null;
 			if (loggableField != null) {
-				valueConverter = getConverter(loggableField, converter);
+				valueConverter = getConverter(converter);
 			}
 
 			int valueTruncateLen = (loggableField != null) ? loggableField.truncateLen() : 0;
@@ -370,15 +369,8 @@ public class LoggerMapper {
 		}
 	}
 
-	@SuppressWarnings({"deprecation", "squid:CallToDeprecatedMethod"})
-	private static UnaryOperator<Object> getConverter(LoggableField loggableField, Converter converter) {
-		if (converter != null) {
-			return ConverterFactory.getConverter(converter.converter());
-		} else if (loggableField.convert() != NoConverter.class) {
-			return ConverterFactory.getConverter(loggableField.convert());
-		}
-
-		return null;
+	private static UnaryOperator<Object> getConverter(Converter converter) {
+		return converter != null ? ConverterFactory.getConverter(converter.converter()) : null;
 	}
 
 	@SuppressWarnings({"deprecation", "squid:CallToDeprecatedMethod"})
