@@ -14,6 +14,7 @@ public class IgnoredPackageSanitiser implements ExceptionSanitiser {
 		"java.base/java.lang.reflect.",
 		"java.base/jdk.internal.reflect.",
 		"java.base/java.util.ArrayList.",
+		"java.base/java.util.stream.",
 		"java.base/jdk.internal.reflect",
 		"reactor.core.publisher",
 		"java.base/java.lang",
