@@ -23,6 +23,7 @@
                 <configuration>
                     <skip>${pitest.skip}</skip>
                     <mutationThreshold>99</mutationThreshold>
+                    <coverageThreshold>99</coverageThreshold>
                     <targetClasses>
                         <param>ie.bitstep.mango.flowsink.spring.aspect*</param>
                         <param>ie.bitstep.mango.flowsink.spring.processor*</param>

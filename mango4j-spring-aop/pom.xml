@@ -12,7 +12,20 @@
 
     <artifactId>mango4j-spring-aop</artifactId>
 
-    <dependencies>
+<build>
+        <plugins>
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <configuration>
+                    <mutationThreshold>96</mutationThreshold>
+                    <coverageThreshold>95</coverageThreshold>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+        <dependencies>
 
         <dependency>
             <groupId>org.springframework</groupId>

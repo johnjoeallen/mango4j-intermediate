@@ -216,7 +216,7 @@
                 <configuration>
                     <verbose>true</verbose>
                     <withHistory>false</withHistory>
-                    <mutationThreshold>93</mutationThreshold>
+                    <mutationThreshold>100</mutationThreshold>
                     <targetClasses>
                         <param>ie.bitstep.mango.spring.*</param>
                     </targetClasses>
@@ -240,6 +240,34 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Mutation testing, fails the build below 100%: mvn clean verify -Phammer-time -->
+        <profile>
+            <id>hammer-time</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-maven</artifactId>
+                        <configuration>
+                            <mutationThreshold>100</mutationThreshold>
+                            <coverageThreshold>100</coverageThreshold>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>run-mutation-tests</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>mutationCoverage</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <dependencyManagement>
         <dependencies>

@@ -30,7 +30,7 @@
     <spring-boot.version>4.1.2</spring-boot.version>
     <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
     <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
-    <pitest.maven.plugin.version>1.25.0</pitest.maven.plugin.version>
+    <pitest.plugin.version>1.30.1</pitest.plugin.version>
     <pitest.junit5.plugin.version>1.2.3</pitest.junit5.plugin.version>
     <sonar-maven-plugin.version>5.7.0.6970</sonar-maven-plugin.version>
     <sonar.projectKey>bitstep-ie_mango4j-swarm</sonar.projectKey>
@@ -39,10 +39,9 @@
     <sonar.java.source>${maven.compiler.release}</sonar.java.source>
     <sonar.sourceEncoding>${project.build.sourceEncoding}</sonar.sourceEncoding>
     <testcontainers.version>2.0.5</testcontainers.version>
-    <spotless-maven-plugin.version>2.46.1</spotless-maven-plugin.version>
-    <spotless-palantir-maven-plugin.version>2.59.0</spotless-palantir-maven-plugin.version>
+    <spotless-maven-plugin.version>3.10.4</spotless-maven-plugin.version>
+    <spotless-palantir-maven-plugin.version>2.103.0</spotless-palantir-maven-plugin.version>
     <maven.javadoc.plugin.version>3.12.0</maven.javadoc.plugin.version>
-    <gpg.skip>true</gpg.skip>
     <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
     <central-publishing-maven-plugin.version>0.11.0</central-publishing-maven-plugin.version>
     <versions-maven-plugin.version>2.21.0</versions-maven-plugin.version>
@@ -262,21 +261,6 @@
           </execution>
         </executions>
       </plugin>
-      <!-- GPG signing -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-gpg-plugin</artifactId>
-        <version>${maven-gpg-plugin.version}</version>
-        <executions>
-          <execution>
-            <id>sign-artifacts</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>sign</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
       <!-- Sources -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -294,6 +278,29 @@
     </plugins>
   </build>
   <profiles>
+    <!-- GPG signing is only needed for publishing: mvn deploy -Prelease -->
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>${maven-gpg-plugin.version}</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
     <profile>
       <id>coverage</id>
       <build>
@@ -351,10 +358,10 @@
           <plugin>
             <groupId>org.pitest</groupId>
             <artifactId>pitest-maven</artifactId>
-            <version>${pitest.maven.plugin.version}</version>
+            <version>${pitest.plugin.version}</version>
             <configuration>
-              <mutationThreshold>90</mutationThreshold>
-              <coverageThreshold>90</coverageThreshold>
+              <mutationThreshold>93</mutationThreshold>
+              <coverageThreshold>97</coverageThreshold>
             </configuration>
             <dependencies>
               <dependency>

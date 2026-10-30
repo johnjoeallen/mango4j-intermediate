@@ -19,6 +19,19 @@
         <commons-lang3.version>3.20.0</commons-lang3.version>
     </properties>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <configuration>
+                    <mutationThreshold>98</mutationThreshold>
+                    <coverageThreshold>98</coverageThreshold>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
         <dependency>
             <groupId>tools.jackson.core</groupId>
