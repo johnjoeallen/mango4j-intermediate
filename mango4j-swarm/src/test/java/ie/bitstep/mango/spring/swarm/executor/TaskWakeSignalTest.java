@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.executor;
+package ie.bitstep.mango.spring.swarm.executor;
 
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;

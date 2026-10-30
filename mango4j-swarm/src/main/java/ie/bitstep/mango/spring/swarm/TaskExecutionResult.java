@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm;
+package ie.bitstep.mango.spring.swarm;
 
 /**
  * Outcome returned by a {@code TaskHandler}.

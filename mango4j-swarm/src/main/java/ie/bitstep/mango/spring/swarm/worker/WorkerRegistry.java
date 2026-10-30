@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.worker;
+package ie.bitstep.mango.spring.swarm.worker;
 
 import java.time.Instant;
 import java.util.UUID;

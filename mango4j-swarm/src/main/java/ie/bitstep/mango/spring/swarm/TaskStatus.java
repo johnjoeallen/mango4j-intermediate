@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm;
+package ie.bitstep.mango.spring.swarm;
 
 /** Persistent task lifecycle states stored in {@code mango_swarm_tasks.status}. */
 public enum TaskStatus {

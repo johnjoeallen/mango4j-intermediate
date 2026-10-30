@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.executor;
+package ie.bitstep.mango.spring.swarm.executor;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -10,7 +10,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
-import ie.bitstep.mango.swarm.config.MangoSwarmProperties;
+import ie.bitstep.mango.spring.swarm.config.MangoSwarmProperties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

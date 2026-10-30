@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.handler;
+package ie.bitstep.mango.spring.swarm.handler;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;

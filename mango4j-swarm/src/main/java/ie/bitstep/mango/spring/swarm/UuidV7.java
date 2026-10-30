@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm;
+package ie.bitstep.mango.spring.swarm;
 
 import java.security.SecureRandom;
 import java.time.Instant;

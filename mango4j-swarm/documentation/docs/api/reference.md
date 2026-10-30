@@ -2,7 +2,7 @@
 
 This page documents the Java types application code interacts with directly: queuing work, implementing handlers, and reading execution context. For `mango4j.swarm.*` configuration properties, see the [README Configuration Reference](https://github.com/bitstep-ie/mango4j-swarm#configuration-reference). For table/column details, see the [Schema reference](../schema/schema.md).
 
-All types below live under the `ie.bitstep.mango.swarm` package (or a named subpackage where noted).
+All types below live under the `ie.bitstep.mango.spring.swarm` package (or a named subpackage where noted).
 
 ## `MangoTasks`
 

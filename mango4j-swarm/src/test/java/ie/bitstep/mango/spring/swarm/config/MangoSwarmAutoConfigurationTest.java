@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.config;
+package ie.bitstep.mango.spring.swarm.config;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -8,13 +8,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.hibernate.autoconfigure.HibernatePropertiesCustomizer;
 import org.springframework.jdbc.core.JdbcTemplate;
 import tools.jackson.databind.ObjectMapper;
-import ie.bitstep.mango.swarm.MangoTasks;
-import ie.bitstep.mango.swarm.db.SchemaQualifiedTables;
-import ie.bitstep.mango.swarm.db.TaskRepository;
-import ie.bitstep.mango.swarm.executor.MangoSwarmDaemon;
-import ie.bitstep.mango.swarm.executor.TaskWakeSignal;
-import ie.bitstep.mango.swarm.handler.TaskHandlerRegistry;
-import ie.bitstep.mango.swarm.worker.WorkerRegistry;
+import ie.bitstep.mango.spring.swarm.MangoTasks;
+import ie.bitstep.mango.spring.swarm.db.SchemaQualifiedTables;
+import ie.bitstep.mango.spring.swarm.db.TaskRepository;
+import ie.bitstep.mango.spring.swarm.executor.MangoSwarmDaemon;
+import ie.bitstep.mango.spring.swarm.executor.TaskWakeSignal;
+import ie.bitstep.mango.spring.swarm.handler.TaskHandlerRegistry;
+import ie.bitstep.mango.spring.swarm.worker.WorkerRegistry;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;

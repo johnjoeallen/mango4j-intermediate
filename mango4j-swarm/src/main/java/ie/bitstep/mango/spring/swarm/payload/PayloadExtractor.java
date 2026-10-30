@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.payload;
+package ie.bitstep.mango.spring.swarm.payload;
 
 /**
  * Converts a durable JSON task payload into the current Java payload model.

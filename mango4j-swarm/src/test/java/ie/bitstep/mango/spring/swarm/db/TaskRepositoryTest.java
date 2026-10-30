@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.db;
+package ie.bitstep.mango.spring.swarm.db;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -26,8 +26,8 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.JsonNodeFactory;
-import ie.bitstep.mango.swarm.PostgresTestSupport;
-import ie.bitstep.mango.swarm.TaskStatus;
+import ie.bitstep.mango.spring.swarm.PostgresTestSupport;
+import ie.bitstep.mango.spring.swarm.TaskStatus;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

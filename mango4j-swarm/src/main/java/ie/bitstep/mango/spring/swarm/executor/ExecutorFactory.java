@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.executor;
+package ie.bitstep.mango.spring.swarm.executor;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
-import ie.bitstep.mango.swarm.config.MangoSwarmProperties;
+import ie.bitstep.mango.spring.swarm.config.MangoSwarmProperties;
 
 final class ExecutorFactory {
 	private static final String WORKER_THREAD_PREFIX = "swarm-worker-";

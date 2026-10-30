@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.db;
+package ie.bitstep.mango.spring.swarm.db;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

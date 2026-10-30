@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.payload;
+package ie.bitstep.mango.spring.swarm.payload;
 
 import java.util.Arrays;
 import java.util.Objects;

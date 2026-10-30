@@ -1,12 +1,12 @@
-package ie.bitstep.mango.swarm.handler;
+package ie.bitstep.mango.spring.swarm.handler;
 
 import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
-import ie.bitstep.mango.swarm.TaskExecutionContext;
-import ie.bitstep.mango.swarm.TaskExecutionResult;
-import ie.bitstep.mango.swarm.payload.PayloadExtractor;
+import ie.bitstep.mango.spring.swarm.TaskExecutionContext;
+import ie.bitstep.mango.spring.swarm.TaskExecutionResult;
+import ie.bitstep.mango.spring.swarm.payload.PayloadExtractor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;

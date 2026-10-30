@@ -1,8 +1,8 @@
-package ie.bitstep.mango.swarm.examples.email;
+package ie.bitstep.mango.spring.swarm.examples.email;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
-import ie.bitstep.mango.swarm.MangoTasks;
+import ie.bitstep.mango.spring.swarm.MangoTasks;
 import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;

@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.examples.email;
+package ie.bitstep.mango.spring.swarm.examples.email;
 
 import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;

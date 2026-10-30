@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.db;
+package ie.bitstep.mango.spring.swarm.db;
 
 import java.sql.Array;
 import java.sql.PreparedStatement;
@@ -22,8 +22,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import ie.bitstep.mango.swarm.TaskStatus;
-import ie.bitstep.mango.swarm.UuidV7;
+import ie.bitstep.mango.spring.swarm.TaskStatus;
+import ie.bitstep.mango.spring.swarm.UuidV7;
 
 /**
  * JDBC/PostgreSQL implementation of {@link TaskRepository}.

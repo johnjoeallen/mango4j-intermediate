@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm;
+package ie.bitstep.mango.spring.swarm;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -112,10 +112,10 @@ public final class TaskExecutionContext<T> {
 	/**
 	 * Requests a follow-up occurrence of this recurring task, reusing the current payload.
 	 *
-	 * <p>Safe to call from {@link ie.bitstep.mango.swarm.handler.TaskHandler#execute(TaskExecutionContext)} regardless
-	 * of what the handler ultimately returns or throws — on success, on failure, or both, at the handler's discretion.
-	 * The follow-up is inserted immediately as a new task row linked to this one via {@link #seriesId()}; it does not
-	 * affect the outcome recorded for the current attempt.
+	 * <p>Safe to call from {@link ie.bitstep.mango.spring.swarm.handler.TaskHandler#execute(TaskExecutionContext)}
+	 * regardless of what the handler ultimately returns or throws — on success, on failure, or both, at the handler's
+	 * discretion. The follow-up is inserted immediately as a new task row linked to this one via {@link #seriesId()};
+	 * it does not affect the outcome recorded for the current attempt.
 	 *
 	 * @param delay delay from now before the new occurrence becomes eligible
 	 * @return the new occurrence's persisted task id

@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm;
+package ie.bitstep.mango.spring.swarm;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -15,10 +15,10 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
-import ie.bitstep.mango.swarm.config.MangoSwarmProperties;
-import ie.bitstep.mango.swarm.db.TaskRecord;
-import ie.bitstep.mango.swarm.db.TaskRepository;
-import ie.bitstep.mango.swarm.executor.TaskWakeSignal;
+import ie.bitstep.mango.spring.swarm.config.MangoSwarmProperties;
+import ie.bitstep.mango.spring.swarm.db.TaskRecord;
+import ie.bitstep.mango.spring.swarm.db.TaskRepository;
+import ie.bitstep.mango.spring.swarm.executor.TaskWakeSignal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;

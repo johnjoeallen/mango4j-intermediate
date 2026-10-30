@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.worker;
+package ie.bitstep.mango.spring.swarm.worker;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -7,8 +7,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
-import ie.bitstep.mango.swarm.PostgresTestSupport;
-import ie.bitstep.mango.swarm.db.SchemaQualifiedTables;
+import ie.bitstep.mango.spring.swarm.PostgresTestSupport;
+import ie.bitstep.mango.spring.swarm.db.SchemaQualifiedTables;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;

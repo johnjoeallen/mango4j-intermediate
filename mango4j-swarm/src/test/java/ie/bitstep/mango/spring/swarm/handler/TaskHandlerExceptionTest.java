@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.handler;
+package ie.bitstep.mango.spring.swarm.handler;
 
 import org.junit.jupiter.api.Test;
 

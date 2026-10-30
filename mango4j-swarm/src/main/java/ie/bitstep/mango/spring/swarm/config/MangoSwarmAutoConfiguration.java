@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.config;
+package ie.bitstep.mango.spring.swarm.config;
 
 import java.time.Clock;
 import java.util.List;
@@ -15,16 +15,16 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import tools.jackson.databind.MapperFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
-import ie.bitstep.mango.swarm.MangoTasks;
-import ie.bitstep.mango.swarm.db.JdbcTaskRepository;
-import ie.bitstep.mango.swarm.db.SchemaQualifiedTables;
-import ie.bitstep.mango.swarm.db.TaskRepository;
-import ie.bitstep.mango.swarm.executor.MangoSwarmDaemon;
-import ie.bitstep.mango.swarm.executor.TaskWakeSignal;
-import ie.bitstep.mango.swarm.handler.TaskHandler;
-import ie.bitstep.mango.swarm.handler.TaskHandlerRegistry;
-import ie.bitstep.mango.swarm.worker.JdbcWorkerRegistry;
-import ie.bitstep.mango.swarm.worker.WorkerRegistry;
+import ie.bitstep.mango.spring.swarm.MangoTasks;
+import ie.bitstep.mango.spring.swarm.db.JdbcTaskRepository;
+import ie.bitstep.mango.spring.swarm.db.SchemaQualifiedTables;
+import ie.bitstep.mango.spring.swarm.db.TaskRepository;
+import ie.bitstep.mango.spring.swarm.executor.MangoSwarmDaemon;
+import ie.bitstep.mango.spring.swarm.executor.TaskWakeSignal;
+import ie.bitstep.mango.spring.swarm.handler.TaskHandler;
+import ie.bitstep.mango.spring.swarm.handler.TaskHandlerRegistry;
+import ie.bitstep.mango.spring.swarm.worker.JdbcWorkerRegistry;
+import ie.bitstep.mango.spring.swarm.worker.WorkerRegistry;
 
 /** Spring Boot auto-configuration for mango-swarm runtime beans. */
 @AutoConfiguration

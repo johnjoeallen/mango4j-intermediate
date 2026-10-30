@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.executor;
+package ie.bitstep.mango.spring.swarm.executor;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -23,17 +23,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import ie.bitstep.mango.swarm.TaskExecutionContext;
-import ie.bitstep.mango.swarm.TaskExecutionResult;
-import ie.bitstep.mango.swarm.UuidV7;
-import ie.bitstep.mango.swarm.config.MangoSwarmProperties;
-import ie.bitstep.mango.swarm.db.TaskRecord;
-import ie.bitstep.mango.swarm.db.TaskRepository;
-import ie.bitstep.mango.swarm.handler.TaskHandler;
-import ie.bitstep.mango.swarm.handler.TaskHandlerRegistry;
-import ie.bitstep.mango.swarm.payload.PayloadReader;
-import ie.bitstep.mango.swarm.rate.LocalTokenRingRateLimiter;
-import ie.bitstep.mango.swarm.worker.WorkerRegistry;
+import ie.bitstep.mango.spring.swarm.TaskExecutionContext;
+import ie.bitstep.mango.spring.swarm.TaskExecutionResult;
+import ie.bitstep.mango.spring.swarm.UuidV7;
+import ie.bitstep.mango.spring.swarm.config.MangoSwarmProperties;
+import ie.bitstep.mango.spring.swarm.db.TaskRecord;
+import ie.bitstep.mango.spring.swarm.db.TaskRepository;
+import ie.bitstep.mango.spring.swarm.handler.TaskHandler;
+import ie.bitstep.mango.spring.swarm.handler.TaskHandlerRegistry;
+import ie.bitstep.mango.spring.swarm.payload.PayloadReader;
+import ie.bitstep.mango.spring.swarm.rate.LocalTokenRingRateLimiter;
+import ie.bitstep.mango.spring.swarm.worker.WorkerRegistry;
 
 /**
  * Core swarm runtime loop.

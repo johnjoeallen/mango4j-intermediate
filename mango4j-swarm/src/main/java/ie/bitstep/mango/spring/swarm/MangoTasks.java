@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm;
+package ie.bitstep.mango.spring.swarm;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -8,9 +8,9 @@ import java.util.UUID;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import ie.bitstep.mango.swarm.config.MangoSwarmProperties;
-import ie.bitstep.mango.swarm.db.TaskRepository;
-import ie.bitstep.mango.swarm.executor.TaskWakeSignal;
+import ie.bitstep.mango.spring.swarm.config.MangoSwarmProperties;
+import ie.bitstep.mango.spring.swarm.db.TaskRepository;
+import ie.bitstep.mango.spring.swarm.executor.TaskWakeSignal;
 
 /**
  * High-level task scheduling API for application code.

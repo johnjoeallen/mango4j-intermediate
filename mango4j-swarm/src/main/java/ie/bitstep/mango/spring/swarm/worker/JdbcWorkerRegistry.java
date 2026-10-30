@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.worker;
+package ie.bitstep.mango.spring.swarm.worker;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
-import ie.bitstep.mango.swarm.db.SchemaQualifiedTables;
+import ie.bitstep.mango.spring.swarm.db.SchemaQualifiedTables;
 
 /** JDBC/PostgreSQL implementation of {@link WorkerRegistry}. */
 public class JdbcWorkerRegistry implements WorkerRegistry {

@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.rate;
+package ie.bitstep.mango.spring.swarm.rate;
 
 import java.time.Duration;
 import java.time.Instant;

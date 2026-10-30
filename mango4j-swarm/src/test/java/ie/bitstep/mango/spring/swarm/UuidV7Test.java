@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm;
+package ie.bitstep.mango.spring.swarm;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

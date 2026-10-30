@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.config;
+package ie.bitstep.mango.spring.swarm.config;
 
 import java.time.Duration;
 import java.util.LinkedHashMap;

@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.payload;
+package ie.bitstep.mango.spring.swarm.payload;
 
 /** Signals semantic payload extraction failures from durable JSON payloads. */
 public class PayloadExtractionException extends RuntimeException {

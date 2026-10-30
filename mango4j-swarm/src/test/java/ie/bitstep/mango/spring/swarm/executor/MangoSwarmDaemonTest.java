@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm.executor;
+package ie.bitstep.mango.spring.swarm.executor;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -19,17 +19,17 @@ import java.util.concurrent.locks.LockSupport;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.JsonNodeFactory;
-import ie.bitstep.mango.swarm.TaskExecutionContext;
-import ie.bitstep.mango.swarm.TaskExecutionResult;
-import ie.bitstep.mango.swarm.config.MangoSwarmProperties;
-import ie.bitstep.mango.swarm.db.TaskRecord;
-import ie.bitstep.mango.swarm.db.TaskRepository;
-import ie.bitstep.mango.swarm.handler.SwarmHandler;
-import ie.bitstep.mango.swarm.handler.TaskHandler;
-import ie.bitstep.mango.swarm.handler.TaskHandlerException;
-import ie.bitstep.mango.swarm.handler.TaskHandlerRegistry;
-import ie.bitstep.mango.swarm.payload.PayloadExtractor;
-import ie.bitstep.mango.swarm.worker.WorkerRegistry;
+import ie.bitstep.mango.spring.swarm.TaskExecutionContext;
+import ie.bitstep.mango.spring.swarm.TaskExecutionResult;
+import ie.bitstep.mango.spring.swarm.config.MangoSwarmProperties;
+import ie.bitstep.mango.spring.swarm.db.TaskRecord;
+import ie.bitstep.mango.spring.swarm.db.TaskRepository;
+import ie.bitstep.mango.spring.swarm.handler.SwarmHandler;
+import ie.bitstep.mango.spring.swarm.handler.TaskHandler;
+import ie.bitstep.mango.spring.swarm.handler.TaskHandlerException;
+import ie.bitstep.mango.spring.swarm.handler.TaskHandlerRegistry;
+import ie.bitstep.mango.spring.swarm.payload.PayloadExtractor;
+import ie.bitstep.mango.spring.swarm.worker.WorkerRegistry;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -1199,7 +1199,7 @@ class MangoSwarmDaemonTest {
 				UUID.nameUUIDFromBytes(("task-" + taskType).getBytes(java.nio.charset.StandardCharsets.UTF_8)),
 				taskType,
 				JsonNodeFactory.instance.objectNode(),
-				ie.bitstep.mango.swarm.TaskStatus.CLAIMED,
+				ie.bitstep.mango.spring.swarm.TaskStatus.CLAIMED,
 				now,
 				UUID.randomUUID(),
 				now,
@@ -1466,7 +1466,7 @@ class MangoSwarmDaemonTest {
 						taskId,
 						taskType,
 						JsonNodeFactory.instance.objectNode(),
-						ie.bitstep.mango.swarm.TaskStatus.CLAIMED,
+						ie.bitstep.mango.spring.swarm.TaskStatus.CLAIMED,
 						now,
 						workerId,
 						now,

@@ -1,4 +1,4 @@
-package ie.bitstep.mango.swarm;
+package ie.bitstep.mango.spring.swarm;
 
 import java.time.Duration;
 import javax.sql.DataSource;
@@ -11,10 +11,10 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.ObjectMapper;
-import ie.bitstep.mango.swarm.db.JdbcTaskRepository;
-import ie.bitstep.mango.swarm.db.TaskRepository;
-import ie.bitstep.mango.swarm.worker.JdbcWorkerRegistry;
-import ie.bitstep.mango.swarm.worker.WorkerRegistry;
+import ie.bitstep.mango.spring.swarm.db.JdbcTaskRepository;
+import ie.bitstep.mango.spring.swarm.db.TaskRepository;
+import ie.bitstep.mango.spring.swarm.worker.JdbcWorkerRegistry;
+import ie.bitstep.mango.spring.swarm.worker.WorkerRegistry;
 
 @Testcontainers(disabledWithoutDocker = true)
 public abstract class PostgresTestSupport {

@@ -1,10 +1,10 @@
-package ie.bitstep.mango.swarm.db;
+package ie.bitstep.mango.spring.swarm.db;
 
 import java.time.Instant;
 import java.util.UUID;
 
 import tools.jackson.databind.JsonNode;
-import ie.bitstep.mango.swarm.TaskStatus;
+import ie.bitstep.mango.spring.swarm.TaskStatus;
 
 /** Immutable task row projection used by repository claim/load operations. */
 public record TaskRecord(

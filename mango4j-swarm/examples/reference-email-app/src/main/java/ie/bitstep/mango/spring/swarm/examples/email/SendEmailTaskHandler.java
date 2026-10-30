@@ -1,10 +1,10 @@
-package ie.bitstep.mango.swarm.examples.email;
+package ie.bitstep.mango.spring.swarm.examples.email;
 
-import ie.bitstep.mango.swarm.TaskExecutionContext;
-import ie.bitstep.mango.swarm.TaskExecutionResult;
-import ie.bitstep.mango.swarm.handler.TaskHandler;
-import ie.bitstep.mango.swarm.handler.SwarmHandler;
-import ie.bitstep.mango.swarm.payload.PayloadExtractor;
+import ie.bitstep.mango.spring.swarm.TaskExecutionContext;
+import ie.bitstep.mango.spring.swarm.TaskExecutionResult;
+import ie.bitstep.mango.spring.swarm.handler.TaskHandler;
+import ie.bitstep.mango.spring.swarm.handler.SwarmHandler;
+import ie.bitstep.mango.spring.swarm.payload.PayloadExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
