@@ -19,10 +19,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import ie.bitstep.mango.swarm.TaskExecutionContext;
 import ie.bitstep.mango.swarm.TaskExecutionResult;
 import ie.bitstep.mango.swarm.UuidV7;
@@ -494,25 +494,35 @@ public class MangoSwarmDaemon {
 						task.attemptCount());
 			}
 		} catch (ClassCastException ex) {
-			handleFailedTask(task, "Task payload type mismatch: " + ex.getClass().getSimpleName());
+			handleFailedTask(
+					task, "Task payload type mismatch: " + ex.getClass().getSimpleName());
 			log.warn(
 					"swarm task execution failed-type-mismatch: taskType={}, taskId={}, workerId={}, attempt={}, exceptionType={}",
-					task.taskType(), task.id(), workerId, task.attemptCount(), ex.getClass().getName());
+					task.taskType(),
+					task.id(),
+					workerId,
+					task.attemptCount(),
+					ex.getClass().getName());
 			log.debug("swarm task execution failed-type-mismatch stacktrace", ex);
 		} catch (Exception ex) {
-			handleFailedTask(task, HANDLER_EXCEPTION_MESSAGE + ": " + ex.getClass().getSimpleName());
+			handleFailedTask(
+					task, HANDLER_EXCEPTION_MESSAGE + ": " + ex.getClass().getSimpleName());
 			log.warn(
 					"swarm task execution failed-exception: taskType={}, taskId={}, workerId={}, attempt={}, exceptionType={}",
-					task.taskType(), task.id(), workerId, task.attemptCount(), ex.getClass().getName());
+					task.taskType(),
+					task.id(),
+					workerId,
+					task.attemptCount(),
+					ex.getClass().getName());
 			log.debug("swarm task execution failed-exception stacktrace", ex);
 		}
 	}
 
 	/**
-	 * Inserts a follow-up occurrence of {@code task}'s recurring series, requested via {@link
-	 * TaskExecutionContext#again}. Mirrors {@code MangoTasks.at(...)}'s mode and wake-on-queue handling, since the
-	 * daemon operates against {@link TaskRepository}/{@link MangoSwarmProperties} directly rather than depending on the
-	 * application-facing {@code MangoTasks} façade.
+	 * Inserts a follow-up occurrence of {@code task}'s recurring series, requested via
+	 * {@link TaskExecutionContext#again}. Mirrors {@code MangoTasks.at(...)}'s mode and wake-on-queue handling, since
+	 * the daemon operates against {@link TaskRepository}/{@link MangoSwarmProperties} directly rather than depending on
+	 * the application-facing {@code MangoTasks} façade.
 	 */
 	private UUID requestAgain(TaskRecord task, UUID seriesId, Duration delay, Object newPayload) {
 		MangoSwarmProperties.TaskType config = properties.getTaskTypes().get(task.taskType());

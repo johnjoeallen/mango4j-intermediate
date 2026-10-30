@@ -141,8 +141,9 @@ class FlowAspectUnitTest {
 		Object result = aspect.aroundStep(joinPoint(method, new Object[0], () -> "done"));
 
 		assertThat(result).isEqualTo("done");
-		assertThat(processor.started).singleElement().satisfies(call -> assertThat(call.name())
-				.isEqualTo("explicit-step"));
+		assertThat(processor.started)
+				.singleElement()
+				.satisfies(call -> assertThat(call.name()).isEqualTo("explicit-step"));
 		assertThat(processor.completed).singleElement().satisfies(call -> {
 			assertThat(call.name()).isEqualTo("explicit-step");
 			assertThat(call.meta.statusCode()).isEqualTo("OK");
@@ -165,10 +166,12 @@ class FlowAspectUnitTest {
 				.hasMessage("boom");
 
 		assertThat(processor.failed).hasSize(1);
-		assertThat(processor.failedSnapshots).singleElement().satisfies(event -> assertThat(event.returnValue())
-				.isNull());
-		assertThat(processor.failed).singleElement().satisfies(call -> assertThat(call.attrs())
-				.containsEntry("error", "IllegalStateException"));
+		assertThat(processor.failedSnapshots)
+				.singleElement()
+				.satisfies(event -> assertThat(event.returnValue()).isNull());
+		assertThat(processor.failed)
+				.singleElement()
+				.satisfies(call -> assertThat(call.attrs()).containsEntry("error", "IllegalStateException"));
 		assertThat(support.cleanupCalls).isEqualTo(1);
 		assertThat(support.currentContext()).isNull();
 	}

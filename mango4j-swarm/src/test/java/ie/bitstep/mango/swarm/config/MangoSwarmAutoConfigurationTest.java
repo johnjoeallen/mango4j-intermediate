@@ -4,10 +4,10 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 
-import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.hibernate.autoconfigure.HibernatePropertiesCustomizer;
 import org.springframework.jdbc.core.JdbcTemplate;
+import tools.jackson.databind.ObjectMapper;
 import ie.bitstep.mango.swarm.MangoTasks;
 import ie.bitstep.mango.swarm.db.SchemaQualifiedTables;
 import ie.bitstep.mango.swarm.db.TaskRepository;

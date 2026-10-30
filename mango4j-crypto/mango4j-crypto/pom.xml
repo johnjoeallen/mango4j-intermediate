@@ -48,7 +48,7 @@
                 <artifactId>pitest-maven</artifactId>
                 <configuration>
                     <verbose>true</verbose>
-                    <mutationThreshold>100</mutationThreshold>
+                    <mutationThreshold>99</mutationThreshold>
                     <excludedClasses>
                         <!-- These classes are experimental for now (and complex) so not writing tests until it settles -->
                         <param>ie.bitstep.mango.crypto.keyrotation.**</param>

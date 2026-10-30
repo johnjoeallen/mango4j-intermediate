@@ -45,17 +45,14 @@ class MangoFlowSinkImportSelectorTest {
 		String[] result = selector.selectImports(null);
 
 		assertThat(result)
-				.contains(
-						MangoFlowSinkConfiguration.class.getName(),
-						MangoWebFluxTraceConfiguration.class.getName())
+				.contains(MangoFlowSinkConfiguration.class.getName(), MangoWebFluxTraceConfiguration.class.getName())
 				.doesNotContain(
 						MangoServletTraceConfiguration.class.getName(), MangoServletFlowConfiguration.class.getName());
 	}
 
 	@Test
 	void omits_webflux_config_when_webfilter_is_absent() {
-		MangoFlowSinkImportSelector selector =
-				withAbsentClasses(Set.of("org.springframework.web.server.WebFilter"));
+		MangoFlowSinkImportSelector selector = withAbsentClasses(Set.of("org.springframework.web.server.WebFilter"));
 
 		String[] result = selector.selectImports(null);
 

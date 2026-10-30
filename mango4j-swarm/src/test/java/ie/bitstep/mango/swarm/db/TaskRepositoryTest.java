@@ -18,14 +18,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.JsonNodeFactory;
 import org.junit.jupiter.api.Test;
 import org.postgresql.util.PGobject;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.JsonNodeFactory;
 import ie.bitstep.mango.swarm.PostgresTestSupport;
 import ie.bitstep.mango.swarm.TaskStatus;
 
@@ -154,8 +154,7 @@ class TaskRepositoryTest extends PostgresTestSupport {
 		UUID third = taskRepository.queue(
 				"email", JsonNodeFactory.instance.objectNode().put("i", 3), now.plusSeconds(1), null);
 
-		var rows = jdbcTemplate.queryForList(
-				"""
+		var rows = jdbcTemplate.queryForList("""
 				select id, available_at
 				from mango_swarm_tasks
 				order by available_at, id
@@ -171,15 +170,15 @@ class TaskRepositoryTest extends PostgresTestSupport {
 	void queuePersistsAndClaimReturnsSeriesId() {
 		Instant now = Instant.parse("2026-05-20T10:00:00Z");
 		UUID rootId = taskRepository.queue("email", JsonNodeFactory.instance.objectNode(), now, null);
-		UUID followUpId =
-				taskRepository.queue("email", JsonNodeFactory.instance.objectNode(), now, rootId);
+		UUID followUpId = taskRepository.queue("email", JsonNodeFactory.instance.objectNode(), now, rootId);
 
 		UUID storedSeriesId = jdbcTemplate.queryForObject(
 				"select series_id from mango_swarm_tasks where id = ?", UUID.class, followUpId);
 		assertThat(storedSeriesId).isEqualTo(rootId);
 
 		List<TaskRecord> claimed = taskRepository.claimBatch("email", UUID.randomUUID(), now, 2);
-		assertThat(claimed).extracting(TaskRecord::id, TaskRecord::seriesId)
+		assertThat(claimed)
+				.extracting(TaskRecord::id, TaskRecord::seriesId)
 				.containsExactlyInAnyOrder(
 						org.assertj.core.groups.Tuple.tuple(rootId, null),
 						org.assertj.core.groups.Tuple.tuple(followUpId, rootId));
@@ -250,14 +249,12 @@ class TaskRepositoryTest extends PostgresTestSupport {
 		int reclaimed = taskRepository.reclaimTimedOut("email", java.time.Duration.ofSeconds(30), now, 10);
 
 		assertThat(reclaimed).isZero();
-		var row = jdbcTemplate.queryForMap(
-				"""
+		var row = jdbcTemplate.queryForMap("""
 					select t.status, r.execution_state, r.progress_percent, r.progress_message, r.updated_at, r.execution_time_ms
 					from mango_swarm_tasks t
 					join mango_swarm_task_runtime r on r.task_id = t.id
 					where t.id = ?
-				""",
-				taskId);
+				""", taskId);
 		assertThat(row)
 				.containsEntry("status", "in_progress")
 				.containsEntry("execution_state", "running")
@@ -276,13 +273,11 @@ class TaskRepositoryTest extends PostgresTestSupport {
 
 		taskRepository.markInProgress(taskId, workerId, now.plusSeconds(1));
 
-		var row = jdbcTemplate.queryForMap(
-				"""
+		var row = jdbcTemplate.queryForMap("""
 					select worker_id, execution_state, progress_percent, progress_message, started_at, updated_at, execution_time_ms
 					from mango_swarm_task_runtime
 					where task_id = ?
-					""",
-				taskId);
+					""", taskId);
 		assertThat(row)
 				.containsEntry("worker_id", workerId)
 				.containsEntry("execution_state", "running")
@@ -317,8 +312,7 @@ class TaskRepositoryTest extends PostgresTestSupport {
 		taskRepository.markInProgress(taskId, workerId, secondStart);
 
 		// started_at must reflect the second attempt, not the first
-		var row = jdbcTemplate.queryForMap(
-				"""
+		var row = jdbcTemplate.queryForMap("""
 					select started_at from mango_swarm_task_runtime where task_id = ?
 					""", taskId);
 		assertThat(toInstant(row.get("started_at"))).isEqualTo(secondStart);
@@ -357,13 +351,11 @@ class TaskRepositoryTest extends PostgresTestSupport {
 
 		taskRepository.updateRuntime(taskId, workerId, now.plusSeconds(2), "Calling partner API", 75, "calling");
 
-		var row = jdbcTemplate.queryForMap(
-				"""
+		var row = jdbcTemplate.queryForMap("""
 					select worker_id, execution_state, progress_percent, progress_message, started_at, updated_at, execution_time_ms
 					from mango_swarm_task_runtime
 					where task_id = ?
-					""",
-				taskId);
+					""", taskId);
 		assertThat(row)
 				.containsEntry("worker_id", workerId)
 				.containsEntry("execution_state", "Calling partner API")
@@ -384,16 +376,14 @@ class TaskRepositoryTest extends PostgresTestSupport {
 
 		taskRepository.markCompleted(taskId, workerId, now.plusSeconds(5));
 
-		var row = jdbcTemplate.queryForMap(
-				"""
+		var row = jdbcTemplate.queryForMap("""
 					select t.status, t.execution_time_ms task_execution_time_ms,
 						r.execution_state, r.progress_percent, r.progress_message, r.updated_at,
 						r.execution_time_ms runtime_execution_time_ms
 					from mango_swarm_tasks t
 					join mango_swarm_task_runtime r on r.task_id = t.id
 					where t.id = ?
-				""",
-				taskId);
+				""", taskId);
 		assertThat(row)
 				.containsEntry("status", "completed")
 				.containsEntry("task_execution_time_ms", 5_000L)
@@ -414,13 +404,11 @@ class TaskRepositoryTest extends PostgresTestSupport {
 
 		taskRepository.markCompleted(taskId, UUID.randomUUID(), now.plusSeconds(5));
 
-		var row = jdbcTemplate.queryForMap(
-				"""
+		var row = jdbcTemplate.queryForMap("""
 				select status, completed_at, execution_time_ms
 				from mango_swarm_tasks
 				where id = ?
-				""",
-				taskId);
+				""", taskId);
 		assertThat(row)
 				.containsEntry("status", TaskStatus.IN_PROGRESS.databaseValue())
 				.containsEntry("completed_at", null)
@@ -441,13 +429,11 @@ class TaskRepositoryTest extends PostgresTestSupport {
 
 		taskRepository.rescheduleAfterFailure(taskId, workerId, now, retryAt, "temporary failure");
 
-		var row = jdbcTemplate.queryForMap(
-				"""
+		var row = jdbcTemplate.queryForMap("""
 					select status, available_at, claimed_by, claimed_at, failed_at, execution_time_ms, last_error_message
 					from mango_swarm_tasks
 					where id = ?
-					""",
-				taskId);
+					""", taskId);
 		assertThat(row).containsEntry("status", "queued");
 		assertThat(toInstant(row.get("available_at"))).isEqualTo(retryAt);
 		assertThat(row.get("claimed_by")).isNull();
@@ -488,15 +474,13 @@ class TaskRepositoryTest extends PostgresTestSupport {
 
 		taskRepository.markFailed(taskId, workerId, now.plusSeconds(1), "remote error");
 
-		var row = jdbcTemplate.queryForMap(
-				"""
+		var row = jdbcTemplate.queryForMap("""
 					select t.status, t.execution_time_ms task_execution_time_ms, r.worker_id, r.execution_state,
 						r.progress_percent, r.progress_message, r.updated_at, r.execution_time_ms runtime_execution_time_ms
 					from mango_swarm_tasks t
 					join mango_swarm_task_runtime r on r.task_id = t.id
 					where t.id = ?
-				""",
-				taskId);
+				""", taskId);
 		assertThat(row)
 				.containsEntry("status", "failed")
 				.containsEntry("task_execution_time_ms", 0L)
@@ -518,13 +502,11 @@ class TaskRepositoryTest extends PostgresTestSupport {
 
 		taskRepository.markFailed(taskId, UUID.randomUUID(), now.plusSeconds(1), "wrong worker");
 
-		var row = jdbcTemplate.queryForMap(
-				"""
+		var row = jdbcTemplate.queryForMap("""
 				select status, failed_at, last_error_message, execution_time_ms
 				from mango_swarm_tasks
 				where id = ?
-				""",
-				taskId);
+				""", taskId);
 		assertThat(row)
 				.containsEntry("status", TaskStatus.IN_PROGRESS.databaseValue())
 				.containsEntry("failed_at", null)
@@ -713,13 +695,11 @@ class TaskRepositoryTest extends PostgresTestSupport {
 		taskRepository.requeueClaimed(
 				taskId, UUID.randomUUID(), now.plusSeconds(1), now.plusSeconds(10), "wrong worker");
 
-		var row = jdbcTemplate.queryForMap(
-				"""
+		var row = jdbcTemplate.queryForMap("""
 				select status, claimed_by, last_error_message
 				from mango_swarm_tasks
 				where id = ?
-				""",
-				taskId);
+				""", taskId);
 		assertThat(row)
 				.containsEntry("status", TaskStatus.CLAIMED.databaseValue())
 				.containsEntry("claimed_by", workerId)

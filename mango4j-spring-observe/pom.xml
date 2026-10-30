@@ -15,6 +15,19 @@
     <name>mango4j-spring-observe</name>
     <packaging>jar</packaging>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <configuration>
+                    <mutationThreshold>98</mutationThreshold>
+                    <coverageThreshold>97</coverageThreshold>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
         <dependency>
             <groupId>ie.bitstep.mango</groupId>

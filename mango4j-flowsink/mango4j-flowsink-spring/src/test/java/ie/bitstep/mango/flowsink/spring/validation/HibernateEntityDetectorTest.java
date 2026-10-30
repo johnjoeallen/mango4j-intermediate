@@ -246,9 +246,7 @@ class HibernateEntityDetectorTest {
 		Path annotationSource = packageDir.resolve("BrokenMarker.java");
 		Path targetSource = packageDir.resolve("BrokenAnnotatedType.java");
 
-		Files.writeString(
-				annotationSource,
-				"""
+		Files.writeString(annotationSource, """
 				package dynamic;
 
 				import java.lang.annotation.ElementType;
@@ -261,9 +259,7 @@ class HibernateEntityDetectorTest {
 				public @interface BrokenMarker {
 				}
 				""");
-		Files.writeString(
-				targetSource,
-				"""
+		Files.writeString(targetSource, """
 				package dynamic;
 
 				@BrokenMarker

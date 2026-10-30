@@ -14,4 +14,17 @@
     <name>mango4j-reflection</name>
     <packaging>jar</packaging>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <configuration>
+                    <mutationThreshold>100</mutationThreshold>
+                    <coverageThreshold>97</coverageThreshold>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

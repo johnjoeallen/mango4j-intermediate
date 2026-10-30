@@ -56,7 +56,8 @@ class TaskWakeSignalTest {
 
 		signal.awaitOrTimeout(Duration.ofMillis(50));
 
-		assertThat(System.nanoTime() - start).isGreaterThanOrEqualTo(Duration.ofMillis(40).toNanos());
+		assertThat(System.nanoTime() - start)
+				.isGreaterThanOrEqualTo(Duration.ofMillis(40).toNanos());
 	}
 
 	@Test

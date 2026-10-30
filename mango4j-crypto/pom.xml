@@ -58,7 +58,7 @@
         <maven.javadoc.plugin.version>3.12.0</maven.javadoc.plugin.version>
         <maven.checkstyle.plugin.version>3.6.0</maven.checkstyle.plugin.version>
         <checkstyle.version>10.26.1</checkstyle.version>
-        <pitest.plugin.version>1.22.1</pitest.plugin.version>
+        <pitest.plugin.version>1.30.1</pitest.plugin.version>
         <pitest.junit5.plugin.version>1.2.3</pitest.junit5.plugin.version>
 
         <!--    Dependencies versions    -->
@@ -194,7 +194,7 @@
                 </dependencies>
                 <configuration>
                     <withHistory>false</withHistory>
-                    <mutationThreshold>99</mutationThreshold>
+                    <mutationThreshold>100</mutationThreshold>
                     <targetClasses>
                         <param>ie.bitstep.mango*</param>
                     </targetClasses>
@@ -228,21 +228,6 @@
                 </executions>
             </plugin>
 
-             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <execution>
-                    <id>sign-artifacts</id>
-                    <phase>verify</phase>
-                    <goals>
-                        <goal>sign</goal>
-                    </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
             <!-- Sources -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -259,6 +244,57 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- GPG signing is only needed for publishing: mvn deploy -Prelease -->
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.8</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Mutation testing, fails the build below 100%: mvn clean verify -Phammer-time -->
+        <profile>
+            <id>hammer-time</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-maven</artifactId>
+                        <configuration>
+                            <mutationThreshold>100</mutationThreshold>
+                            <coverageThreshold>100</coverageThreshold>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>run-mutation-tests</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>mutationCoverage</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <dependencies>
         <dependency>

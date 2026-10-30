@@ -27,7 +27,20 @@
         </dependencies>
     </dependencyManagement>
 
-    <dependencies>
+<build>
+        <plugins>
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <configuration>
+                    <mutationThreshold>100</mutationThreshold>
+                    <coverageThreshold>95</coverageThreshold>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+        <dependencies>
         <!-- JUnit + Spring Boot test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

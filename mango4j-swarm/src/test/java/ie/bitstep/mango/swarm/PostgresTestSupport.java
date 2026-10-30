@@ -3,7 +3,6 @@ package ie.bitstep.mango.swarm;
 import java.time.Duration;
 import javax.sql.DataSource;
 
-import tools.jackson.databind.ObjectMapper;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -11,6 +10,7 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
+import tools.jackson.databind.ObjectMapper;
 import ie.bitstep.mango.swarm.db.JdbcTaskRepository;
 import ie.bitstep.mango.swarm.db.TaskRepository;
 import ie.bitstep.mango.swarm.worker.JdbcWorkerRegistry;
