@@ -78,7 +78,7 @@ Add the library:
 <dependency>
     <groupId>ie.bitstep.mango</groupId>
     <artifactId>mango-swarm</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
 </dependency>
 ```
 

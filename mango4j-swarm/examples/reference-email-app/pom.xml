@@ -4,14 +4,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>ie.bitstep.mango.examples</groupId>
   <artifactId>mango-swarm-reference-email-app</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>4.0.0-SNAPSHOT</version>
   <name>mango-swarm reference email app</name>
   <properties>
     <java.version>17</java.version>
     <maven.compiler.release>17</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <spring-boot.version>3.5.15</spring-boot.version>
-    <mango-swarm.version>0.1.0-SNAPSHOT</mango-swarm.version>
+    <mango-swarm.version>4.0.0-SNAPSHOT</mango-swarm.version>
   </properties>
   <dependencyManagement>
     <dependencies>
