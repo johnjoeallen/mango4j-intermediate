@@ -33,6 +33,36 @@ mvn -f mango4j-spring-parent/pom.xml clean verify -Dgpg.skip   # one group, as i
 Nothing inherits from the root pom. It is a throw-away aggregator; every group is a standalone
 Maven project.
 
+### Mutation testing and formatting
+
+`-Phammer-time` runs Spotless (`spotless:apply`) and PIT mutation testing at `verify`:
+
+```bash
+mvn -Phammer-time clean verify
+```
+
+- PIT is `pitest-maven` 1.30.1 in every group (`pitest.plugin.version`); Spotless is 3.10.4 with
+  palantir-java-format 2.103.0, which is needed to run on JDK 25. `mango4j-flowsink` skips PIT unless
+  this profile is active.
+- Thresholds are per module. They sit at each module's current score rather than 100, so the profile
+  passes today and a regression fails the build. Raise a threshold when you raise the score.
+- `mango-swarm` takes about 10 minutes under PIT; the rest of the reactor takes about 6.
+
+### Which modules need Spring
+
+Spring-free (no Spring in sources or the full dependency tree): `collections`, `reflection`,
+`masking`, `utils`, `validation`, `hibernate-proxy-resolver`, `crypto`, `crypto-core`,
+`crypto-aws-kms-delegate`, `flowsink-annotations`, `flowsink-core`.
+
+Need Spring: `flowsink-spring`, `flowsink-spring-boot`, `spring-aop`, `spring-logging`,
+`spring-insights`, `spring-observe`, `spring-data`, `spring-crypto-caas-delegate` and `swarm`.
+`spring-aop`, `spring-logging`, `spring-insights` and `spring-observe` declare Spring as `provided`, so
+consumers must bring their own; the others put it on the compile classpath.
+
+`flowsink-annotations` and `flowsink-core` are Spring-free but only useful through `flowsink-spring`
+(it scans the handlers and runs the aspect). They are kept separate on purpose so the annotations and
+engine carry no Spring dependency; merging them into `flowsink-spring` is the alternative.
+
 ## Progress log
 
 ### 2026-10-25 start: bringing the family together
