@@ -16,12 +16,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 import org.postgresql.util.PGobject;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import ie.bitstep.mango.swarm.TaskStatus;
 import ie.bitstep.mango.swarm.UuidV7;
 
@@ -32,13 +32,11 @@ import ie.bitstep.mango.swarm.UuidV7;
  * rescheduling, timeout recovery, and retention cleanup.
  */
 public class JdbcTaskRepository implements TaskRepository {
-	private static final String INSERT_TASK_SQL =
-			"""
+	private static final String INSERT_TASK_SQL = """
 INSERT INTO mango_swarm_tasks(id, task_type, payload, status, available_at, series_id)
 VALUES (?, ?, ?, 'queued', ?, ?)
 """;
-	private static final String SELECT_QUEUED_TASK_IDS_SQL =
-			"""
+	private static final String SELECT_QUEUED_TASK_IDS_SQL = """
 SELECT id
 FROM mango_swarm_tasks
 WHERE task_type = ?
@@ -48,8 +46,7 @@ ORDER BY available_at, id
 LIMIT ?
 FOR UPDATE SKIP LOCKED
 """;
-	private static final String CLAIM_TASK_SQL =
-			"""
+	private static final String CLAIM_TASK_SQL = """
 UPDATE mango_swarm_tasks
 SET status = 'claimed',
 claimed_by = ?,
@@ -60,22 +57,19 @@ updated_at = ?
 WHERE id = ?
 AND status = 'queued'
 """;
-	private static final String SELECT_CLAIMED_TASKS_SQL =
-			"""
+	private static final String SELECT_CLAIMED_TASKS_SQL = """
 SELECT id, task_type, payload, status, available_at, claimed_by, claimed_at,
 attempt_count, created_at, updated_at, series_id
 FROM mango_swarm_tasks
 WHERE claimed_by = ?
 AND id = ANY (?)
 """;
-	private static final String MARK_IN_PROGRESS_SQL =
-			"""
+	private static final String MARK_IN_PROGRESS_SQL = """
 UPDATE mango_swarm_tasks
 SET status = 'in_progress', execution_time_ms = 0, updated_at = ?
 WHERE id = ? AND claimed_by = ? AND status = 'claimed'
 """;
-	private static final String UPSERT_RUNTIME_SQL =
-			"""
+	private static final String UPSERT_RUNTIME_SQL = """
 INSERT INTO mango_swarm_task_runtime(
 task_id, worker_id, execution_state, progress_percent, progress_message, started_at, updated_at, execution_time_ms)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -87,8 +81,7 @@ progress_message = EXCLUDED.progress_message,
 updated_at = EXCLUDED.updated_at,
 execution_time_ms = EXCLUDED.execution_time_ms
 """;
-	private static final String INSERT_RUNTIME_SQL =
-			"""
+	private static final String INSERT_RUNTIME_SQL = """
 INSERT INTO mango_swarm_task_runtime(
 task_id, worker_id, execution_state, progress_percent, progress_message, started_at, updated_at, execution_time_ms)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -97,8 +90,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 DELETE FROM mango_swarm_task_runtime
 WHERE task_id = ?
 """;
-	private static final String MARK_COMPLETED_SQL =
-			"""
+	private static final String MARK_COMPLETED_SQL = """
 UPDATE mango_swarm_tasks
 SET status = 'completed',
 completed_at = ?,
@@ -106,14 +98,12 @@ execution_time_ms = ?,
 updated_at = ?
 WHERE id = ? AND claimed_by = ? AND status IN ('claimed', 'in_progress')
 """;
-	private static final String MARK_FAILED_SQL =
-			"""
+	private static final String MARK_FAILED_SQL = """
 UPDATE mango_swarm_tasks
 SET status = 'failed', failed_at = ?, execution_time_ms = ?, updated_at = ?, last_error_message = ?
 WHERE id = ? AND claimed_by = ? AND status IN ('claimed', 'in_progress')
 """;
-	private static final String RESCHEDULE_AFTER_FAILURE_SQL =
-			"""
+	private static final String RESCHEDULE_AFTER_FAILURE_SQL = """
 UPDATE mango_swarm_tasks
 SET status = 'queued',
 available_at = ?,
@@ -125,8 +115,7 @@ updated_at = ?,
 last_error_message = ?
 WHERE id = ? AND claimed_by = ? AND status IN ('claimed', 'in_progress')
 """;
-	private static final String REQUEUE_CLAIMED_SQL =
-			"""
+	private static final String REQUEUE_CLAIMED_SQL = """
 UPDATE mango_swarm_tasks
 SET status = 'queued',
 available_at = ?,
@@ -137,8 +126,7 @@ updated_at = ?,
 last_error_message = ?
 WHERE id = ? AND claimed_by = ? AND status = 'claimed'
 """;
-	private static final String RECLAIM_TIMED_OUT_SQL =
-			"""
+	private static final String RECLAIM_TIMED_OUT_SQL = """
 UPDATE mango_swarm_tasks
 SET status = 'queued',
 claimed_by = NULL,
@@ -157,8 +145,7 @@ ORDER BY COALESCE(r.updated_at, t.claimed_at), t.id
 LIMIT ?
 )
 """;
-	private static final String MARK_TIMED_OUT_FAILED_SQL =
-			"""
+	private static final String MARK_TIMED_OUT_FAILED_SQL = """
 UPDATE mango_swarm_tasks
 SET status = 'failed',
 failed_at = ?,
@@ -176,8 +163,7 @@ ORDER BY COALESCE(r.updated_at, t.claimed_at), t.id
 LIMIT ?
 )
 """;
-	private static final String DELETE_COMPLETED_SQL =
-			"""
+	private static final String DELETE_COMPLETED_SQL = """
 DELETE FROM mango_swarm_tasks
 WHERE id IN (
 SELECT id
@@ -188,8 +174,7 @@ ORDER BY completed_at, id
 LIMIT ?
 )
 """;
-	private static final String DELETE_FAILED_SQL =
-			"""
+	private static final String DELETE_FAILED_SQL = """
 DELETE FROM mango_swarm_tasks
 WHERE id IN (
 SELECT id
@@ -559,8 +544,7 @@ LIMIT ?
 	}
 
 	private long executionTimeMillis(java.sql.Connection connection, UUID taskId, Instant now) throws SQLException {
-		PreparedStatement statement = connection.prepareStatement(
-				"""
+		PreparedStatement statement = connection.prepareStatement("""
 				SELECT started_at
 				FROM mango_swarm_task_runtime
 				WHERE task_id = ?

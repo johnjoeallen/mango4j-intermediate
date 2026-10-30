@@ -12,8 +12,8 @@ import ie.bitstep.mango.flowsink.spring.web.FlowWebInterceptor;
  * Registers the {@link FlowWebInterceptor} as a Spring MVC interceptor so that {@code @Flow}-annotated controller
  * handler methods are automatically instrumented without requiring any extra configuration from the application.
  *
- * <p>This configuration is imported by {@link MangoFlowSinkImportSelector} when {@code jakarta.servlet.Filter}
- * is on the classpath, and by {@code MangoServletFlowAutoConfiguration} for Spring Boot applications.
+ * <p>This configuration is imported by {@link MangoFlowSinkImportSelector} when {@code jakarta.servlet.Filter} is on
+ * the classpath, and by {@code MangoServletFlowAutoConfiguration} for Spring Boot applications.
  */
 @Configuration(proxyBeanMethods = false)
 public class MangoServletFlowConfiguration {

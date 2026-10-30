@@ -16,9 +16,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
+import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.JsonNodeFactory;
-import org.junit.jupiter.api.Test;
 import ie.bitstep.mango.swarm.TaskExecutionContext;
 import ie.bitstep.mango.swarm.TaskExecutionResult;
 import ie.bitstep.mango.swarm.config.MangoSwarmProperties;
@@ -598,7 +598,9 @@ class MangoSwarmDaemonTest {
 		// requestAgain stamps availableAt from the real wall clock (matching markCompleted/markFailed elsewhere in
 		// executeTask), not from pollOnce's now parameter, so assert against Instant.now() with tolerance.
 		assertThat(call.availableAt())
-				.isCloseTo(Instant.now().plus(Duration.ofMinutes(5)), org.assertj.core.api.Assertions.within(Duration.ofSeconds(5)));
+				.isCloseTo(
+						Instant.now().plus(Duration.ofMinutes(5)),
+						org.assertj.core.api.Assertions.within(Duration.ofSeconds(5)));
 		assertThat(call.seriesId()).isEqualTo(rootId);
 		assertThat(handler.againTaskId).isNotNull();
 		daemon.stop();
@@ -1130,7 +1132,8 @@ class MangoSwarmDaemonTest {
 			TaskHandler<?> handler) {
 		TaskHandlerRegistry registry = new TaskHandlerRegistry(
 				List.of(handler), properties.getTaskTypes().keySet(), false);
-		return new MangoSwarmDaemon(workers, repository, registry, properties, new ObjectMapper(), new TaskWakeSignal());
+		return new MangoSwarmDaemon(
+				workers, repository, registry, properties, new ObjectMapper(), new TaskWakeSignal());
 	}
 
 	private static MangoSwarmProperties properties(int rate, int concurrency, int batchSize) {
@@ -1441,10 +1444,7 @@ class MangoSwarmDaemonTest {
 
 		@Override
 		public UUID queue(
-				String taskType,
-				tools.jackson.databind.JsonNode payload,
-				Instant availableAt,
-				UUID seriesId) {
+				String taskType, tools.jackson.databind.JsonNode payload, Instant availableAt, UUID seriesId) {
 			queueCalls.add(new QueuedCall(taskType, payload, availableAt, seriesId));
 			return UUID.randomUUID();
 		}

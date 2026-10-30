@@ -419,8 +419,9 @@ class FlowSinkScannerInternalsTest {
 					new FlowSinkScanner(new ie.bitstep.mango.flowsink.core.sinks.FlowHandlerRegistry());
 			scanner.postProcessAfterInitialization(new LoggingSink(), "loggingSink");
 
-			assertThat(appender.list).anySatisfy(event -> assertThat(event.getFormattedMessage())
-					.contains("Registered FlowSink: LoggingSink"));
+			assertThat(appender.list)
+					.anySatisfy(event ->
+							assertThat(event.getFormattedMessage()).contains("Registered FlowSink: LoggingSink"));
 		} finally {
 			logger.detachAppender(appender);
 		}

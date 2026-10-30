@@ -1,8 +1,8 @@
 package ie.bitstep.mango.swarm.payload;
 
+import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.NullNode;
-import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -12,16 +12,13 @@ class PayloadReaderTest {
 
 	@Test
 	void extractsAliasesNestedPathsAndDefaults() throws Exception {
-		PayloadReader reader = new PayloadReader(
-				objectMapper.readTree(
-						"""
+		PayloadReader reader = new PayloadReader(objectMapper.readTree("""
 				{
 				"recipientEmail": "x@y.com",
 				"userId": "123",
 				"priority": 8
 				}
-				"""),
-				objectMapper);
+				"""), objectMapper);
 
 		EmailPayload payload = new EmailPayload(
 				reader.required(String.class, "customerId", "userId", "customer.id"),
@@ -36,13 +33,12 @@ class PayloadReaderTest {
 
 	@Test
 	void staticExtractorConvenienceWrapsPayloadReader() throws Exception {
-		String customerId = new PayloadReader(
-						objectMapper.readTree("""
+		String customerId =
+				new PayloadReader(objectMapper.readTree("""
 				{
 				"customerId": "customer-1"
 				}
-				"""), objectMapper)
-				.required(String.class, "customerId");
+				"""), objectMapper).required(String.class, "customerId");
 
 		assertThat(customerId).isEqualTo("customer-1");
 	}
@@ -59,8 +55,7 @@ class PayloadReaderTest {
 
 	@Test
 	void treatsNullPayloadNodesAsMissingData() throws Exception {
-		PayloadReader reader = new PayloadReader(
-				objectMapper.readTree("""
+		PayloadReader reader = new PayloadReader(objectMapper.readTree("""
 				{
 				"customer": null,
 				"legacy": null
@@ -77,8 +72,7 @@ class PayloadReaderTest {
 
 	@Test
 	void optionalValueCanBeInspectedValidatedAndRequired() throws Exception {
-		PayloadReader reader =
-				new PayloadReader(objectMapper.readTree("""
+		PayloadReader reader = new PayloadReader(objectMapper.readTree("""
 				{
 				"priority": 8
 				}
@@ -99,14 +93,12 @@ class PayloadReaderTest {
 
 	@Test
 	void rejectsInvalidOptionalValueAndConversionFailures() throws Exception {
-		PayloadReader invalid = new PayloadReader(
-				objectMapper.readTree("""
+		PayloadReader invalid = new PayloadReader(objectMapper.readTree("""
 				{
 				"priority": -1,
 				"count": "not-a-number"
 				}
-				"""),
-				objectMapper);
+				"""), objectMapper);
 		PayloadReader.OptionalValue<Integer> priority = invalid.optional(Integer.class, "priority");
 
 		assertThatThrownBy(() -> priority.validate(value -> value > 0, "must be positive"))

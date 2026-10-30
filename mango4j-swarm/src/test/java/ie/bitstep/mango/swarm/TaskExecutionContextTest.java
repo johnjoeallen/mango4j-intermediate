@@ -103,9 +103,7 @@ class TaskExecutionContextTest {
 	void againRejectsNullDelayAndPayload() {
 		TaskExecutionContext<String> context = context((state, percent, message) -> {});
 
-		assertThatNullPointerException()
-				.isThrownBy(() -> context.again(null))
-				.withMessage("delay must not be null");
+		assertThatNullPointerException().isThrownBy(() -> context.again(null)).withMessage("delay must not be null");
 		assertThatNullPointerException()
 				.isThrownBy(() -> context.again(null, "payload"))
 				.withMessage("delay must not be null");
@@ -148,15 +146,39 @@ class TaskExecutionContextTest {
 
 		assertThatNullPointerException()
 				.isThrownBy(() -> new TaskExecutionContext<>(
-						null, "email", workerId, 1, claimedAt, "payload", null, (state, percent, message) -> {}, noopAgain))
+						null,
+						"email",
+						workerId,
+						1,
+						claimedAt,
+						"payload",
+						null,
+						(state, percent, message) -> {},
+						noopAgain))
 				.withMessage("taskId must not be null");
 		assertThatNullPointerException()
 				.isThrownBy(() -> new TaskExecutionContext<>(
-						taskId, null, workerId, 1, claimedAt, "payload", null, (state, percent, message) -> {}, noopAgain))
+						taskId,
+						null,
+						workerId,
+						1,
+						claimedAt,
+						"payload",
+						null,
+						(state, percent, message) -> {},
+						noopAgain))
 				.withMessage("taskType must not be null");
 		assertThatNullPointerException()
 				.isThrownBy(() -> new TaskExecutionContext<>(
-						taskId, "email", null, 1, claimedAt, "payload", null, (state, percent, message) -> {}, noopAgain))
+						taskId,
+						"email",
+						null,
+						1,
+						claimedAt,
+						"payload",
+						null,
+						(state, percent, message) -> {},
+						noopAgain))
 				.withMessage("workerId must not be null");
 		assertThatNullPointerException()
 				.isThrownBy(() -> new TaskExecutionContext<>(
@@ -164,7 +186,15 @@ class TaskExecutionContextTest {
 				.withMessage("progressReporter must not be null");
 		assertThatNullPointerException()
 				.isThrownBy(() -> new TaskExecutionContext<>(
-						taskId, "email", workerId, 1, claimedAt, "payload", null, (state, percent, message) -> {}, null))
+						taskId,
+						"email",
+						workerId,
+						1,
+						claimedAt,
+						"payload",
+						null,
+						(state, percent, message) -> {},
+						null))
 				.withMessage("againRequester must not be null");
 	}
 

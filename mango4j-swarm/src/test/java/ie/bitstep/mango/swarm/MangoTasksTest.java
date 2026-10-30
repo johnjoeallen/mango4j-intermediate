@@ -10,11 +10,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
-import org.junit.jupiter.api.Test;
 import ie.bitstep.mango.swarm.config.MangoSwarmProperties;
 import ie.bitstep.mango.swarm.db.TaskRecord;
 import ie.bitstep.mango.swarm.db.TaskRepository;
@@ -32,7 +32,8 @@ class MangoTasksTest {
 	@Test
 	void queuesObjectPayloadForImmediateExecution() {
 		RecordingRepository repository = new RecordingRepository();
-		MangoTasks tasks = new MangoTasks(repository, new ObjectMapper(), properties(), FIXED_CLOCK, new TaskWakeSignal());
+		MangoTasks tasks =
+				new MangoTasks(repository, new ObjectMapper(), properties(), FIXED_CLOCK, new TaskWakeSignal());
 
 		UUID taskId = tasks.queue("email", new EmailRequest("customer-1", "x@example.com"));
 
@@ -48,7 +49,8 @@ class MangoTasksTest {
 	@Test
 	void queuesJsonPayloadForImmediateExecution() {
 		RecordingRepository repository = new RecordingRepository();
-		MangoTasks tasks = new MangoTasks(repository, new ObjectMapper(), properties(), FIXED_CLOCK, new TaskWakeSignal());
+		MangoTasks tasks =
+				new MangoTasks(repository, new ObjectMapper(), properties(), FIXED_CLOCK, new TaskWakeSignal());
 		ObjectNode payload = JsonNodeFactory.instance
 				.objectNode()
 				.put("customerId", "customer-2")
@@ -64,7 +66,8 @@ class MangoTasksTest {
 	@Test
 	void schedulesObjectPayloadAtRequestedTime() {
 		RecordingRepository repository = new RecordingRepository();
-		MangoTasks tasks = new MangoTasks(repository, new ObjectMapper(), properties(), FIXED_CLOCK, new TaskWakeSignal());
+		MangoTasks tasks =
+				new MangoTasks(repository, new ObjectMapper(), properties(), FIXED_CLOCK, new TaskWakeSignal());
 		Instant availableAt = Instant.parse("2026-05-21T10:00:00Z");
 
 		UUID taskId = tasks.at(availableAt, "email", new EmailRequest("customer-1", "x@example.com"));
@@ -79,7 +82,8 @@ class MangoTasksTest {
 	@Test
 	void scheduleAfterUsesFutureAvailableAt() {
 		RecordingRepository repository = new RecordingRepository();
-		MangoTasks tasks = new MangoTasks(repository, new ObjectMapper(), properties(), FIXED_CLOCK, new TaskWakeSignal());
+		MangoTasks tasks =
+				new MangoTasks(repository, new ObjectMapper(), properties(), FIXED_CLOCK, new TaskWakeSignal());
 
 		UUID taskId = tasks.after(Duration.ofSeconds(30), "email", new EmailRequest("customer-1", "x@example.com"));
 
@@ -90,7 +94,8 @@ class MangoTasksTest {
 	@Test
 	void schedulesJsonPayloadAfterDelay() {
 		RecordingRepository repository = new RecordingRepository();
-		MangoTasks tasks = new MangoTasks(repository, new ObjectMapper(), properties(), FIXED_CLOCK, new TaskWakeSignal());
+		MangoTasks tasks =
+				new MangoTasks(repository, new ObjectMapper(), properties(), FIXED_CLOCK, new TaskWakeSignal());
 		ObjectNode payload = JsonNodeFactory.instance.objectNode().put("customerId", "customer-3");
 
 		UUID taskId = tasks.after(Duration.ofSeconds(5), "email", payload);
@@ -102,7 +107,8 @@ class MangoTasksTest {
 
 	@Test
 	void rejectsNullDelayTaskTypePayloadAndTime() {
-		MangoTasks tasks = new MangoTasks(new RecordingRepository(), new ObjectMapper(), properties(), FIXED_CLOCK, new TaskWakeSignal());
+		MangoTasks tasks = new MangoTasks(
+				new RecordingRepository(), new ObjectMapper(), properties(), FIXED_CLOCK, new TaskWakeSignal());
 		ObjectNode payload = JsonNodeFactory.instance.objectNode();
 
 		assertThatNullPointerException()
@@ -130,7 +136,8 @@ class MangoTasksTest {
 		RecordingRepository repository = new RecordingRepository();
 		MangoSwarmProperties properties = properties();
 		properties.getTaskTypes().get("email").setRate(0);
-		MangoTasks tasks = new MangoTasks(repository, new ObjectMapper(), properties, FIXED_CLOCK, new TaskWakeSignal());
+		MangoTasks tasks =
+				new MangoTasks(repository, new ObjectMapper(), properties, FIXED_CLOCK, new TaskWakeSignal());
 
 		tasks.queue("email", JsonNodeFactory.instance.objectNode());
 
@@ -177,7 +184,8 @@ class MangoTasksTest {
 
 		long start = System.nanoTime();
 		wakeSignal.awaitOrTimeout(Duration.ofMillis(100));
-		assertThat(System.nanoTime() - start).isGreaterThanOrEqualTo(Duration.ofMillis(90).toNanos());
+		assertThat(System.nanoTime() - start)
+				.isGreaterThanOrEqualTo(Duration.ofMillis(90).toNanos());
 	}
 
 	@Test
@@ -192,12 +200,14 @@ class MangoTasksTest {
 
 		long start = System.nanoTime();
 		wakeSignal.awaitOrTimeout(Duration.ofMillis(100));
-		assertThat(System.nanoTime() - start).isGreaterThanOrEqualTo(Duration.ofMillis(90).toNanos());
+		assertThat(System.nanoTime() - start)
+				.isGreaterThanOrEqualTo(Duration.ofMillis(90).toNanos());
 	}
 
 	@Test
 	void rejectsUnconfiguredTaskType() {
-		MangoTasks tasks = new MangoTasks(new RecordingRepository(), new ObjectMapper(), properties(), FIXED_CLOCK, new TaskWakeSignal());
+		MangoTasks tasks = new MangoTasks(
+				new RecordingRepository(), new ObjectMapper(), properties(), FIXED_CLOCK, new TaskWakeSignal());
 		ObjectNode payload = JsonNodeFactory.instance.objectNode();
 
 		assertThatThrownBy(() -> tasks.queue("unknown", payload))
@@ -210,7 +220,8 @@ class MangoTasksTest {
 		RecordingRepository repository = new RecordingRepository();
 		MangoSwarmProperties properties = properties();
 		properties.getTaskTypes().get("email").setMode(MangoSwarmProperties.TaskMode.REJECT);
-		MangoTasks tasks = new MangoTasks(repository, new ObjectMapper(), properties, FIXED_CLOCK, new TaskWakeSignal());
+		MangoTasks tasks =
+				new MangoTasks(repository, new ObjectMapper(), properties, FIXED_CLOCK, new TaskWakeSignal());
 		ObjectNode payload = JsonNodeFactory.instance.objectNode();
 
 		assertThatThrownBy(() -> tasks.queue("email", payload))
@@ -224,7 +235,8 @@ class MangoTasksTest {
 		RecordingRepository repository = new RecordingRepository();
 		MangoSwarmProperties properties = properties();
 		properties.getTaskTypes().get("email").setMode(MangoSwarmProperties.TaskMode.DROP);
-		MangoTasks tasks = new MangoTasks(repository, new ObjectMapper(), properties, FIXED_CLOCK, new TaskWakeSignal());
+		MangoTasks tasks =
+				new MangoTasks(repository, new ObjectMapper(), properties, FIXED_CLOCK, new TaskWakeSignal());
 
 		UUID taskId = tasks.queue("email", JsonNodeFactory.instance.objectNode());
 

@@ -126,8 +126,10 @@ class TraceContextFilterTest {
 				(proxy, method, args) -> null);
 		MockHttpServletResponse response = new MockHttpServletResponse();
 
-		filter.doFilter(request, response, (req, res) -> assertThat(MDC.getCopyOfContextMap())
-				.isNull());
+		filter.doFilter(
+				request,
+				response,
+				(req, res) -> assertThat(MDC.getCopyOfContextMap()).isNull());
 
 		assertThat(MDC.getCopyOfContextMap()).isNullOrEmpty();
 	}
