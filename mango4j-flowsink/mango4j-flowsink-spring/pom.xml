@@ -25,15 +25,15 @@
                     <mutationThreshold>99</mutationThreshold>
                     <coverageThreshold>99</coverageThreshold>
                     <targetClasses>
-                        <param>ie.bitstep.mango.flowsink.spring.aspect*</param>
-                        <param>ie.bitstep.mango.flowsink.spring.processor*</param>
-                        <param>ie.bitstep.mango.flowsink.spring.scanner*</param>
-                        <param>ie.bitstep.mango.flowsink.spring.validation*</param>
-                        <param>ie.bitstep.mango.flowsink.spring.web*</param>
-                        <param>ie.bitstep.mango.flowsink.spring.webflux*</param>
+                        <param>ie.bitstep.mango.spring.flowsink.aspect*</param>
+                        <param>ie.bitstep.mango.spring.flowsink.processor*</param>
+                        <param>ie.bitstep.mango.spring.flowsink.scanner*</param>
+                        <param>ie.bitstep.mango.spring.flowsink.validation*</param>
+                        <param>ie.bitstep.mango.spring.flowsink.web*</param>
+                        <param>ie.bitstep.mango.spring.flowsink.webflux*</param>
                     </targetClasses>
                     <targetTests>
-                        <param>ie.bitstep.mango.flowsink.spring*</param>
+                        <param>ie.bitstep.mango.spring.flowsink*</param>
                     </targetTests>
                 </configuration>
                 <executions>
