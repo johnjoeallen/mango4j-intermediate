@@ -1,4 +1,4 @@
-package ie.bitstep.mango.flowsink.spring.boot;
+package ie.bitstep.mango.spring.boot.flowsink;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.server.WebFilter;
 import ie.bitstep.mango.flowsink.core.FlowProcessorSupport;
-import ie.bitstep.mango.flowsink.spring.webflux.TraceContextWebFilter;
+import ie.bitstep.mango.spring.flowsink.webflux.TraceContextWebFilter;
 
 /**
  * Spring Boot auto-configuration that registers the WebFlux {@code TraceContextWebFilter} when the WebFlux API is on

@@ -1,4 +1,4 @@
-package ie.bitstep.mango.flowsink.spring.boot;
+package ie.bitstep.mango.spring.boot.flowsink;
 
 import jakarta.servlet.Filter;
 
@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import ie.bitstep.mango.flowsink.core.FlowProcessorSupport;
-import ie.bitstep.mango.flowsink.spring.web.TraceContextFilter;
+import ie.bitstep.mango.spring.flowsink.web.TraceContextFilter;
 
 /**
  * Spring Boot auto-configuration that registers the servlet {@code TraceContextFilter} when the Servlet API is on the

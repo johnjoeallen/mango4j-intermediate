@@ -1,10 +1,10 @@
-package ie.bitstep.mango.flowsink.spring.boot;
+package ie.bitstep.mango.spring.boot.flowsink;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Import;
-import ie.bitstep.mango.flowsink.spring.MangoServletFlowConfiguration;
+import ie.bitstep.mango.spring.flowsink.MangoServletFlowConfiguration;
 
 /**
  * Spring Boot auto-configuration that registers {@link MangoServletFlowConfiguration} when Spring MVC is on the
