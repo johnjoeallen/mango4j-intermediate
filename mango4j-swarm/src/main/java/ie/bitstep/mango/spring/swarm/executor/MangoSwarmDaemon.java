@@ -1,0 +1,708 @@
+package ie.bitstep.mango.spring.swarm.executor;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import ie.bitstep.mango.spring.swarm.TaskExecutionContext;
+import ie.bitstep.mango.spring.swarm.TaskExecutionResult;
+import ie.bitstep.mango.spring.swarm.UuidV7;
+import ie.bitstep.mango.spring.swarm.config.MangoSwarmProperties;
+import ie.bitstep.mango.spring.swarm.db.TaskRecord;
+import ie.bitstep.mango.spring.swarm.db.TaskRepository;
+import ie.bitstep.mango.spring.swarm.handler.TaskHandler;
+import ie.bitstep.mango.spring.swarm.handler.TaskHandlerRegistry;
+import ie.bitstep.mango.spring.swarm.payload.PayloadReader;
+import ie.bitstep.mango.spring.swarm.rate.LocalTokenRingRateLimiter;
+import ie.bitstep.mango.spring.swarm.worker.WorkerRegistry;
+
+/**
+ * Core swarm runtime loop.
+ *
+ * <p>Coordinates worker heartbeat, rate recalculation, task claiming, dispatch to executor threads, timeout handling,
+ * retry scheduling, and retention cleanup.
+ */
+public class MangoSwarmDaemon {
+	private static final Logger log = LoggerFactory.getLogger(MangoSwarmDaemon.class);
+	private static final Duration MAX_EMPTY_QUEUE_BACKOFF = Duration.ofSeconds(5);
+	private static final Duration TIMEOUT_RECOVERY_INTERVAL = Duration.ofSeconds(1);
+	private static final String HANDLER_FAILED_MESSAGE = "Task handler reported failure";
+	private static final String HANDLER_EXCEPTION_MESSAGE = "Task handler threw an exception";
+
+	private final WorkerRegistry workerRegistry;
+	private final TaskRepository taskRepository;
+	private final TaskHandlerRegistry handlerRegistry;
+	private final MangoSwarmProperties properties;
+	private final ObjectMapper objectMapper;
+	private final TaskWakeSignal wakeSignal;
+	private final UUID workerId = UUID.randomUUID();
+	private final Instant startedAt = Instant.now();
+	private final String hostname = resolveHostname();
+	private final Map<String, LocalTokenRingRateLimiter> startRateLimiters = new LinkedHashMap<>();
+	private final Map<String, Semaphore> typeSemaphores;
+	private final ExecutorService executorService;
+	private final Semaphore executorCapacity;
+	private final AtomicBoolean running = new AtomicBoolean(false);
+	private final AtomicReference<Thread> daemonThread = new AtomicReference<>();
+	private final int runtimeProgressThresholdPercent;
+	private final Duration runtimeMinUpdateInterval;
+	private int activeWorkers = 1;
+	private Instant lastHeartbeat = Instant.EPOCH;
+	private Instant lastCleanup = Instant.EPOCH;
+	private Instant lastTimeoutRecovery = Instant.EPOCH;
+	private int consecutiveEmptyPolls = 0;
+
+	public MangoSwarmDaemon(
+			WorkerRegistry workerRegistry,
+			TaskRepository taskRepository,
+			TaskHandlerRegistry handlerRegistry,
+			MangoSwarmProperties properties,
+			ObjectMapper objectMapper,
+			TaskWakeSignal wakeSignal) {
+		this.workerRegistry = workerRegistry;
+		this.taskRepository = taskRepository;
+		this.handlerRegistry = handlerRegistry;
+		this.properties = properties.normalize();
+		this.objectMapper = objectMapper;
+		this.wakeSignal = wakeSignal;
+		boolean virtual = usingVirtualThreads(this.properties.getExecutor());
+		log.info(
+				"swarm executor: virtualThreadsAvailable={}, configured={}, usingVirtual={}",
+				ExecutorFactory.virtualThreadsAvailable(),
+				this.properties.getExecutor().getVirtualThreads(),
+				virtual);
+		this.executorService = ExecutorFactory.create(this.properties.getExecutor());
+		int maxThreads =
+				ExecutorFactory.resolveMaxThreads(this.properties.getExecutor().getMaxThreads(), virtual);
+		this.executorCapacity = new Semaphore(maxThreads);
+		this.runtimeProgressThresholdPercent =
+				Math.max(0, this.properties.getRuntime().getProgressThresholdPercent());
+		this.runtimeMinUpdateInterval =
+				positiveOrZero(this.properties.getRuntime().getMinUpdateInterval());
+		Map<String, Semaphore> semaphores = new LinkedHashMap<>();
+		this.properties
+				.getTaskTypes()
+				.forEach((type, config) -> semaphores.put(type, new Semaphore(Math.max(1, config.getConcurrency()))));
+		this.typeSemaphores = Map.copyOf(semaphores);
+		this.properties
+				.getTaskTypes()
+				.forEach((type, config) ->
+						startRateLimiters.put(type, new LocalTokenRingRateLimiter(Math.max(1, config.getRate()))));
+	}
+
+	public void start() {
+		if (!running.compareAndSet(false, true)) {
+			return;
+		}
+		Thread thread = new Thread(this::runLoop, "mango-swarm-daemon");
+		daemonThread.set(thread);
+		thread.start();
+	}
+
+	@Generated
+	public void stop() {
+		running.set(false);
+		Thread thread = daemonThread.getAndSet(null);
+		if (thread != null) {
+			thread.interrupt();
+			try {
+				thread.join(5_000);
+			} catch (InterruptedException ex) {
+				Thread.currentThread().interrupt();
+			}
+		}
+		executorService.shutdown();
+		try {
+			if (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
+				executorService.shutdownNow();
+			}
+		} catch (InterruptedException ex) {
+			executorService.shutdownNow();
+			Thread.currentThread().interrupt();
+		}
+	}
+
+	Duration pollOnce(Instant now) {
+		heartbeatIfNeeded(now);
+		cleanupIfNeeded(now);
+		reclaimTimedOut(now);
+		PollState pollState = new PollState();
+		for (Map.Entry<String, MangoSwarmProperties.TaskType> entry :
+				properties.getTaskTypes().entrySet()) {
+			processTaskType(entry, now, pollState);
+		}
+		return resolvePollDelay(pollState);
+	}
+
+	private void processTaskType(
+			Map.Entry<String, MangoSwarmProperties.TaskType> entry, Instant now, PollState pollState) {
+		String taskType = entry.getKey();
+		MangoSwarmProperties.TaskType config = entry.getValue();
+		if (config.getMode() != MangoSwarmProperties.TaskMode.EXECUTE) {
+			return;
+		}
+		double effectiveRate = Math.max(0.0d, (double) config.getRate() / Math.max(activeWorkers, 1));
+		BatchDecision decision = decideBatchSize(taskType, config, effectiveRate, now);
+		if (decision.claimLimit() <= 0) {
+			if (decision.startCapacity() <= 0 && isPositive(decision.nextExecutionDelay())) {
+				pollState.nextRateLimitedPoll =
+						minPositive(pollState.nextRateLimitedPoll, decision.nextExecutionDelay());
+			}
+			return;
+		}
+		log.debug(
+				"swarm claiming batch: taskType={}, workerId={}, activeWorkers={}, effectiveRate={}/{}, configuredBatch={}, claimLimit={}, rateCapacity={}, typeCapacity={}, executorCapacity={}",
+				taskType,
+				workerId,
+				activeWorkers,
+				effectiveRate,
+				config.getPeriod(),
+				decision.configuredBatch(),
+				decision.claimLimit(),
+				decision.startCapacity(),
+				decision.remainingTypeCapacity(),
+				decision.remainingExecutorCapacity());
+		pollState.attemptedAnyClaim = true;
+		List<TaskRecord> claimed = taskRepository.claimBatch(taskType, workerId, now, decision.claimLimit());
+		log.debug(
+				"swarm claimed batch: taskType={}, workerId={}, requested={}, claimed={}, taskIds={}",
+				taskType,
+				workerId,
+				decision.claimLimit(),
+				claimed.size(),
+				claimedTaskIdsForDebugLog(claimed));
+		if (!claimed.isEmpty()) {
+			pollState.claimedAnyTasks = true;
+		}
+		for (TaskRecord task : claimed) {
+			DispatchDecision dispatchDecision = dispatch(task, now);
+			pollState.nextRateLimitedPoll = minPositive(pollState.nextRateLimitedPoll, dispatchDecision.waitDuration());
+			if (dispatchDecision.dispatched()) {
+				pollState.dispatchedAnyTasks = true;
+			}
+		}
+	}
+
+	private Duration resolvePollDelay(PollState pollState) {
+		if (pollState.dispatchedAnyTasks) {
+			consecutiveEmptyPolls = 0;
+			return Duration.ZERO;
+		}
+		if (pollState.claimedAnyTasks) {
+			consecutiveEmptyPolls = 0;
+			return properties.getExecutor().getPollInterval();
+		}
+		if (pollState.attemptedAnyClaim) {
+			consecutiveEmptyPolls++;
+			Duration backoff = emptyQueueBackoff(properties.getExecutor().getPollInterval(), consecutiveEmptyPolls);
+			Duration sleep = minPositive(backoff, pollState.nextRateLimitedPoll);
+			log.debug(
+					"swarm empty-queue backoff: workerId={}, consecutiveEmptyPolls={}, base={}, sleep={}",
+					workerId,
+					consecutiveEmptyPolls,
+					properties.getExecutor().getPollInterval(),
+					sleep);
+			return sleep;
+		}
+		if (pollState.nextRateLimitedPoll != null) {
+			return pollState.nextRateLimitedPoll;
+		}
+		return properties.getExecutor().getPollInterval();
+	}
+
+	static Duration emptyQueueBackoff(Duration base, int consecutiveEmptyPolls) {
+		if (base == null || base.isNegative() || base.isZero()) {
+			return Duration.ZERO;
+		}
+		long nanos = base.toNanos();
+		long maxNanos = MAX_EMPTY_QUEUE_BACKOFF.toNanos();
+		if (nanos >= maxNanos) {
+			return MAX_EMPTY_QUEUE_BACKOFF;
+		}
+		int steps = Math.max(0, consecutiveEmptyPolls - 1);
+		if (steps >= 63) {
+			return MAX_EMPTY_QUEUE_BACKOFF;
+		}
+		if (nanos > (Long.MAX_VALUE >> steps)) {
+			return MAX_EMPTY_QUEUE_BACKOFF;
+		}
+		long scaled = nanos << steps;
+		return scaled >= maxNanos ? MAX_EMPTY_QUEUE_BACKOFF : Duration.ofNanos(scaled);
+	}
+
+	@Generated
+	private static boolean usingVirtualThreads(MangoSwarmProperties.Executor executor) {
+		return executor.getVirtualThreads() != MangoSwarmProperties.VirtualThreads.DISABLED
+				&& ExecutorFactory.virtualThreadsAvailable();
+	}
+
+	@Generated
+	private static List<UUID> claimedTaskIdsForDebugLog(List<TaskRecord> claimed) {
+		return log.isDebugEnabled() ? claimed.stream().map(TaskRecord::id).toList() : List.of();
+	}
+
+	int calculateBatchSize(String taskType, MangoSwarmProperties.TaskType config, double effectiveRate, Instant now) {
+		return decideBatchSize(taskType, config, effectiveRate, now).claimLimit();
+	}
+
+	private BatchDecision decideBatchSize(
+			String taskType, MangoSwarmProperties.TaskType config, double effectiveRate, Instant now) {
+		int remainingTypeCapacity = typeSemaphores.get(taskType).availablePermits();
+		int remainingExecutorCapacity = executorCapacity.availablePermits();
+		int configuredBatch = configuredBatch(config, effectiveRate);
+		LocalTokenRingRateLimiter startLimiter = startRateLimiters.get(taskType);
+		startLimiter.configure(effectiveRate, config.getPeriod(), now);
+		int startCapacity = startLimiter.availablePermits(now, configuredBatch);
+		int claimLimit =
+				Math.max(0, min(configuredBatch, startCapacity, remainingTypeCapacity, remainingExecutorCapacity));
+		return new BatchDecision(
+				configuredBatch,
+				startCapacity,
+				remainingTypeCapacity,
+				remainingExecutorCapacity,
+				claimLimit,
+				startLimiter.timeUntilNextPermit(now));
+	}
+
+	@Generated
+	private void runLoop() {
+		while (running.get()) {
+			try {
+				wakeSignal.awaitOrTimeout(pollOnce(Instant.now()));
+			} catch (InterruptedException ex) {
+				Thread.currentThread().interrupt();
+				return;
+			} catch (Exception ex) {
+				log.warn("Mango swarm polling failed", ex);
+			}
+		}
+	}
+
+	static Duration minPositive(Duration current, Duration candidate) {
+		if (!isPositive(candidate)) {
+			return current;
+		}
+		if (current == null || candidate.compareTo(current) < 0) {
+			return candidate;
+		}
+		return current;
+	}
+
+	static boolean isPositive(Duration delay) {
+		return delay != null && delay.compareTo(Duration.ZERO) > 0;
+	}
+
+	private static Duration positiveOrZero(Duration delay) {
+		return isPositive(delay) ? delay : Duration.ZERO;
+	}
+
+	private void heartbeatIfNeeded(Instant now) {
+		if (lastHeartbeat.plus(properties.getWorker().getHeartbeatInterval()).isAfter(now)) {
+			return;
+		}
+		activeWorkers = workerRegistry.heartbeat(workerId, hostname, startedAt, now);
+		lastHeartbeat = now;
+	}
+
+	private void cleanupIfNeeded(Instant now) {
+		MangoSwarmProperties.Cleanup cleanup = properties.getCleanup();
+		if (cleanup == null || !cleanup.isEnabled()) {
+			return;
+		}
+		Duration interval = cleanup.getInterval();
+		if (interval == null || interval.isNegative() || interval.isZero()) {
+			return;
+		}
+		if (lastCleanup.plus(interval).isAfter(now)) {
+			return;
+		}
+		Duration completedRetention = cleanup.getCompletedRetention();
+		Duration failedRetention = cleanup.getFailedRetention();
+		int batchSize = maintenanceBatchSize();
+		if (isRetentionEnabled(completedRetention)) {
+			int deletedCompleted = taskRepository.deleteCompletedOlderThan(completedRetention, now, batchSize);
+			log.debug(
+					"swarm cleanup completed-tasks: workerId={}, retention={}, deleted={}",
+					workerId,
+					completedRetention,
+					deletedCompleted);
+		}
+		if (isRetentionEnabled(failedRetention)) {
+			int deletedFailed = taskRepository.deleteFailedOlderThan(failedRetention, now, batchSize);
+			log.debug(
+					"swarm cleanup failed-tasks: workerId={}, retention={}, deleted={}",
+					workerId,
+					failedRetention,
+					deletedFailed);
+		}
+		lastCleanup = now;
+	}
+
+	private static int configuredBatch(MangoSwarmProperties.TaskType config, double effectiveRate) {
+		if (config.getBatchSize() != null) {
+			return config.getBatchSize();
+		}
+		return Math.max(1, Math.min(config.getConcurrency(), (int) Math.ceil(effectiveRate)));
+	}
+
+	private void reclaimTimedOut(Instant now) {
+		if (lastTimeoutRecovery.plus(TIMEOUT_RECOVERY_INTERVAL).isAfter(now)) {
+			return;
+		}
+		int batchSize = maintenanceBatchSize();
+		properties.getTaskTypes().forEach((type, config) -> {
+			if (config.getMode() != MangoSwarmProperties.TaskMode.EXECUTE) {
+				return;
+			}
+			if (config.isReclaimOnTimeout() && config.isIdempotent()) {
+				taskRepository.reclaimTimedOut(type, config.getTimeout(), now, batchSize);
+			} else {
+				taskRepository.markTimedOutFailed(type, config.getTimeout(), now, batchSize);
+			}
+		});
+		lastTimeoutRecovery = now;
+	}
+
+	private int maintenanceBatchSize() {
+		MangoSwarmProperties.Cleanup cleanup = properties.getCleanup();
+		if (cleanup == null) {
+			return 1_000;
+		}
+		return Math.max(1, cleanup.getBatchSize());
+	}
+
+	private static boolean isRetentionEnabled(Duration retention) {
+		return retention != null && !retention.isNegative() && !retention.isZero();
+	}
+
+	private DispatchDecision dispatch(TaskRecord task, Instant now) {
+		Semaphore typeSemaphore = typeSemaphores.get(task.taskType());
+		if (!typeSemaphore.tryAcquire()) {
+			taskRepository.requeueClaimed(
+					task.id(), workerId, now, now, "Local task-type concurrency unavailable; returned to queue");
+			log.debug(
+					"swarm dispatch deferred: taskType={}, taskId={}, workerId={}, reason=task-type-concurrency",
+					task.taskType(),
+					task.id(),
+					workerId);
+			return DispatchDecision.notDispatchedDecision();
+		}
+		if (!executorCapacity.tryAcquire()) {
+			typeSemaphore.release();
+			taskRepository.requeueClaimed(
+					task.id(), workerId, now, now, "Local executor capacity unavailable; returned to queue");
+			log.debug(
+					"swarm dispatch deferred: taskType={}, taskId={}, workerId={}, reason=executor-capacity",
+					task.taskType(),
+					task.id(),
+					workerId);
+			return DispatchDecision.notDispatchedDecision();
+		}
+		LocalTokenRingRateLimiter.Acquisition token =
+				startRateLimiters.get(task.taskType()).acquire(now);
+		if (!token.granted()) {
+			executorCapacity.release();
+			typeSemaphore.release();
+			taskRepository.requeueClaimed(
+					task.id(), workerId, now, now, "Local rate token unavailable; returned to queue");
+			log.debug(
+					"swarm dispatch deferred: taskType={}, taskId={}, workerId={}, reason=local-rate-token, wait={}",
+					task.taskType(),
+					task.id(),
+					workerId,
+					token.waitDuration());
+			return DispatchDecision.waitFor(token.waitDuration());
+		}
+		log.debug(
+				"swarm dispatch submitted: taskType={}, taskId={}, workerId={}, attempt={}",
+				task.taskType(),
+				task.id(),
+				workerId,
+				task.attemptCount());
+		executorService.submit(() -> {
+			try {
+				taskRepository.markInProgress(task.id(), workerId, Instant.now());
+				executeTask(task);
+			} finally {
+				typeSemaphore.release();
+				executorCapacity.release();
+			}
+		});
+		return DispatchDecision.dispatchedDecision();
+	}
+
+	private void executeTask(TaskRecord task) {
+		executeTask(task, handlerRegistry.get(task.taskType()));
+	}
+
+	private <T> void executeTask(TaskRecord task, TaskHandler<T> handler) {
+		try {
+			log.debug(
+					"swarm task execution started: taskType={}, taskId={}, workerId={}, attempt={}",
+					task.taskType(),
+					task.id(),
+					workerId,
+					task.attemptCount());
+			T payload = handler.payloadExtractor().extract(new PayloadReader(task.payload(), objectMapper));
+			UUID currentSeriesId = task.seriesId() != null ? task.seriesId() : task.id();
+			TaskExecutionContext<T> context = new TaskExecutionContext<>(
+					task.id(),
+					task.taskType(),
+					workerId,
+					task.attemptCount(),
+					task.claimedAt(),
+					payload,
+					task.seriesId(),
+					new RuntimeProgressReporter(task.id(), workerId),
+					(delay, newPayload) -> requestAgain(task, currentSeriesId, delay, newPayload));
+			TaskExecutionResult result = handler.execute(context);
+			if (result instanceof TaskExecutionResult.Failed failed) {
+				handleFailedTask(task, HANDLER_FAILED_MESSAGE);
+				log.debug(
+						"swarm task execution failed-result: taskType={}, taskId={}, workerId={}, attempt={}, failureType={}",
+						task.taskType(),
+						task.id(),
+						workerId,
+						task.attemptCount(),
+						HANDLER_FAILED_MESSAGE);
+			} else {
+				taskRepository.markCompleted(task.id(), workerId, Instant.now());
+				log.debug(
+						"swarm task execution completed: taskType={}, taskId={}, workerId={}, attempt={}",
+						task.taskType(),
+						task.id(),
+						workerId,
+						task.attemptCount());
+			}
+		} catch (ClassCastException ex) {
+			handleFailedTask(
+					task, "Task payload type mismatch: " + ex.getClass().getSimpleName());
+			log.warn(
+					"swarm task execution failed-type-mismatch: taskType={}, taskId={}, workerId={}, attempt={}, exceptionType={}",
+					task.taskType(),
+					task.id(),
+					workerId,
+					task.attemptCount(),
+					ex.getClass().getName());
+			log.debug("swarm task execution failed-type-mismatch stacktrace", ex);
+		} catch (Exception ex) {
+			handleFailedTask(
+					task, HANDLER_EXCEPTION_MESSAGE + ": " + ex.getClass().getSimpleName());
+			log.warn(
+					"swarm task execution failed-exception: taskType={}, taskId={}, workerId={}, attempt={}, exceptionType={}",
+					task.taskType(),
+					task.id(),
+					workerId,
+					task.attemptCount(),
+					ex.getClass().getName());
+			log.debug("swarm task execution failed-exception stacktrace", ex);
+		}
+	}
+
+	/**
+	 * Inserts a follow-up occurrence of {@code task}'s recurring series, requested via
+	 * {@link TaskExecutionContext#again}. Mirrors {@code MangoTasks.at(...)}'s mode and wake-on-queue handling, since
+	 * the daemon operates against {@link TaskRepository}/{@link MangoSwarmProperties} directly rather than depending on
+	 * the application-facing {@code MangoTasks} façade.
+	 */
+	private UUID requestAgain(TaskRecord task, UUID seriesId, Duration delay, Object newPayload) {
+		MangoSwarmProperties.TaskType config = properties.getTaskTypes().get(task.taskType());
+		if (config.getMode() == MangoSwarmProperties.TaskMode.REJECT) {
+			throw new IllegalStateException("Task type is rejecting new tasks: " + task.taskType());
+		}
+		if (config.getMode() == MangoSwarmProperties.TaskMode.DROP) {
+			return UuidV7.generate();
+		}
+		Instant at = Instant.now().plus(delay);
+		JsonNode payloadNode = objectMapper.valueToTree(newPayload);
+		UUID newTaskId = taskRepository.queue(task.taskType(), payloadNode, at, seriesId);
+		if (config.isWakeOnQueue() && !at.isAfter(Instant.now())) {
+			wakeSignal.signal();
+		}
+		return newTaskId;
+	}
+
+	private void handleFailedTask(TaskRecord task, String errorMessage) {
+		Instant now = Instant.now();
+		MangoSwarmProperties.TaskType config = properties.getTaskTypes().get(task.taskType());
+		int maxAttempts = Math.max(1, config.getMaxAttempts());
+		if (task.attemptCount() < maxAttempts) {
+			Duration retryDelay = retryDelay(task.attemptCount(), config, properties.getRetry());
+			Instant retryAt = now.plus(retryDelay);
+			taskRepository.rescheduleAfterFailure(task.id(), workerId, now, retryAt, errorMessage);
+			log.debug(
+					"swarm task scheduled for retry: taskType={}, taskId={}, workerId={}, attempt={}, maxAttempts={}, retryDelay={}, retryAt={}, failureType={}",
+					task.taskType(),
+					task.id(),
+					workerId,
+					task.attemptCount(),
+					maxAttempts,
+					retryDelay,
+					retryAt,
+					errorMessage);
+			return;
+		}
+		taskRepository.markFailed(task.id(), workerId, now, errorMessage);
+	}
+
+	static Duration retryDelay(
+			int failedAttempt, MangoSwarmProperties.TaskType config, MangoSwarmProperties.Retry defaults) {
+		Duration baseDelay = firstNonNull(config.getRetryBaseDelay(), config.getRetryDelay(), defaults.getBaseDelay());
+		if (baseDelay == null || baseDelay.isNegative()) {
+			baseDelay = Duration.ZERO;
+		}
+		double multiplier =
+				config.getRetryMultiplier() == null ? defaults.getMultiplier() : config.getRetryMultiplier();
+		multiplier = Math.max(1.0d, multiplier);
+		int exponent = Math.max(0, failedAttempt - 1);
+		double factor = Math.pow(multiplier, exponent);
+		if (factor >= Long.MAX_VALUE) {
+			return retryMaxDelay(config, defaults);
+		}
+		long baseNanos;
+		try {
+			baseNanos = baseDelay.toNanos();
+		} catch (ArithmeticException ex) {
+			return retryMaxDelay(config, defaults);
+		}
+		double nanos = baseNanos * factor;
+		if (nanos >= Long.MAX_VALUE) {
+			return retryMaxDelay(config, defaults);
+		}
+		Duration calculated = Duration.ofNanos(Math.max(0L, (long) nanos));
+		Duration maxDelay = retryMaxDelay(config, defaults);
+		if (maxDelay.isZero()) {
+			return Duration.ZERO;
+		}
+		return calculated.compareTo(maxDelay) > 0 ? maxDelay : calculated;
+	}
+
+	private static Duration retryMaxDelay(MangoSwarmProperties.TaskType config, MangoSwarmProperties.Retry defaults) {
+		Duration maxDelay = firstNonNull(config.getRetryMaxDelay(), defaults.getMaxDelay());
+		if (maxDelay == null || maxDelay.isNegative()) {
+			return Duration.ZERO;
+		}
+		return maxDelay;
+	}
+
+	@SafeVarargs
+	private static <T> T firstNonNull(T... values) {
+		for (T value : values) {
+			if (value != null) {
+				return value;
+			}
+		}
+		return null;
+	}
+
+	private final class RuntimeProgressReporter implements TaskExecutionContext.ProgressReporter {
+		private final UUID taskId;
+		private final UUID workerId;
+		private String executionState = "running";
+		private Integer progressPercent;
+		private String message;
+		private Instant lastPersistedAt = Instant.EPOCH;
+
+		private RuntimeProgressReporter(UUID taskId, UUID workerId) {
+			this.taskId = taskId;
+			this.workerId = workerId;
+		}
+
+		@Override
+		public void report(String state, Integer percent, String progressMessage) {
+			Instant now = Instant.now();
+			String nextState = state == null ? executionState : state;
+			String nextMessage = progressMessage == null ? message : progressMessage;
+			if (shouldPersist(now, nextState, percent, nextMessage)) {
+				taskRepository.updateRuntime(taskId, workerId, now, nextState, percent, nextMessage);
+				executionState = nextState;
+				progressPercent = percent;
+				message = nextMessage;
+				lastPersistedAt = now;
+			}
+		}
+
+		private boolean shouldPersist(Instant now, String nextState, Integer nextPercent, String nextMessage) {
+			return !Objects.equals(executionState, nextState)
+					|| !Objects.equals(message, nextMessage)
+					|| progressChangedEnough(nextPercent)
+					|| !now.isBefore(lastPersistedAt.plus(runtimeMinUpdateInterval));
+		}
+
+		private boolean progressChangedEnough(Integer nextPercent) {
+			if (progressPercent == null || nextPercent == null) {
+				return !Objects.equals(progressPercent, nextPercent);
+			}
+			return Math.abs(nextPercent - progressPercent) >= runtimeProgressThresholdPercent;
+		}
+	}
+
+	private static int min(int first, int... values) {
+		int result = first;
+		for (int value : values) {
+			result = Math.min(result, value);
+		}
+		return result;
+	}
+
+	@Generated
+	private static String resolveHostname() {
+		try {
+			return InetAddress.getLocalHost().getHostName();
+		} catch (UnknownHostException ex) {
+			return System.getenv().getOrDefault("HOSTNAME", "unknown");
+		}
+	}
+
+	private static final class PollState {
+		private Duration nextRateLimitedPoll;
+		private boolean attemptedAnyClaim;
+		private boolean claimedAnyTasks;
+		private boolean dispatchedAnyTasks;
+	}
+
+	private record BatchDecision(
+			int configuredBatch,
+			int startCapacity,
+			int remainingTypeCapacity,
+			int remainingExecutorCapacity,
+			int claimLimit,
+			Duration nextExecutionDelay) {}
+
+	private record DispatchDecision(boolean dispatched, Duration waitDuration) {
+		private static DispatchDecision dispatchedDecision() {
+			return new DispatchDecision(true, Duration.ZERO);
+		}
+
+		private static DispatchDecision notDispatchedDecision() {
+			return new DispatchDecision(false, Duration.ZERO);
+		}
+
+		private static DispatchDecision waitFor(Duration waitDuration) {
+			return new DispatchDecision(false, waitDuration);
+		}
+	}
+
+	@Retention(RetentionPolicy.CLASS)
+	@Target({ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.TYPE})
+	private @interface Generated {}
+}

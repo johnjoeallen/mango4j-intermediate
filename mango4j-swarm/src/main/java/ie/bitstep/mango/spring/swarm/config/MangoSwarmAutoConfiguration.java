@@ -1,0 +1,122 @@
+package ie.bitstep.mango.spring.swarm.config;
+
+import java.time.Clock;
+import java.util.List;
+
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.hibernate.autoconfigure.HibernatePropertiesCustomizer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.jdbc.core.JdbcTemplate;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import ie.bitstep.mango.spring.swarm.MangoTasks;
+import ie.bitstep.mango.spring.swarm.db.JdbcTaskRepository;
+import ie.bitstep.mango.spring.swarm.db.SchemaQualifiedTables;
+import ie.bitstep.mango.spring.swarm.db.TaskRepository;
+import ie.bitstep.mango.spring.swarm.executor.MangoSwarmDaemon;
+import ie.bitstep.mango.spring.swarm.executor.TaskWakeSignal;
+import ie.bitstep.mango.spring.swarm.handler.TaskHandler;
+import ie.bitstep.mango.spring.swarm.handler.TaskHandlerRegistry;
+import ie.bitstep.mango.spring.swarm.worker.JdbcWorkerRegistry;
+import ie.bitstep.mango.spring.swarm.worker.WorkerRegistry;
+
+/** Spring Boot auto-configuration for mango-swarm runtime beans. */
+@AutoConfiguration
+@EnableConfigurationProperties(MangoSwarmProperties.class)
+@ConditionalOnProperty(prefix = "mango4j.swarm", name = "enabled", havingValue = "true", matchIfMissing = true)
+public class MangoSwarmAutoConfiguration {
+
+	@Bean
+	@ConditionalOnMissingBean
+	ObjectMapper mangoObjectMapper() {
+		return JsonMapper.builder()
+				.disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+				.build();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	SchemaQualifiedTables mangoSchemaQualifiedTables(MangoSwarmProperties properties) {
+		return new SchemaQualifiedTables(properties.normalize().getDatabase().getSchema());
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	WorkerRegistry mangoWorkerRegistry(
+			JdbcTemplate jdbcTemplate, MangoSwarmProperties properties, SchemaQualifiedTables tables) {
+		MangoSwarmProperties normalized = properties.normalize();
+		return new JdbcWorkerRegistry(jdbcTemplate, normalized.getWorker().getStaleAfter(), tables);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	TaskRepository mangoTaskRepository(
+			JdbcTemplate jdbcTemplate, ObjectMapper objectMapper, SchemaQualifiedTables tables) {
+		return new JdbcTaskRepository(jdbcTemplate, objectMapper, tables);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	TaskWakeSignal mangoTaskWakeSignal() {
+		return new TaskWakeSignal();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	MangoTasks mangoTasks(
+			TaskRepository taskRepository,
+			ObjectMapper objectMapper,
+			MangoSwarmProperties properties,
+			TaskWakeSignal wakeSignal) {
+		return new MangoTasks(taskRepository, objectMapper, properties.normalize(), Clock.systemUTC(), wakeSignal);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	TaskHandlerRegistry mangoTaskHandlerRegistry(List<TaskHandler<?>> handlers, MangoSwarmProperties properties) {
+		MangoSwarmProperties normalized = properties.normalize();
+		return new TaskHandlerRegistry(
+				handlers, normalized.getTaskTypes().keySet(), normalized.isAllowUnconfiguredHandlers());
+	}
+
+	@Bean(initMethod = "start", destroyMethod = "stop")
+	@ConditionalOnBean(TaskHandlerRegistry.class)
+	@ConditionalOnMissingBean
+	MangoSwarmDaemon mangoSwarmDaemon(
+			WorkerRegistry workerRegistry,
+			TaskRepository taskRepository,
+			TaskHandlerRegistry handlerRegistry,
+			MangoSwarmProperties properties,
+			ObjectMapper objectMapper,
+			TaskWakeSignal wakeSignal) {
+		return new MangoSwarmDaemon(
+				workerRegistry, taskRepository, handlerRegistry, properties.normalize(), objectMapper, wakeSignal);
+	}
+
+	@Bean
+	@ConditionalOnClass(name = "org.hibernate.cfg.AvailableSettings")
+	HibernatePropertiesCustomizer mangoHibernateDefaultSchemaCustomizer(MangoSwarmProperties properties) {
+		return hibernateProperties -> {
+			String schema = normalizedSchema(properties.normalize());
+			if (schema != null
+					&& properties.getDatabase().isApplySchemaToHibernateDefault()
+					&& !hibernateProperties.containsKey("hibernate.default_schema")) {
+				hibernateProperties.put("hibernate.default_schema", schema);
+			}
+		};
+	}
+
+	private static String normalizedSchema(MangoSwarmProperties properties) {
+		String schema = properties.getDatabase().getSchema();
+		if (schema == null || schema.isBlank()) {
+			return null;
+		}
+		return schema.trim();
+	}
+}
