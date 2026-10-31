@@ -35,14 +35,15 @@ Maven project.
 
 ### Mutation testing and formatting
 
-`-Phammer-time` runs Spotless (`spotless:apply`) and PIT mutation testing at `verify`:
+`-Phammer-time` runs PIT mutation testing at `verify`. It does not modify source files; in flowsink and swarm it runs `spotless:check` and fails on unformatted code.
 
 ```bash
 mvn -Phammer-time clean verify
+mvn spotless:apply    # flowsink and swarm only; format sources on demand
 ```
 
-- PIT is `pitest-maven` 1.30.1 in every group (`pitest.plugin.version`); Spotless is 3.10.4 with
-  palantir-java-format 2.103.0, which is needed to run on JDK 25. `mango4j-flowsink` skips PIT unless
+- PIT is `pitest-maven` 1.30.1 in every group (`pitest.plugin.version`); Spotless (flowsink and swarm) is 3.10.4
+  with palantir-java-format 2.103.0, which is needed to run on JDK 25. `mango4j-flowsink` skips PIT unless
   this profile is active.
 - Thresholds are per module. They sit at each module's current score rather than 100, so the profile
   passes today and a regression fails the build. Raise a threshold when you raise the score.
