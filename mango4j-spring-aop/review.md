@@ -1,17 +1,17 @@
 # Code and security review
 
-Reviewed all production Java classes and the module POM. This is a static review; tests were not run and dependency vulnerabilities were not independently assessed.
+Static review of all production Java classes and the module POM, with each finding checked against the code. Findings marked *reproduced* were also demonstrated by running the code. Dependencies were not scanned for known vulnerabilities.
+
+**Quality gates:** mutation 96% (74/77), line coverage 96%; PIT thresholds are set to 96/95.
 
 ## Findings
 
-- **Implementation parameter annotations can be missed through interface proxies** — `src/main/java/ie/bitstep/mango/spring/aop/ParameterMapper.java:23` maps the method supplied by the join-point signature directly. For a JDK interface proxy that method can be the interface declaration, so `ParameterValue.getAnnotation()` sees interface parameter annotations rather than annotations declared only on the implementation. An aspect using these annotations to mask or validate arguments can therefore miss its intended policy. Resolve the most specific target method and define how interface and implementation annotations combine; test both proxy styles and annotation locations. `MethodInfo.java:35` similarly retains the signature method for annotation lookup.
-- **Metadata caches retain classes and class loaders** — `ParameterMapper.java:17` keeps `Method` keys strongly even though its values are soft references, and `MethodInfoFactory.java:18` strongly retains both class and method keys and values. Neither cache removes entries as classes unload. Applications that repeatedly create proxy classes or reload plugins can retain class loaders and grow memory indefinitely. Use lifecycle-aware caching such as `ClassValue` or a bounded cache and test unloading.
-- **Mapped arguments are not defensively copied on construction** — `src/main/java/ie/bitstep/mango/spring/aop/MappedMethodParameters.java:40` stores the supplied array directly, while the `ParameterValue` list captures its elements at construction. If the caller later changes the original array, `getArgument()` and `getArguments()` disagree with `getModifiedArguments()` and the parameter values. Copy the input array and test mutation after construction.
+1. **Parameter annotations on the implementation are invisible through JDK interface proxies** (Medium). `ParameterMapper.java:23` maps the method returned by `methodSignature.getMethod()`. *Reproduced* with `AspectJProxyFactory`: for an interface-based (JDK) proxy the method is the interface declaration and an annotation placed on the implementation's parameter is not present (`false`), while a class-based proxy sees it (`true`). Advice that reads parameter annotations, for example to decide what to mask or redact, silently misses them. Resolve the most specific method on the target class.
 
-`ProxyBuilder` uses Spring proxies, so direct calls within a target and methods Spring cannot proxy may bypass advice; callers must account for this when using advice as a security boundary.
+2. **Metadata caches retain classes and class loaders** (Low). `ParameterMapper.java:16` keeps `Method` keys strongly (only the values are soft references) and `MethodInfoFactory.java:17` retains class and method keys and values strongly. Neither releases entries when classes unload.
 
+3. **Mapped arguments are not defensively copied** (Low). `MappedMethodParameters.java:24` stores the supplied array directly while the `ParameterValue` list captures the elements at construction, so a later change to the caller's array makes `getArgument(i)` and `getParameterValue(i)` disagree.
 
-## Re-assessment (2026-10-31)
+## Notes
 
-- No new findings; carried forward without re-verification.
-- **Altered:** mutation 96% (74/77) and coverage 96%; thresholds lowered from 100 to 96/95. Three mutants and six lines are untested, and the weak spots are likely the proxy and cache paths described above.
+- `ProxyBuilder` uses Spring proxies, so self-invocation and methods Spring cannot proxy bypass advice; do not rely on it as a security boundary.

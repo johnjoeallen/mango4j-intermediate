@@ -1,10 +1,13 @@
 # Code and security review
 
-Reviewed the aggregator/parent POM, its module declarations, inherited dependencies and plugins, and build support files. This parent contains no production Java code. Reviews of the three child modules are in their respective `review.md` files.
+Static review of the aggregator/parent POM, its module declarations, inherited plugins and the Checkstyle setup. The POM has no production code. Dependencies and plugins were not scanned for known vulnerabilities.
 
-No additional actionable issue was identified in the parent configuration by this static review. The release profile makes signing opt-in, and publication is configured via the Central publishing plugin; release automation should explicitly select and verify its signing settings. No build was run and dependency/plugin vulnerabilities were not independently assessed.
+## Findings
 
+1. **Build tooling versions differ between parent POMs** (Low). This parent uses Checkstyle 10.26.1 while `mango4j-spring-parent` uses 14.3.0, so the two trees enforce different rule sets.
 
-## Re-assessment (2026-10-31)
+2. **The `hammer-time` profile no longer states the enforced thresholds** (Low). The profile defaults to 100% mutation and coverage, but `mango4j-crypto-core` (98/99) and `mango4j-crypto` (99/100) override them in their own POMs to the current scores. The profile's description therefore overstates the gate.
 
-- **Altered:** PIT is now 1.30.1 (was 1.22.1) and the hammer-time profile still demands 100% at the aggregator level; the per-module thresholds for `mango4j-crypto-core` (98/99) and `mango4j-crypto` (99/100) override it. Nothing else changed.
+## Notes
+
+- The `release` profile makes GPG signing opt-in; release automation should select and verify it explicitly.

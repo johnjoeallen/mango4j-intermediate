@@ -1,19 +1,21 @@
 # Code and security review
 
-Reviewed the production Java classes and module configuration. This is a static review; tests were not run and third-party dependency vulnerabilities were not independently assessed.
+Static review of all production Java classes and the module POM, with each finding checked against the code. Findings marked *reproduced* were also demonstrated by running the code. Dependencies were not scanned for known vulnerabilities.
+
+**Quality gates:** mutation 93% (81/87), line coverage 99%; PIT thresholds are set to 93/99.
 
 ## Findings
 
-- **Insight variable masking and truncation settings are ignored** — `src/main/java/ie/bitstep/mango/spring/insights/internal/InsightsProcessor.java:70` converts the argument with `LoggerMapper.toLoggable` but never reads `InsightVariable.mask()` or `truncateLen()`. A caller specifying a masker or a length limit can therefore publish a value without the requested protection, including to the log publisher. Apply the configured masker and truncation before storing the value, and test annotated sensitive strings through the full publishing path.
-- **Exception messages are published without sanitization** — `src/main/java/ie/bitstep/mango/spring/insights/internal/ExceptionUtils.java:16` captures each exception message, and `publisher/InsightsPublisherLogFile.java:30` serializes the resulting insight. Exceptions can contain sensitive input, URLs, or credentials, which can reach logs or storage. Apply a configurable sanitization/allowlist policy before publishing and test nested causes containing secrets.
-- **Correlation ID can leak across reused threads** — `src/main/java/ie/bitstep/mango/spring/insights/initialiser/DefaultInsightsContextInitialiser.java:30` creates an MDC correlation ID if none exists, but this module never removes the value it creates. On a pooled thread without an external MDC cleanup, a subsequent unrelated operation can inherit the previous correlation ID, linking unrelated requests. Track ownership and restore the prior MDC state when the outer insight completes; test consecutive operations on the same thread.
-- **Unknown HTTP status prevents insight publication** — `src/main/java/ie/bitstep/mango/spring/insights/internal/InsightWebInterceptor.java:71` uses `HttpStatus.valueOf(int)`, which throws for a valid status code not represented by the enum. The enclosing catch skips publishing all insights for that request. Use a status-code representation that accepts arbitrary valid HTTP codes and test a non-enum code.
-- **Asynchronous publisher failures are not caught by the provider** — `src/main/java/ie/bitstep/mango/spring/insights/internal/InsightsProvider.java:47` catches task submission errors but exceptions thrown inside the scheduled lambda occur later on the executor thread. Depending on executor configuration, publication failures may be lost or only reach a generic handler. Catch and report errors inside each task and test a throwing publisher using a real asynchronous executor.
+1. **`@InsightVariable` masking and truncation are ignored** (High). `InsightVariable.java:16,18` define `mask()` and `truncateLen()`, but `InsightsProcessor.java:74` converts the argument with `LoggerMapper.toLoggable(arg)` and never reads either. A caller who marks a variable with a masker still publishes the raw value, and the length limit is not applied.
 
-Request URIs are captured in insight context and may themselves contain sensitive path segments. `InsightTag` has no masking option; applications should avoid placing secrets in tags.
+2. **Exception messages are published unsanitised** (Medium). `ExceptionUtils.java:16` copies each exception's message into the insight and `InsightsPublisherLogFile` serialises it. Messages can contain user input, URLs or credentials, and none of the logging module's sanitisers are applied.
 
+3. **The correlation id is created but never removed** (Medium). `DefaultInsightsContextInitialiser.java:31` puts a generated id into the MDC when none exists and nothing in this module removes it, so on a pooled thread without external MDC cleanup it carries over to unrelated work.
 
-## Re-assessment (2026-10-31)
+4. **An unknown HTTP status prevents publication** (Medium). `InsightWebInterceptor.java:71` uses `HttpStatus.valueOf(int)`, which throws for a code that is not an enum constant; the enclosing `catch` then skips publishing every insight for that request. Use `HttpStatusCode.valueOf`.
 
-- No new findings; carried forward without re-verification.
-- **Altered:** mutation 93% (81/87) and coverage 99%; thresholds lowered from 100 to 93/99. Six surviving mutants in a module that publishes request data and exception messages, so the masking/truncation and status-code findings above are plausibly among them.
+5. **Asynchronous publisher failures are not handled** (Low). `InsightsProvider.java:47` catches only submission errors, so an exception thrown inside the task on the executor thread is handled by that executor's policy.
+
+## Notes
+
+- Request URIs are captured in the insight context and may contain sensitive path segments. `InsightTag` has no masking option, so secrets must not be placed in tags.

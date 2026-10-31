@@ -1,15 +1,13 @@
 # Code and security review
 
-Reviewed the module's production Java source, `OffsetLimitPageable`. Tests and dependency vulnerabilities were not independently assessed.
+Static review of all production Java classes and the module POM, with each finding checked against the code. Findings marked *reproduced* were also demonstrated by running the code. Dependencies were not scanned for known vulnerabilities.
 
-## Finding
+**Quality gates:** mutation 100%, line coverage 95% (19/20); the coverage threshold is set to 95.
 
-- **Page number silently overflows for large offsets** — `src/main/java/ie/bitstep/mango/spring/jpa/OffsetLimitPageable.java:35` casts a long quotient to int without checking its range. For example, offset 2147483648 and limit 1 produce a negative page number despite passing constructor validation. Consumers using `getPageNumber()` can navigate to or report the wrong page. Reject offsets whose quotient exceeds `Integer.MAX_VALUE`, or use a checked conversion, and test the boundary. `next()` can also overflow a long near `Long.MAX_VALUE` and then throws through constructor validation; document or explicitly check that boundary.
+## Findings
 
-No tests were run.
+1. **The page number overflows for large offsets** (Low). `OffsetLimitPageable.java:35` casts a `long` quotient to `int`. An offset of 2147483648 with limit 1 passes constructor validation and gives a negative page number.
 
+2. **There is no upper bound on the page size** (Low). `OffsetLimitPageable.of` accepts any limit up to `Integer.MAX_VALUE`; if it is built from request parameters, the caller must cap it.
 
-## Re-assessment (2026-10-31)
-
-- No new findings. The module is one class (`OffsetLimitPageable`, 77 lines) and the overflow finding stands as written.
-- **Altered:** line coverage is 95% (19/20 lines) and its PIT coverage threshold was lowered from 100 to 95; one line is untested. The module declares `spring-boot-starter-data-jpa` at compile scope for this single class, which forces JPA and Hibernate onto every consumer.
+3. **JPA is a compile-scope dependency of a one-class module** (Low). `pom.xml:53` declares `spring-boot-starter-data-jpa` at compile scope for one class that needs only Spring Data's `Pageable`, forcing JPA and Hibernate onto every consumer.

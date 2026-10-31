@@ -1,10 +1,13 @@
 # Code and security review
 
-Reviewed the module's sole production Java class, `HibernateProxyResolver`. No actionable code or security finding was identified in that class. Resolving a proxy initializes it through Hibernate and therefore may issue a database query or require an open session; callers should account for those side effects.
+Static review of the module's single production class, `HibernateProxyResolver`, and its POM. Dependencies were not scanned for known vulnerabilities.
 
-Tests and third-party dependency vulnerabilities were not independently assessed; no tests were run.
+**Quality gates:** mutation and line coverage 100%.
 
+## Findings
 
-## Re-assessment (2026-10-31)
+1. **`hibernate-core` is a compile-scope dependency** (Low). `pom.xml:24` declares `hibernate-core` 7.2.1.Final with default scope, so every consumer inherits that Hibernate version transitively for a 31-line adapter. Consumers of this module already have Hibernate; declare it `provided`.
 
-- No new findings; the module is a single 31-line class. Re-read this pass.
+## Notes
+
+- `HibernateProxyResolver.resolve` (`:16`) calls `getImplementation()`, which initialises the proxy. That can issue a query or throw `LazyInitializationException` when no session is open, so callers must account for the side effect.

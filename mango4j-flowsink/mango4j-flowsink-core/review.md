@@ -1,19 +1,22 @@
 # Code and security review
 
-Reviewed the production Java classes and module POM. This is a static review; tests were not run and dependency vulnerabilities were not independently assessed.
+Static review of all production Java classes and the module POM, with each finding checked against the code. Findings marked *reproduced* were also demonstrated by running the code. Dependencies were not scanned for known vulnerabilities.
+
+**Quality gates:** mutation and line coverage 100%.
 
 ## Findings
 
-- **Disabling processing during a flow leaves its context on the thread** — `src/main/java/ie/bitstep/mango/flowsink/core/processor/DefaultFlowProcessor.java:72` returns immediately from completion when support is disabled, without popping the event pushed at start. Re-enabling on a reused thread can attach later steps to the old flow and expose prior attributes across requests. Ensure a started flow is closed even if emission is disabled midway, and test disable/enable across pooled-thread reuse.
-- **Dispatch can create an orphan worker during close** — `src/main/java/ie/bitstep/mango/flowsink/core/dispatch/AsyncDispatchBus.java:32` checks `closed` separately from worker creation. A dispatch that passes the check can create a worker after `close()` has iterated and cleared the map; that daemon worker is never shut down and its event can outlive the bus. Coordinate registration and close atomically and test their interleaving.
-- **Asynchronous snapshots retain mutable values** — `src/main/java/ie/bitstep/mango/flowsink/model/FlowEvent.java:141` copies maps but not nested values, return values, or throwables; `StepEvent.snapshot()` behaves similarly. A producer or one sink can mutate shared data after dispatch, so other sinks can observe changed or inconsistent data, including sensitive values. Define an immutable event-value contract or snapshot supported nested values, and test mutation after dispatch and between sinks.
-- **Flow completion ignores the supplied name** — `DefaultFlowProcessor.java:84` completes the current stack entry without checking `name`. An out-of-order or mismatched completion can close a different flow and misattribute its data. Verify the expected flow identity and define recovery for mismatches; test nested flows completed out of order.
-- **Concurrent handler registration can duplicate deliveries** — `src/main/java/ie/bitstep/mango/flowsink/core/sinks/FlowHandlerRegistry.java:10` performs `contains` and `add` separately. Concurrent registrations of the same handler can both add it, causing duplicate dispatch. Use `addIfAbsent` and test concurrent registration.
+1. **A completed or disabled flow can leave its event on the thread's stack** (Medium). `DefaultFlowProcessor.java:62` returns early from `onFlowCompleted` when processing has been disabled, without popping the event pushed at start. `validate(attrs, ctx)` at `:67` and `:100` also runs before the pop, so a validator exception leaves the event pushed. Later steps on the same thread then attach to a stale flow. Pop in a `finally`.
 
-The bus deliberately drops events on queue saturation and logs failures; consumers requiring durable audit records need a durable delivery mechanism. Event data and error messages should be treated as potentially sensitive by sinks.
+2. **Completion ignores the supplied flow name** (Low). `DefaultFlowProcessor.java:69` and `:102` complete `support.currentContext()` without comparing it to `name`, so an out-of-order or mismatched completion closes a different flow and misattributes its data.
 
+3. **Dispatch can create a worker after `close()`** (Low). `AsyncDispatchBus.java:37` checks `closed` and then calls `workers.computeIfAbsent`; a dispatch that passes the check can create a daemon worker after `close()` has cleared the map, and that worker is never shut down.
 
-## Re-assessment (2026-10-31)
+4. **Event snapshots are shallow** (Low). `FlowEvent.java:143` copies the top-level maps but shares nested values, the return value and the throwable, so a producer or one sink mutating them is visible to every other sink.
 
-- No new findings; carried forward without re-verification.
-- Re-checked this pass: the module is Spring-free (slf4j and opentelemetry only). It holds the engine but nothing in it discovers handlers or starts flows; that is all in `flowsink-spring`. The module is at 100% mutation and coverage and keeps the full 100/100 gate.
+5. **Concurrent registration can duplicate a handler** (Low). `FlowHandlerRegistry.java:10` does `contains` then `add` on a `CopyOnWriteArrayList` as two steps. Use `addIfAbsent`.
+
+## Notes
+
+- The module is Spring-free (slf4j and OpenTelemetry only) and contains the engine, but nothing in it discovers handlers or starts flows; that is in `flowsink-spring`.
+- The bus deliberately drops events when a sink's queue (10,000) is full and logs it; consumers that need durable audit records need a durable mechanism. Event data and error messages should be treated as potentially sensitive by sinks.

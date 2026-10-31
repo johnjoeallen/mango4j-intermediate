@@ -1,16 +1,18 @@
 # Code and security review
 
-Reviewed both production classes, the module POM, and the delegate tests. This is a static review; no tests were run, no live AWS calls were made, and dependency vulnerabilities were not independently assessed.
+Static review of both production classes, the POM and the delegate tests. No live AWS call was made. Dependencies were not scanned for known vulnerabilities.
+
+**Quality gates:** mutation and line coverage 100%.
 
 ## Findings
 
-- **Decryption does not bind the ciphertext to the configured KMS key** — `src/main/java/ie/bitstep/mango/crypto/delegates/aws/kms/impl/service/encryption/AwsKmsEncryptionServiceDelegate.java:63` sends only the ciphertext blob to KMS, ignoring the `CryptoKey` associated with the container and the key ID saved during encryption. If the application's KMS principal can decrypt under multiple keys, a substituted ciphertext can be decrypted under a different key than the caller's selected key, undermining key or tenant isolation assumptions. Set the expected KMS key from trusted key configuration and verify the returned key identity, accounting for aliases and rotation; test mismatched keys and tenant contexts.
-- **Asymmetric encryption configuration is not propagated to decryption** — the encrypt method sends the configured algorithm and persists the response algorithm, but the decrypt request at line 63 omits both the algorithm and key ID. KMS asymmetric decryption requires these parameters, so ciphertext produced with an asymmetric key cannot round-trip through this delegate. Populate the request using trusted key configuration and validated stored metadata; add a KMS-compatible asymmetric round-trip test.
+1. **Decryption does not bind the ciphertext to the configured KMS key** (Medium). `AwsKmsEncryptionServiceDelegate.java:60` builds a `DecryptRequest` from the ciphertext blob only. The stored key id and the container's `CryptoKey` are ignored, and the response key id is not compared. If the application's principal can decrypt under several KMS keys, a ciphertext produced under another key is accepted. Pass `keyId` so KMS enforces the key, and compare the response.
 
-The existing mocked decrypt test explicitly expects both fields to be null, so it does not exercise either constraint. KMS encryption context is not supported by this interface; applications needing context-bound ciphertext must account for that limitation.
+2. **Asymmetric keys cannot round-trip** (Medium). Encryption sends the configured algorithm (`:50`), but the decrypt request omits both the key id and the encryption algorithm, which KMS requires for asymmetric keys, so asymmetric ciphertext cannot be decrypted by this delegate. The existing mocked decrypt test expects both to be null, so it does not exercise this.
 
+3. **KMS errors are not translated, so the retry logic never retries them** (Medium). The delegate lets `KmsException` (and throttling errors) escape. `CryptoShield.retryableCommand` retries only `TransientCryptoException` and wraps anything else as non-transient, so a throttled or temporarily failing KMS call fails immediately.
 
-## Re-assessment (2026-10-31)
+## Notes
 
-- No new findings. Both existing findings were carried forward without re-verification.
-- Unchanged from the previous pass: no live AWS call was made, and the delegate's decrypt test asserts null key ID and algorithm, so neither constraint is exercised.
+- KMS encryption context is not supported by the delegate interface; applications that need context-bound ciphertext must account for that.
+- `hmac` makes one `GenerateMac` call per holder, sequentially.

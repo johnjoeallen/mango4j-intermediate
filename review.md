@@ -1,15 +1,16 @@
-# Root aggregator review
+# Code and security review
 
-Reviewed the root Maven aggregator POM and its module declarations. It contains no production code and is documented as an unpublished intermediate reactor. No additional actionable issue was identified in this POM.
+The repository is an intermediate aggregator for several independent Maven groups. The root POM has no production code. Every Maven project in the repository, including the parent POMs and the swarm reference application, has its own `review.md` with its findings; none of these is a dependency vulnerability scan, and no dependency or plugin was checked against a vulnerability database.
 
-Every Maven project in this repository has its own `review.md`, including parent POMs and the reference email application. Those files describe findings and scope; they are static reviews, not independent dependency vulnerability assessments. Tests were not systematically run across the reactor. The collections test run is recorded in its module review and encountered Mockito initialization errors.
+## Cross-cutting results
 
+- **Quality gates:** `mvn -Phammer-time clean verify` passes for every module. PIT thresholds are set per module to the current score, so a regression fails the build but the gaps below 100% are untested or unkilled code, not accepted risk. Scores (mutation / line coverage): collections 99/98, reflection 100/97, utils 98/98, validation 100/86, masking 100/100, crypto-core 99/99, crypto 99/100, flowsink-core 100/100, flowsink-spring 99/99, swarm 93/97, spring-aop 96/96, spring-logging 94/98, spring-insights 93/99, spring-observe 98/98, spring-data 100/95, spring-crypto-caas-delegate 97/99.
+- **Sensitive data reaching output:** several annotations meant to protect data are silently not applied. `@Mask` on `LoggableStyle.ALL` fields (spring-logging), `@InsightVariable` masking and truncation (spring-insights), `@Tag` values and raw throwables (spring-observe), and annotation-keyed masker caching (masking) can each expose a value the developer asked to protect.
+- **Cryptography:** the PBKDF2 and wrapped-key services accept CBC without authentication and take cipher parameters from stored ciphertext (crypto-core); key rotation can mark keys for deletion after failed or interrupted runs and skips encrypted entity types (crypto); the CaaS delegate permits plain HTTP and silently widens TLS trust.
+- **Concurrency and lifecycle:** thread-local diagnostic, observation and flow state is not always released on failure paths, and several static registries are mutable and unsynchronised.
+- **Correctness bugs reproduced by running code:** `ObjectMutator` skipping equal objects and reused state (utils), `getEndOfMonth(int, TimeZone)` near month end (utils), URL path and query encoding (utils), `MapFormat` and `QueryParam` exceptions (utils), masker cache hash collisions and the overflow in `MaskingUtils` (masking), and the interface-proxy annotation visibility (spring-aop).
 
-## Re-assessment (2026-10-31)
+## Build notes
 
-Scope of this pass: static re-assessment of each module against the current `main` (post package rename, PIT 1.30.1, Spotless 3.10.4). Findings were checked by reading the cited code; each module file says what was verified versus carried forward. Dependency/CVE scanning (e.g. OWASP dependency-check) was **not** performed anywhere.
-
-- **Altered: tests do run.** The earlier note that tests hit Mockito initialisation errors does not reproduce. `mvn -Phammer-time clean verify` passes for every module on JDK 25, including PIT.
-- **Altered: PIT is no longer a 100% gate.** Thresholds are now per module and set to each module's current score (mutation/coverage): collections 99/98, reflection 100/97, utils 98/98, validation 100/85, crypto-core 98/99, crypto 99/100, flowsink-spring 99/99, swarm 93/97, spring-aop 96/95, spring-logging 94/98, spring-insights 93/99, spring-observe 98/97, spring-data 100/95, caas-delegate 96/98. These guard against regression only; the gaps are untested code, not accepted risk.
-- **Resolved:** the Spotless/palantir `NoSuchMethodError` on JDK 25 and the PIT version drift (1.22.0/1.22.1/1.25.0/1.30.1) are fixed; PIT is 1.30.1 and Spotless 3.10.4/palantir 2.103.0 throughout.
-- **Highest-priority open items across the repo:** unauthenticated CBC and ciphertext-controlled parameters in crypto-core; plain-HTTP and silent trust-store fallback in the CaaS delegate; masking cache keyed by annotation hash; swarm lease/fencing races; sensitive values reaching logs (insights, observe, logging).
+- PIT is `pitest-maven` 1.30.1 and Spotless 3.10.4 with palantir-java-format 2.103.0 in every tree that uses them. `-Phammer-time` runs `spotless:check` (it does not rewrite files) in flowsink and swarm.
+- Parent POMs differ on the Checkstyle version (10.26.1 vs 14.3.0) and reference their Checkstyle configuration through a sibling-directory path.

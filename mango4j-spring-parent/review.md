@@ -1,15 +1,15 @@
 # Code and security review
 
-Reviewed the parent POM, module wiring, dependency and plugin configuration, and build-support file layout. The parent has no production Java code. This is a static review; no build was run and dependency or plugin vulnerabilities were not independently assessed.
+Static review of the parent POM, module wiring, dependency and plugin configuration and the build-support files. The POM has no production code. Dependencies and plugins were not scanned for known vulnerabilities.
 
-## Finding
+## Findings
 
-- **Checkstyle requires a specific sibling-directory layout** — `pom.xml:174` resolves its configuration through `${project.basedir}/../mango4j-spring-parent/checkstyle.xml`. A child built from a different checkout layout or using the published parent without the sibling directory can fail during the Checkstyle lifecycle. Package the rules as a reusable build artifact or explicitly constrain supported builds, and test a standalone child checkout.
+1. **Checkstyle requires a particular sibling-directory layout** (Low). `pom.xml:173` resolves the configuration as `${project.basedir}/../mango4j-spring-parent/checkstyle.xml`, relative to each child. A build from another layout, or one using the published parent without that sibling directory, fails when Checkstyle runs. Package the configuration as a resource or use a plugin dependency.
 
-The inherited Surefire `argLine` explicitly supplies the Mockito agent; child projects adding other agents need to compose their JVM arguments rather than replacing this value.
+2. **Checkstyle is on a different major version from the other parents** (Low). `pom.xml:66` uses Checkstyle 14.3.0 while `mango4j-parent` and `mango4j-crypto` use 10.26.1.
 
+3. **The `hammer-time` profile no longer states the enforced thresholds** (Low). The profile defaults to 100%, but six child modules (aop, logging, insights, observe, data, CaaS delegate) override mutation and coverage with lower, per-module values.
 
-## Re-assessment (2026-10-31)
+## Notes
 
-- **Altered:** PIT is 1.30.1 (unchanged here; the other trees moved up to it) and the `hammer-time` 100% defaults are overridden by lower per-module values in aop, logging, insights, observe, data and the CaaS delegate.
-- The Checkstyle sibling-directory finding was carried forward without re-verification.
+- The inherited Surefire `argLine` supplies the Mockito agent; child modules that add other agents must compose their arguments instead of replacing it.

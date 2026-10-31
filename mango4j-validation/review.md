@@ -1,15 +1,17 @@
 # Code and security review
 
-Reviewed the nine production Java classes and constraint definitions. Test execution and third-party dependency vulnerability analysis were not performed.
+Static review of all production Java classes and the module POM, with each finding checked against the code. Findings marked *reproduced* were also demonstrated by running the code. Dependencies were not scanned for known vulnerabilities.
 
-## Finding
+**Quality gates:** mutation 100%, line coverage 86% (24/28); the coverage threshold is set to 85, so four lines have no test.
 
-- **Empty identifiers pass both naming validators** — `src/main/java/ie/bitstep/mango/validation/validators/IdentifierValidator.java:47` checks character membership and separator placement but does not require a character. The empty string passes these checks and hence both `@IsValidKebabCase` and `@IsValidDottedCase`. Where these constraints alone protect a required identifier, empty values are accepted. Require a nonempty string if the intended contract requires a name, or document that callers must combine these constraints with `@NotBlank`; add tests for empty and null inputs.
+## Findings
 
-The UUID constraints intentionally permit null under Bean Validation's `@Pattern` semantics; applications needing a required value must also apply `@NotNull`.
+1. **Empty identifiers pass both naming validators** (Medium). `IdentifierValidator.java:47-51` requires only that every character is valid and that the separator is not first, last or doubled. The empty string satisfies all of that, so `@IsValidKebabCase` and `@IsValidDottedCase` accept it. Where the constraint alone guards a required identifier, an empty value gets through; require a minimum length or document that `@NotEmpty` is also needed. (`null` passing is standard Bean Validation behaviour.)
 
+2. **`ValidationUtils.validate` builds a new validator factory on every call** (Low). `ValidationUtils.java:26` calls `Validation.buildDefaultValidatorFactory()` inside the method, which bootstraps the provider each time. Called on a hot path it adds latency and garbage; cache the factory.
 
-## Re-assessment (2026-10-31)
+3. **`ValidationUtilsException` has no message** (Low). `ValidationUtilsException.java:17` stores the violations but never calls `super(message)`, so `getMessage()` is `null` and logs show an unexplained exception. Build a message from the violations' paths (not their invalid values).
 
-- No new findings. The empty-identifier finding was carried forward without re-verification.
-- **Altered:** line coverage is 86% (24/28). The PIT coverage threshold was lowered from 100 to 85, so four lines have no test at all; check whether they include the empty-input path above.
+## Notes
+
+- The UUID constraints are lowercase-only patterns; `Type4UUID` does not check the version nibble (its message says "type 4 like"), while `StrictType4UUID` checks both version and variant.
