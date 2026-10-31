@@ -314,16 +314,16 @@
                 <defaultGoal>clean verify</defaultGoal>
                 <plugins>
 
-                    <!-- Format source code -->
+                    <!-- Fail on unformatted source; run spotless:apply to fix -->
                     <plugin>
                         <groupId>com.diffplug.spotless</groupId>
                         <artifactId>spotless-maven-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>spotless-apply</id>
+                                <id>spotless-check</id>
                                 <phase>process-sources</phase>
                                 <goals>
-                                    <goal>apply</goal>
+                                    <goal>check</goal>
                                 </goals>
                             </execution>
                         </executions>
