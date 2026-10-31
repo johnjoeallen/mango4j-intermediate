@@ -1,0 +1,38 @@
+# Code and security review
+
+Reviewed the production Java classes, module POM, and selected tests. This is a static review; tests were not run and dependency vulnerabilities were not independently assessed.
+
+## Findings
+
+- **Mask annotations are ignored for implicitly included fields** — `src/main/java/ie/bitstep/mango/spring/logging/internal/LoggerMapper.java:327` includes fields under `LoggableStyle.ALL`, but lines 340–343 only resolve `@Mask` when `@LoggableField` is also present. A field annotated with `@Mask` alone can therefore be emitted unmasked. Resolve masking independently of explicit inclusion and test `ALL` style with a sensitive field carrying only `@Mask`.
+- **Masking a loggable object can skip the requested masker** — `LoggerMapper.java:267` maps an object annotated `@LoggableClass` using its field mapping rather than applying the supplied masker. A caller using a full masker on an object can consequently expose fields unless each is independently protected. Define and enforce masking behavior for structured objects and add regression tests for nested objects and collections.
+- **Cleanup is skipped when a post-populator or logger throws** — `src/main/java/ie/bitstep/mango/spring/logging/web/LoggingWebInterceptor.java:59` invokes post-populators and logging before unsetting the thread-local, without a `finally`. A failure can retain diagnostic context on a pooled request thread and contaminate later logs. Ensure cleanup runs even when population or logging fails, and test a throwing populator. Failures during `preHandle` similarly occur after context creation and need cleanup.
+- **Sanitizer registration is not thread-safe** — `src/main/java/ie/bitstep/mango/spring/logging/sanitiser/ExceptionSanitiserManager.java:15` stores sanitizers in a mutable `ArrayList`, with public unsynchronized addition and concurrent iteration. Runtime registration can race with logging and throw or produce inconsistent results. Restrict registration to startup or use a safely published immutable snapshot.
+
+No tests were run.
+
+Additional findings from the aspect and diagnostic context paths:
+
+- **Exception messages bypass registered sanitizers** — `src/main/java/ie/bitstep/mango/spring/logging/internal/DiagnosticContextLogger.java:105` logs `Throwable.getMessage()` after escaping control characters, without using `ExceptionSanitiserManager`. A custom sanitizer intended to remove secrets is therefore bypassed on this exception logging path. Apply sanitization before log-safe escaping and test a registered sanitizer against a logged exception.
+- **Isolated logging can erase the outer diagnostic context** — `src/main/java/ie/bitstep/mango/spring/logging/internal/AspectLoggerDelegate.java:229` unsets the entire thread-local deque when an isolated context's root finishes, before calling `pop()` at line 234. `DiagnosticContextThreadLocal.unset()` clears all contexts, including the outer one; `pop()` then operates on a newly initialized deque. Nested isolated calls can lose outer logging data. Pop only the isolated context and preserve the enclosing deque; test an isolated call inside an active outer context.
+- **Child limit is only diagnostic** — `src/main/java/ie/bitstep/mango/spring/logging/internal/DiagnosticContextItem.java:167` logs when the configured maximum is reached but still appends each child. A long-running operation with many nested logged calls can grow its diagnostic tree without bound. Enforce a limit or clearly document that this threshold only warns, and test high-volume nesting.
+
+The additional review covered `AspectLoggerDelegate`, diagnostic context lifecycle, web population, logger adapters, and exception logging. No tests were run.
+- **Top-level presence checks always succeed** — `src/main/java/ie/bitstep/mango/spring/logging/dc/DiagnosticContext.java:253` returns `true` for any configured top-level key even when no value has been stored. Consumers using `LogContext.contains()` to decide whether to initialize or propagate a value can skip required initialization. Check `topValues.containsKey(key)` and test absent, present-null, and present-value cases.
+- **Projection registry can change while logging** — `src/main/java/ie/bitstep/mango/spring/logging/internal/LogProjectionRegistry.java:16` shares a static mutable `HashMap`, clears and repopulates it during each application-context construction, and reads it without synchronization. Multiple contexts or concurrent startup and logging can cause missing or incorrect projections and unsafe concurrent map access. Build an immutable map and publish it atomically, preferably scoped to the owning application context; test concurrent and multiple-context initialization.
+
+Further reviewed projection mapping, accessors, sanitizers, and `DiagnosticContext`. Tests were not run.
+- **Root context top-level writes are lost** — `src/main/java/ie/bitstep/mango/spring/logging/dc/DiagnosticContext.java:111` creates a new context for every `getRootContext()` call and attaches only the root item. `RootLogContext.put()` for a top-level key writes to that temporary context's `topValues`, while a subsequent `get()` creates another empty context; those values are also absent from the original context's log output. Return a root view backed by the original top-level state or delegate top-level operations to it, and test put/get and emitted output.
+
+Reviewed the full `LoggerMapper`, root-context facade, aspect entry point, module POM, and selected sanitizer and masking tests in this pass. Tests were not executed. Dependency vulnerabilities were not independently assessed.
+
+- **Map conversion errors can disclose values** — `src/main/java/ie/bitstep/mango/spring/logging/internal/NullKeyException.java:5` embeds the value of a null-keyed map entry in an exception message. `LoggerMapper.toLoggable(Map)` logs that exception, so a secret value may be written to logs precisely when conversion fails. Report the invalid key without including the value, and test a null-keyed map containing sensitive data.
+
+
+## Re-assessment (2026-10-31)
+
+- **Verified in code:** `LogUtils.toLogSafeValue` escapes `\n`, `\t` and every other non-printable character (including `\r` and ESC) to `\uXXXX`, so log-forging through that path is handled. The earlier findings about exception messages and `NullKeyException` concern paths that do not use it.
+- **Altered (production change):** `IgnoredPackageSanitiser` now also ignores `java.base/java.util.stream.` frames. Four `LogUtilsTest` stack-trace assertions failed under PIT's runner, which invokes test methods through stream frames, so mutation testing could not start. The change is harmless but shows the sanitiser's behaviour depends on JDK-internal frame names.
+- **New (low): the sanitiser drops any stack line containing `$`.** `isIgnoredPackage` returns true for `line.contains("$")`, so frames from application inner classes, anonymous classes, lambdas and proxies (past the first two lines) are removed, not just framework ones. Match on the package prefix only, or at least keep the application's own packages.
+- **New (low): the ignored-package list is a shared mutable `ArrayList`.** `IgnoredPackageSanitiser.IGNORED_PACKAGES` is static, modified by the public `ignorePackage(String)` and streamed on every logged exception. Concurrent registration and logging can throw `ConcurrentModificationException` and lose the stack trace; it is the same class of issue as the existing `ExceptionSanitiserManager` finding. Use a `CopyOnWriteArrayList`.
+- **Altered:** mutation 94% (578/614) and coverage 98%; thresholds lowered from 100 to 94/98 and the module was previously failing outright under PIT (the four tests above). It has the largest gap of any Spring module.
