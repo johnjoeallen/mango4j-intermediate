@@ -20,7 +20,7 @@ Newest entries go at the bottom of the [log](#progress-log). Detail lives in
 | `mango4j-crypto` | `mango4j-crypto/` | crypto-core, crypto, aws-kms-delegate | yes | n/a | yes | yes (upstream is public) | not yet |
 | `mango4j-flowsink` | `mango4j-flowsink/` | annotations, core, spring, spring-boot | yes | yes | n/a (no Jackson) | yes (upstream is public) | not yet |
 | `mango4j-swarm` | `mango4j-swarm/` | single module | yes | yes | yes | yes (upstream is public) | not yet |
-| `mango4j-spring` | `mango4j-spring-parent/` | aop, logging, insights, observe, data, crypto-caas-delegate | yes | yes | yes | yes, one open question | needs `mango4j-masking` (logging), `crypto-core` (CaaS delegate) |
+| `mango4j-spring` | `mango4j-spring-parent/` | aop, logging, insights, observe, data | yes | yes | yes | yes, one open question | needs `mango4j-masking` (logging) |
 
 "Ready to split" stays "not yet" until the cross-group dependencies are broken and each group
 builds standalone from a fresh clone (see [Next](#next)).
@@ -56,7 +56,7 @@ Spring-free (no Spring in sources or the full dependency tree): `collections`, `
 `crypto-aws-kms-delegate`, `flowsink-annotations`, `flowsink-core`.
 
 Need Spring: `flowsink-spring`, `flowsink-spring-boot`, `spring-aop`, `spring-logging`,
-`spring-insights`, `spring-observe`, `spring-data`, `spring-crypto-caas-delegate` and `swarm`.
+`spring-insights`, `spring-observe`, `spring-data` and `swarm`.
 `spring-aop`, `spring-logging`, `spring-insights` and `spring-observe` declare Spring as `provided`, so
 consumers must bring their own; the others put it on the compile classpath.
 
@@ -83,8 +83,6 @@ engine carry no Spring dependency; merging them into `flowsink-spring` is the al
 - Renamed the spring modules to groupId `ie.bitstep.mango`, packages `ie.bitstep.mango.spring.*`,
   to match the public modules. Scrubbed internal class names and an email from test fixtures.
 - Added Apache-2.0 LICENSE and pom metadata (licenses, scm, developers).
-- Open question: `mango4j-spring-crypto-caas-delegate` talks to a CaaS gateway. We still need to
-  confirm that API is not internal before publishing that module.
 
 ### Java 25 and Spring Boot 4
 - Spring modules and swarm are on Spring Boot 4.1.2 (Spring Framework 7.0.10), flowsink on
@@ -122,7 +120,7 @@ engine carry no Spring dependency; merging them into `flowsink-spring` is the al
 ### Breaking spring's dependencies on core
 - Spring depended on four core modules (`reflection`, `collections`, `utils`, `validation`) and on
   `crypto-core`. After analysing real usage, spring now depends only on `mango4j-utils` (logging,
-  for masking and converters) and, in the CaaS delegate, on `crypto-core`.
+  for masking and converters).
   - `validation`: declared, never used. Removed.
   - `reflection`: test-only. `MDCTestUtils` is now a plain-reflection helper in
     `mango4j-spring-logging`'s test sources; `ReflectionUtils.getMethod` became a three-line
@@ -202,7 +200,7 @@ engine carry no Spring dependency; merging them into `flowsink-spring` is the al
   swarm 0.1.9, spring 1.0.0), and every cross-group dependency (`mango4j.version`,
   `mango4j-crypto.version`) points at `4.0.0-SNAPSHOT`, so the family releases in lockstep and
   nothing resolves a stale published artifact any more.
-- The dependency snippets in the spring docs and the CaaS delegate readme use the real groupId
+- The dependency snippets in the spring docs use the real groupId
   `ie.bitstep.mango` and this version (an earlier rename had left `ie.bitstep.mango.spring` there).
 - Consequence: a group built on its own (`mvn -f mango4j-crypto/pom.xml ...`) needs the groups it
   depends on installed first, in this order: core, crypto, then spring. In the root reactor this is
@@ -210,11 +208,9 @@ engine carry no Spring dependency; merging them into `flowsink-spring` is the al
 
 ## Next
 1. Cross-group dependencies that remain, all deliberate:
-   `crypto-core -> collections` (`ConcurrentCache`), `spring-logging -> masking`,
-   `spring-crypto-caas-delegate -> crypto-core`.
-2. Confirm the CaaS delegate is publishable.
-3. Make each group build standalone from a clean clone against published (or `-SNAPSHOT`)
+   `crypto-core -> collections` (`ConcurrentCache`), `spring-logging -> masking`.
+2. Make each group build standalone from a clean clone against published (or `-SNAPSHOT`)
    artifacts of the others, not the reactor.
-4. Per-group open-source hygiene: README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, `.github`
+3. Per-group open-source hygiene: README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, `.github`
    workflows, changelog (the spring one is still the old internal history).
-5. Split each group into its own repo, publish, then bump versions in dependants.
+4. Split each group into its own repo, publish, then bump versions in dependants.

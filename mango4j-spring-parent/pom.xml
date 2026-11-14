@@ -11,7 +11,6 @@
         <module>../mango4j-spring-insights</module>
         <module>../mango4j-spring-observe</module>
         <module>../mango4j-spring-data</module>
-        <module>../mango4j-spring-crypto-caas-delegate</module>
     </modules>
 
 
@@ -69,7 +68,6 @@
 
         <!--    Dependencies versions    -->
         <mango4j.version>4.0.0-SNAPSHOT</mango4j.version>
-        <mango4j-crypto.version>4.0.0-SNAPSHOT</mango4j-crypto.version>
         <spring-boot.version>4.1.2</spring-boot.version>
         <commons-collections4.version>4.6.0</commons-collections4.version>
         <logstash-logback-encoder.version>9.0</logstash-logback-encoder.version>
