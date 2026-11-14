@@ -19,7 +19,7 @@ break it and implement the needed part inside the dependant.
 
 ## Dependency analysis: `mango4j-spring-*` modules
 
-**Status: done** (see readme log). Spring now depends on `mango4j-masking` (logging) and `crypto-core` (CaaS delegate) only. The
+**Status: done** (see readme log). Spring now depends on `mango4j-masking` (logging) only. The
 table below is the original analysis; masking was extracted into its own core module,
 `mango4j-masking`, because it is reusable outside logging (API responses).
 
@@ -39,7 +39,6 @@ Counts are import statements of the external class in that module, from
 | insights | utils | `Masker`, `NoMasker` (1 / 0 each) | Follows the logging decision (insights already depends on logging). |
 | logging | validation | none | Removed (it was also the source of the transitive utils dependency). |
 | logging, insights, observe | `com.mastercard.enterprise:logging-rest` | none | Internal artifact, removed. It was never imported but supplied Spring, Servlet, Lombok, commons-collections and mango4j-utils transitively, so those are now declared explicitly (framework ones `provided`). |
-| crypto-caas-delegate | crypto-core | `CryptoKey`, `CiphertextContainer`, `HmacHolder`, `EncryptionServiceDelegate`, `ConfigurableObjectMapperFactory` | It implements `EncryptionServiceDelegate`, so this is a true contract dependency on `mango4j-crypto`. Keep as versioned dependency. |
 | root pom | `com.mastercard:parent:3.0.0`, `finicity` profile | n/a | Removed. Root pom is self-contained. JDK 23+ needed `<proc>full</proc>` for Lombok. |
 
 Intra-group (stay together): `aop` <- `logging` <- `insights`, `observe`. `data` is a leaf.
@@ -51,7 +50,7 @@ commons-lang3, httpclient5) for Boot 4 compatibility.
 ## Identity (resolved)
 
 Spring modules are now groupId `ie.bitstep.mango`, version `4.0.0-SNAPSHOT` (the whole family is 4.0.0-SNAPSHOT), packages
-`ie.bitstep.mango.spring.*` (crypto delegate: `ie.bitstep.mango.spring.crypto.caas.delegate`).
+`ie.bitstep.mango.spring.*`.
 Imports of core and crypto-core use `ie.bitstep.mango.*`; versions come from the
 `mango4j.version` and `mango4j-crypto.version` root properties.
 
@@ -62,9 +61,6 @@ internal parent, `finicity` profile, `logging-rest`, `repoTagData.json`, `ci.md`
 hostnames in docs, an internal package in `IgnoredPackageSanitiser`, and internal class names
 and an email address in test fixtures. LICENSE (Apache-2.0) and license/scm/developers pom
 metadata were added.
-
-Still to review before publishing: `mango4j-spring-crypto-caas-delegate` talks to a CaaS
-(Crypto-as-a-Service) gateway; check that API is not Mastercard-internal.
 
 ## Suggested order
 
@@ -118,7 +114,7 @@ level. Nothing inherits from the root, which is only a throw-away aggregator.
 | mango4j-crypto | `mango4j-crypto/` (nested, as upstream) | `mango4j-crypto-core`, `mango4j-crypto`, `mango4j-crypto-aws-kms-delegate` |
 | mango4j-flowsink | `mango4j-flowsink/` (nested) | `mango4j-flowsink-annotations`, `-core`, `-spring`, `-spring-boot` |
 | mango4j-swarm | `mango4j-swarm/` (single module) | n/a |
-| mango4j-spring | `mango4j-spring-parent/` | `mango4j-spring-aop`, `-logging`, `-insights`, `-observe`, `-data`, `-crypto-caas-delegate` |
+| mango4j-spring | `mango4j-spring-parent/` | `mango4j-spring-aop`, `-logging`, `-insights`, `-observe`, `-data` |
 
 Spring modules carry their own `lombok.config`; checkstyle, docs, readme, contributing and
 LICENSE live in `mango4j-spring-parent/`. When splitting, move the parent directory's
@@ -140,8 +136,6 @@ Changes worth knowing:
 - Boot 4 modularisation: `spring-boot-starter-data-jpa-test` for `@DataJpaTest`, new packages for
   `EntityScan`, `AutoConfigureTestDatabase`, `HibernatePropertiesCustomizer`.
 - `HttpEntity` now takes `HttpHeaders`; `HttpMessageNotReadableException` needs an input message.
-- Removed `system-stubs` from the CaaS delegate tests (its agent cannot attach on JDK 25); the
-  test overrides the existing `SslFactory.getSystemEnv` hook instead.
 
 Jackson 3 (`tools.jackson`, 3.1.7): done for core, crypto, spring and swarm; see the readme log
 for the behaviour defaults that were restored.
@@ -158,4 +152,3 @@ was removed. `crypto-core -> collections` (`ConcurrentCache`) stays by decision.
 ## Status
 
 Next: break `reflection`, `collections` and `utils` dependencies per the analysis table; decide
-on the CaaS delegate (see above).
