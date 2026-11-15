@@ -9,7 +9,6 @@
         <module>../mango4j-spring-aop</module>
         <module>../mango4j-spring-logging</module>
         <module>../mango4j-spring-insights</module>
-        <module>../mango4j-spring-observe</module>
         <module>../mango4j-spring-data</module>
     </modules>
 

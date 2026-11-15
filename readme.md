@@ -20,7 +20,7 @@ Newest entries go at the bottom of the [log](#progress-log). Detail lives in
 | `mango4j-crypto` | `mango4j-crypto/` | crypto-core, crypto, aws-kms-delegate | yes | n/a | yes | yes (upstream is public) | not yet |
 | `mango4j-flowsink` | `mango4j-flowsink/` | annotations, core, spring, spring-boot | yes | yes | n/a (no Jackson) | yes (upstream is public) | not yet |
 | `mango4j-swarm` | `mango4j-swarm/` | single module | yes | yes | yes | yes (upstream is public) | not yet |
-| `mango4j-spring` | `mango4j-spring-parent/` | aop, logging, insights, observe, data | yes | yes | yes | yes, one open question | needs `mango4j-masking` (logging) |
+| `mango4j-spring` | `mango4j-spring-parent/` | aop, logging, insights, data | yes | yes | yes | yes, one open question | needs `mango4j-masking` (logging) |
 
 "Ready to split" stays "not yet" until the cross-group dependencies are broken and each group
 builds standalone from a fresh clone (see [Next](#next)).
@@ -56,8 +56,8 @@ Spring-free (no Spring in sources or the full dependency tree): `collections`, `
 `crypto-aws-kms-delegate`, `flowsink-annotations`, `flowsink-core`.
 
 Need Spring: `flowsink-spring`, `flowsink-spring-boot`, `spring-aop`, `spring-logging`,
-`spring-insights`, `spring-observe`, `spring-data` and `swarm`.
-`spring-aop`, `spring-logging`, `spring-insights` and `spring-observe` declare Spring as `provided`, so
+`spring-insights`, `spring-data` and `swarm`.
+`spring-aop`, `spring-logging`, and `spring-insights` declare Spring as `provided`, so
 consumers must bring their own; the others put it on the compile classpath.
 
 `flowsink-annotations` and `flowsink-core` are Spring-free but only useful through `flowsink-spring`
@@ -127,8 +127,8 @@ engine carry no Spring dependency; merging them into `flowsink-spring` is the al
     helper in the aop tests.
   - `collections`: `MapBuilder` was used in six places in main code, all replaced by plain
     `LinkedHashMap`/`HashMap` (values can be null, so `Map.of` was not an option). Tests use slim
-    `MapBuilder`/`ListBuilder` helpers from the logging test-jar, which insights and observe
-    consume (test scope).
+    `MapBuilder`/`ListBuilder` helpers from the logging test-jar, which insights
+    consumes (test scope).
   - `utils`: only the `masking` and `converters` packages are used. First attempt: copy them
     into logging. **Reversed**: masking is reusable beyond logging (API responses can use it too),
     so it was instead extracted from `mango4j-utils` into its own module, `mango4j-masking`

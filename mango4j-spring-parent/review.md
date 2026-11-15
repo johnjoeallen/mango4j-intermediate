@@ -8,7 +8,7 @@ Static review of the parent POM, module wiring, dependency and plugin configurat
 
 2. **Checkstyle is on a different major version from the other parents** (Low). `pom.xml:66` uses Checkstyle 14.3.0 while `mango4j-parent` and `mango4j-crypto` use 10.26.1.
 
-3. **The `hammer-time` profile no longer states the enforced thresholds** (Low). The profile defaults to 100%, but five child modules (aop, logging, insights, observe, data) override mutation and coverage with lower, per-module values.
+3. **The `hammer-time` profile no longer states the enforced thresholds** (Low). The profile defaults to 100%, but four child modules (aop, logging, insights, data) override mutation and coverage with lower, per-module values.
 
 ## Notes
 

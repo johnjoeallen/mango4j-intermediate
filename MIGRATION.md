@@ -31,17 +31,15 @@ Counts are import statements of the external class in that module, from
 | aop | reflection | `ReflectionUtils.getMethod` (0 / 4) | Test only. Inline as a private test helper, drop the dependency. |
 | logging | reflection | `MDCTestUtils` (0 / 11) | Test only. Inline (it is an MDC clear/assert helper), drop the dependency. |
 | insights | reflection | `MDCTestUtils` (0 / 7) | Test only. Share with logging via a test-jar or copy. |
-| observe | reflection | `MDCTestUtils` (0 / 6) | Same. |
 | logging | collections | `MapBuilder` (1 / 4), `ListBuilder` (0 / 4) | One main use. Replace with `Map.of` or a plain map and drop. |
 | insights | collections | `MapBuilder` (2 / 2) | Replace in 2 main sites, drop. |
-| observe | collections | `MapBuilder` (3 / 7), `ListBuilder` (0 / 10) | Replace with `Map.of` / `List.of`, drop. |
 | logging | utils | masking: `Masker`, `NoMasker`, `Mask`, `MaskerFactory`; converters: `Converter`, `NoConverter`, `ConverterFactory` (about 22 main imports) | The one real runtime dependency. Part of the public annotation API (`@LoggableField(masker=...)`). Decide: move the masking and converter packages into logging, or keep `mango4j-utils`. Check what else `utils` pulls in. |
 | insights | utils | `Masker`, `NoMasker` (1 / 0 each) | Follows the logging decision (insights already depends on logging). |
 | logging | validation | none | Removed (it was also the source of the transitive utils dependency). |
-| logging, insights, observe | `com.mastercard.enterprise:logging-rest` | none | Internal artifact, removed. It was never imported but supplied Spring, Servlet, Lombok, commons-collections and mango4j-utils transitively, so those are now declared explicitly (framework ones `provided`). |
+| logging, insights | `com.mastercard.enterprise:logging-rest` | none | Internal artifact, removed. It was never imported but supplied Spring, Servlet, Lombok, commons-collections and mango4j-utils transitively, so those are now declared explicitly (framework ones `provided`). |
 | root pom | `com.mastercard:parent:3.0.0`, `finicity` profile | n/a | Removed. Root pom is self-contained. JDK 23+ needed `<proc>full</proc>` for Lombok. |
 
-Intra-group (stay together): `aop` <- `logging` <- `insights`, `observe`. `data` is a leaf.
+Intra-group (stay together): `aop` <- `logging` <- `insights`. `data` is a leaf.
 
 Still to analyse when each module arrives: what `mango4j-utils` and `mango4j-crypto-core`
 themselves pull in transitively, and third-party dependencies (Jackson, AspectJ,
@@ -114,7 +112,7 @@ level. Nothing inherits from the root, which is only a throw-away aggregator.
 | mango4j-crypto | `mango4j-crypto/` (nested, as upstream) | `mango4j-crypto-core`, `mango4j-crypto`, `mango4j-crypto-aws-kms-delegate` |
 | mango4j-flowsink | `mango4j-flowsink/` (nested) | `mango4j-flowsink-annotations`, `-core`, `-spring`, `-spring-boot` |
 | mango4j-swarm | `mango4j-swarm/` (single module) | n/a |
-| mango4j-spring | `mango4j-spring-parent/` | `mango4j-spring-aop`, `-logging`, `-insights`, `-observe`, `-data` |
+| mango4j-spring | `mango4j-spring-parent/` | `mango4j-spring-aop`, `-logging`, `-insights`, `-data` |
 
 Spring modules carry their own `lombok.config`; checkstyle, docs, readme, contributing and
 LICENSE live in `mango4j-spring-parent/`. When splitting, move the parent directory's
