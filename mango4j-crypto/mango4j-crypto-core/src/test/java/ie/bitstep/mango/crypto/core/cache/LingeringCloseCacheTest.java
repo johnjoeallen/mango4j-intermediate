@@ -1,6 +1,6 @@
-package ie.bitstep.mango.collections;
+package ie.bitstep.mango.crypto.core.cache;
 
-import ie.bitstep.mango.collections.ConcurrentCache.CacheEntry;
+import ie.bitstep.mango.crypto.core.cache.LingeringCloseCache.CacheEntry;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ import static org.mockito.Mockito.verify;
 
 @SuppressWarnings("ALL")
 @ExtendWith(MockitoExtension.class)
-class ConcurrentCacheTest {
+class LingeringCloseCacheTest {
 
 	public static final TimeUnit TEST_CACHE_TIME_TO_LIVE_TIME_UNIT = TimeUnit.SECONDS;
 	public static final Duration TEST_GRACE_PERIOD = Duration.ofSeconds(5);
@@ -46,9 +46,9 @@ class ConcurrentCacheTest {
 	public static final Duration TEST_EVICTION_TASK_PERIOD = Duration.ofMinutes(1);
 	public static final String TEST_KEY = "key1";
 	public static final String TEST_STRING_VALUE = "value1";
-	private ConcurrentCache<String, String> cache;
+	private LingeringCloseCache<String, String> cache;
 
-	private ConcurrentCache<String, AutoCloseable> closeableCache;
+	private LingeringCloseCache<String, AutoCloseable> closeableCache;
 
 	@Mock
 	private Clock clock;
@@ -94,8 +94,8 @@ class ConcurrentCacheTest {
 				eq(TEST_EVICTION_TASK_PERIOD.toMillis()), eq(TimeUnit.MILLISECONDS))).willReturn(mockScheduledFuture);
 		given(closableCleaner.scheduleAtFixedRate(closableTaskArgumentCaptor.capture(), eq(TEST_EVICTION_TASK_PERIOD.toMillis()),
 				eq(TEST_EVICTION_TASK_PERIOD.toMillis()), eq(TimeUnit.MILLISECONDS))).willReturn(mockScheduledFuture);
-		cache = new ConcurrentCache<>(TEST_CACHE_DURATION_TTL, TEST_CURRENT_ENTRY_TTL, TEST_GRACE_PERIOD, TEST_EVICTION_TASK_PERIOD, nonClosableCleaner, clock);
-		closeableCache = new ConcurrentCache<>(TEST_CACHE_DURATION_TTL, TEST_CURRENT_ENTRY_TTL, TEST_GRACE_PERIOD, TEST_EVICTION_TASK_PERIOD, closableCleaner, clock);
+		cache = new LingeringCloseCache<>(TEST_CACHE_DURATION_TTL, TEST_CURRENT_ENTRY_TTL, TEST_GRACE_PERIOD, TEST_EVICTION_TASK_PERIOD, nonClosableCleaner, clock);
+		closeableCache = new LingeringCloseCache<>(TEST_CACHE_DURATION_TTL, TEST_CURRENT_ENTRY_TTL, TEST_GRACE_PERIOD, TEST_EVICTION_TASK_PERIOD, closableCleaner, clock);
 	}
 
 	@AfterEach
@@ -111,7 +111,7 @@ class ConcurrentCacheTest {
 				eq(Duration.ofMinutes(1).toMillis()),
 				eq(TimeUnit.MILLISECONDS))).willReturn(mockScheduledFuture);
 
-		cache = new ConcurrentCache<>(5, TEST_CACHE_TIME_TO_LIVE_TIME_UNIT, nonClosableCleaner, clock);
+		cache = new LingeringCloseCache<>(5, TEST_CACHE_TIME_TO_LIVE_TIME_UNIT, nonClosableCleaner, clock);
 
 		assertThat(getCache(cache)).isEmpty();
 		assertThat(cache.getCacheEntryTTL()).isEqualTo(Duration.ofMillis(5000));
@@ -325,6 +325,39 @@ class ConcurrentCacheTest {
 		Set<Object> expectedEvictedEntries = Set.of(currentAutoclosable, cachedAutoclosable);
 		assertThat(getEvictedEntries(closeableCache)).extracting(cacheEntry -> cacheEntry.value).containsExactlyInAnyOrderElementsOf(expectedEvictedEntries::iterator);
 		assertThat(getEvictedEntries(closeableCache)).allMatch(cacheEntry -> getExpiryDate(cacheEntry).equals(now.plus(TEST_GRACE_PERIOD)));
+	}
+
+	@Test
+	void evictionTaskFailureIsLoggedAndTheNextRunStillHappens() {
+		Instant birthDate = Instant.now();
+		Instant expiredTime = birthDate.plus(TEST_CACHE_DURATION_TTL).plus(Duration.ofMinutes(15));
+		given(clock.instant()).willReturn(birthDate).willThrow(new IllegalStateException("clock failure")).willReturn(expiredTime);
+		cache.put(TEST_KEY, TEST_STRING_VALUE);
+		Runnable evictionTask = nonClosableTaskArgumentCaptor.getAllValues().get(0);
+
+		assertThatNoException().isThrownBy(evictionTask::run);
+		assertThat(getCache(cache)).hasSize(1);
+
+		evictionTask.run();
+		assertThat(getCache(cache)).isEmpty();
+	}
+
+	@Test
+	void purgeTaskFailureIsLoggedAndTheNextRunStillHappens() throws Exception {
+		Instant birthDate = Instant.now();
+		Instant expiredTime = birthDate.plus(TEST_CACHE_DURATION_TTL).plus(Duration.ofMinutes(15));
+		Instant afterGracePeriod = expiredTime.plus(TEST_GRACE_PERIOD).plusSeconds(1);
+		given(clock.instant()).willReturn(birthDate, expiredTime, expiredTime).willThrow(new IllegalStateException("clock failure")).willReturn(afterGracePeriod);
+		closeableCache.put(TEST_KEY, cachedAutoclosable);
+		closableTaskArgumentCaptor.getAllValues().get(0).run();
+		Runnable purgeTask = closableTaskArgumentCaptor.getAllValues().get(1);
+
+		assertThatNoException().isThrownBy(purgeTask::run);
+		verify(cachedAutoclosable, Mockito.never()).close();
+
+		purgeTask.run();
+		verify(cachedAutoclosable).close();
+		assertThat(getEvictedEntries(closeableCache)).isEmpty();
 	}
 
 	@Test
@@ -672,9 +705,9 @@ class ConcurrentCacheTest {
 		}
 	}
 
-	private AtomicReference<Map.Entry<?, CacheEntry>> getCurrentEntry(ConcurrentCache concurrentCache) {
+	private AtomicReference<Map.Entry<?, CacheEntry>> getCurrentEntry(LingeringCloseCache concurrentCache) {
 		try {
-			Field currentEntry = ConcurrentCache.class.getDeclaredField("currentEntry");
+			Field currentEntry = LingeringCloseCache.class.getDeclaredField("currentEntry");
 			currentEntry.setAccessible(true);
 			return (AtomicReference<Map.Entry<?, CacheEntry>>) currentEntry.get(concurrentCache);
 		} catch (Exception e) {
@@ -682,9 +715,9 @@ class ConcurrentCacheTest {
 		}
 	}
 
-	private Set<CacheEntry> getEvictedEntries(ConcurrentCache concurrentCache) {
+	private Set<CacheEntry> getEvictedEntries(LingeringCloseCache concurrentCache) {
 		try {
-			Field evictedEntriesField = ConcurrentCache.class.getDeclaredField("evictedEntries");
+			Field evictedEntriesField = LingeringCloseCache.class.getDeclaredField("evictedEntries");
 			evictedEntriesField.setAccessible(true);
 			return (Set<CacheEntry>) evictedEntriesField.get(concurrentCache);
 		} catch (Exception e) {
@@ -692,9 +725,9 @@ class ConcurrentCacheTest {
 		}
 	}
 
-	private ConcurrentHashMap<?, CacheEntry> getCache(ConcurrentCache concurrentCache) {
+	private ConcurrentHashMap<?, CacheEntry> getCache(LingeringCloseCache concurrentCache) {
 		try {
-			Field field = ConcurrentCache.class.getDeclaredField("cache");
+			Field field = LingeringCloseCache.class.getDeclaredField("cache");
 			field.setAccessible(true);
 			return (ConcurrentHashMap<?, CacheEntry>) field.get(concurrentCache);
 		} catch (Exception e) {

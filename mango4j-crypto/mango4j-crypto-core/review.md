@@ -28,8 +28,19 @@ Static review of all production Java classes and the module POM, with each findi
 
 11. **Malformed ciphertext does not always produce the formatter exception** (Low). `CiphertextFormatter.java:41` dereferences `jsonNode.get("cryptoKeyId")` without a null check and catches only `JacksonException`, so a missing member or a null root escapes as `NullPointerException`.
 
+12. **Replacing a keyed entry never closes the old value** (Medium). `LingeringCloseCache.java:180` calls `cache.put(...)` and discards the previous entry, so it is never moved to the evicted set. An `AutoCloseable` value (for example a cached encryption key holder) that is replaced by `put` is not closed by the cache, not even by `shutdown()`, and the key material stays in memory until garbage collection. Move the replaced entry to delayed eviction (`put` returns the old value from the map) and test replacement and shutdown.
+
+13. **`putCurrent` can lose cleanup under concurrent writers** (Medium). `LingeringCloseCache.java:220-222` evicts the current entry and then sets the new one as two separate steps. Two concurrent callers can both evict (one gets the old entry, the other `null`) and then both set, so the first caller's new entry is overwritten without being scheduled for cleanup. Swap atomically with `getAndSet` and evict the returned value.
+
+14. **Expiry can evict a newly installed current entry** (Medium). `LingeringCloseCache.java:304` checks that the current entry has expired and then calls `evictCurrentKey()`, which removes whichever entry is current at that moment. If `putCurrent` runs between the check and the removal, the fresh entry is evicted and closed after the grace period while callers still expect it. Remove only the entry that was checked, with compare-and-set.
+
+15. **`clear()` can drop entries added concurrently without closing them** (Low). `LingeringCloseCache.java:403-404` snapshots the map and then clears it in a separate step. An entry inserted in between is removed without being scheduled for cleanup.
+
+16. **Runtime TTL changes are not safely published** (Low). `LingeringCloseCache.java:72-74` declare the TTL and grace-period fields as plain mutable fields, with public setters that run on a different thread from the cache and scheduler methods. Without `volatile` (or equivalent) another thread need not observe an update, which the class documents as supported runtime tuning.
+
 ## Notes
 
 - All randomness (IVs, data keys, vault IVs) comes from a `SecureRandom`; there is no use of `java.util.Random`, MD5, SHA-1 or ECB, and HMAC uses HmacSHA256.
+- `LingeringCloseCache` has no size bound, and a grace period does not guarantee a value stays open for an arbitrarily long operation; callers must account for both.
 - The passphrase is held as a `String` in the key configuration and cannot be wiped.
 - Security properties also depend on caller configuration and on the external key providers.

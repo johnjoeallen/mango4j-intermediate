@@ -1,4 +1,4 @@
-package ie.bitstep.mango.collections;
+package ie.bitstep.mango.crypto.core.cache;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -61,8 +61,8 @@ import static java.lang.System.Logger.Level.TRACE;
  * @param <K> key type
  * @param <V> value type, ideally {@link AutoCloseable} if it holds a resource or secret that must be released
  */
-public class ConcurrentCache<K, V> {
-	private final System.Logger logger = System.getLogger(ConcurrentCache.class.getName());
+public class LingeringCloseCache<K, V> {
+	private final System.Logger logger = System.getLogger(LingeringCloseCache.class.getName());
 
 	/** How often the eviction and purge tasks run when not specified. */
 	public static final Duration DEFAULT_EVICTION_TASK_PERIOD = Duration.ofMinutes(1);
@@ -88,16 +88,16 @@ public class ConcurrentCache<K, V> {
 	 * @param cleaner scheduler used to run eviction tasks
 	 * @param clock clock used to compute expiry times
 	 */
-	public ConcurrentCache(Duration cacheEntryTTL, Duration currentEntryTTL, Duration gracePeriod, Duration evictionTaskPeriod, ScheduledExecutorService cleaner, Clock clock) {
+	public LingeringCloseCache(Duration cacheEntryTTL, Duration currentEntryTTL, Duration gracePeriod, Duration evictionTaskPeriod, ScheduledExecutorService cleaner, Clock clock) {
 		this.cacheGracePeriod = gracePeriod;
 		this.cleaner = cleaner;
 		this.clock = clock;
 		this.cacheEntryTTL = cacheEntryTTL;
 		this.currentEntryTTL = currentEntryTTL;
 		cache = new ConcurrentHashMap<>();
-		cleaner.scheduleAtFixedRate(this::expiredCacheEntriesEvictionTask, evictionTaskPeriod.toMillis(), evictionTaskPeriod.toMillis(), TimeUnit.MILLISECONDS);
-		cleaner.scheduleAtFixedRate(this::purgeTask, evictionTaskPeriod.toMillis(), evictionTaskPeriod.toMillis(), TimeUnit.MILLISECONDS);
-		logger.log(TRACE, "ConcurrentCache instance created with cacheEntryTTL duration of {0}, currentEntryTTL of {1}", cacheEntryTTL, currentEntryTTL);
+		cleaner.scheduleAtFixedRate(guarded("eviction", this::expiredCacheEntriesEvictionTask), evictionTaskPeriod.toMillis(), evictionTaskPeriod.toMillis(), TimeUnit.MILLISECONDS);
+		cleaner.scheduleAtFixedRate(guarded("purge", this::purgeTask), evictionTaskPeriod.toMillis(), evictionTaskPeriod.toMillis(), TimeUnit.MILLISECONDS);
+		logger.log(TRACE, "LingeringCloseCache instance created with cacheEntryTTL duration of {0}, currentEntryTTL of {1}", cacheEntryTTL, currentEntryTTL);
 	}
 
 	/**
@@ -108,8 +108,27 @@ public class ConcurrentCache<K, V> {
 	 * @param cleaner scheduler used to run eviction tasks
 	 * @param clock clock used to compute expiry times
 	 */
-	public ConcurrentCache(long cacheTimeToLive, TimeUnit unit, ScheduledExecutorService cleaner, Clock clock) {
+	public LingeringCloseCache(long cacheTimeToLive, TimeUnit unit, ScheduledExecutorService cleaner, Clock clock) {
 		this(Duration.ofMillis(unit.toMillis(cacheTimeToLive)), Duration.ofMillis(unit.toMillis(cacheTimeToLive)), DEFAULT_GRACE_PERIOD, DEFAULT_EVICTION_TASK_PERIOD, cleaner, clock);
+	}
+
+	/**
+	 * Wraps a periodic task so an unexpected exception is logged and the next run still happens.
+	 * {@link ScheduledExecutorService#scheduleAtFixedRate} silently cancels all later runs of a task that throws, which
+	 * would mean entries never expire or close again and secrets would stay in memory with no indication why.
+	 *
+	 * @param name the task name used in the log message
+	 * @param task the task to run
+	 * @return a task that never throws an exception
+	 */
+	private Runnable guarded(String name, Runnable task) {
+		return () -> {
+			try {
+				task.run();
+			} catch (Exception e) {
+				logger.log(ERROR, "The " + name + " task failed; it will run again at the next period", e);
+			}
+		};
 	}
 
 	/**

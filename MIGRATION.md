@@ -98,13 +98,12 @@ modules, and `mango4j-crypto/` is the multi-module root, with `mango4j-crypto-co
 Builds, each independent (`<dir>` is `mango4j-crypto`, `mango4j-flowsink` or `mango4j-swarm`): `mvn -f <dir>/pom.xml clean verify -Dgpg.skip`
 (swarm checked with `-DskipTests`; its tests use Testcontainers).
 
-Cross-group dependencies seen in poms: crypto-core -> `mango4j-collections`;
-crypto -> `mango4j-utils`; flowsink and swarm import nothing from the core modules.
+Cross-group dependencies seen in poms: crypto -> `mango4j-utils`; flowsink and swarm import nothing from the core modules.
 
-## Layout and building from the root
+## Layout and building
 
 Each future repo is a directory pair: a parent pom directory plus its modules at the top
-level. Nothing inherits from the root, which is only a throw-away aggregator.
+level. There is no root pom; each group is a standalone Maven project.
 
 | Future repo | Parent / root pom | Modules |
 |---|---|---|
@@ -118,8 +117,7 @@ Spring modules carry their own `lombok.config`; checkstyle, docs, readme, contri
 LICENSE live in `mango4j-spring-parent/`. When splitting, move the parent directory's
 contents to the new repo root together with the modules.
 
-`mvn clean verify -Dgpg.skip` at the root builds everything and passes, tests included.
-Per group: `mvn -f <parent-dir>/pom.xml clean verify -Dgpg.skip`.
+Build per group: `mvn -f <parent-dir>/pom.xml clean verify -Dgpg.skip`.
 
 ## Java 25 / Spring Boot 4 upgrade
 
@@ -145,7 +143,7 @@ Not done:
 ## Crypto dependencies on core
 
 `mango4j-crypto`'s use of `mango4j-utils` (one executor builder) and `mango4j-reflection` (one test helper)
-was removed. `crypto-core -> collections` (`ConcurrentCache`) stays by decision.
+was removed. `ConcurrentCache` was then moved into `crypto-core` as `LingeringCloseCache`, so `crypto-core` no longer depends on `collections`.
 
 ## Status
 
