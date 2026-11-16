@@ -215,9 +215,15 @@ engine carry no Spring dependency; merging them into `flowsink-spring` is the al
 4. Split each group into its own repo, publish, then bump versions in dependants.
 - **Restructure: three repos, not four groups** (crypto is already its own repo and is not here).
   Core and spring now live together in `mango4j/` with a reactor `pom.xml` that builds both
-  (`mvn -f mango4j/pom.xml clean verify`). The `mango4j-parent` and `mango4j-spring-parent` poms
-  are kept as they were, so the Spring build config is unchanged. `maven-enforcer-plugin` in
+  (`mvn -f mango4j/pom.xml clean verify`). `maven-enforcer-plugin` in
   `mango4j-parent` (`no-spring`, transitive) fails the build if any plain-Java module gains a
   Spring dependency; verified by adding `spring-core` to `mango4j-collections`. The remaining repos
-  are `mango4j-flowsink` and `mango4j-swarm`, unchanged. Open item: merge the two parent poms
-  (Checkstyle is still 10.26.1 vs 14.3.0).
+  are `mango4j-flowsink` and `mango4j-swarm`, unchanged.
+- **Parent poms merged.** `mango4j-spring-parent` now inherits from `mango4j-parent` and keeps only
+  Spring-specific config (Boot BOM, `-parameters`/`proc full`, Mockito agent, pitest targets); the
+  shared plugins, publishing, profiles and `checkstyle.xml` live once in `mango4j-parent`. Side
+  effects, all verified by a full `mvn clean verify`: Checkstyle is 14.3.0 everywhere (it flagged one
+  malformed Javadoc in `MapUtils`, fixed); plugin versions follow the newer Spring set; Spring
+  modules import `junit-bom` ahead of the Boot BOM, so JUnit is 6.1.2 throughout (was 6.0.3) and
+  they inherit `mango4j-parent`'s Central publishing config; the `no-spring` enforcer rule is
+  switched off for the Spring modules. `mango4j/pom.xml` now just lists `mango4j-parent`.

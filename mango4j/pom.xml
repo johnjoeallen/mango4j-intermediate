@@ -18,7 +18,6 @@
 
     <modules>
         <module>mango4j-parent</module>
-        <module>mango4j-spring-parent</module>
     </modules>
 
     <properties>

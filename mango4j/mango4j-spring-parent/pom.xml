@@ -4,6 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>ie.bitstep.mango</groupId>
+        <artifactId>mango4j</artifactId>
+        <version>4.0.0-SNAPSHOT</version>
+        <relativePath>../mango4j-parent/pom.xml</relativePath>
+    </parent>
+
     <packaging>pom</packaging>
     <modules>
         <module>../mango4j-spring-aop</module>
@@ -13,60 +20,17 @@
     </modules>
 
 
-    <groupId>ie.bitstep.mango</groupId>
     <artifactId>mango4j-spring</artifactId>
-    <version>4.0.0-SNAPSHOT</version>
 
     <name>Mango4j Spring</name>
     <description>Spring Boot support libraries for Mango4j</description>
-    <url>https://github.com/bitstep-ie/mango4j-spring</url>
-
-    <licenses>
-        <license>
-            <name>Apache License, Version 2.0</name>
-            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
-        </license>
-    </licenses>
-
-    <developers>
-        <developer>
-            <id>bitstep</id>
-            <name>Bitstep</name>
-        </developer>
-    </developers>
-
-    <scm>
-        <connection>scm:git:git://github.com/bitstep-ie/mango4j-spring.git</connection>
-        <developerConnection>scm:git:ssh://github.com/bitstep-ie/mango4j-spring.git</developerConnection>
-        <url>https://github.com/bitstep-ie/mango4j-spring</url>
-    </scm>
 
     <properties>
-        <java.version>25</java.version>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
-        <encoding>UTF-8</encoding>
-        <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
-        <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
-        <archetype.encoding>${encoding}</archetype.encoding>
-
-        <!--    Plugin versions    -->
-        <maven.deploy.plugin>3.2.0</maven.deploy.plugin>
-        <maven.dependency.plugin>3.9.0</maven.dependency.plugin>
         <maven.jar.plugin>3.5.1</maven.jar.plugin>
-        <maven.help.plugin>3.5.2</maven.help.plugin>
-        <maven.compiler.plugin>3.16.0</maven.compiler.plugin>
-        <maven.surefire.plugin>3.6.0</maven.surefire.plugin>
-        <maven.javadoc.plugin.version>3.12.0</maven.javadoc.plugin.version>
-        <maven.checkstyle.plugin.version>3.6.0</maven.checkstyle.plugin.version>
-        <maven.versions.plugin.version>2.23.0</maven.versions.plugin.version>
-        <checkstyle.version>14.3.0</checkstyle.version>
-        <pitest.plugin.version>1.30.1</pitest.plugin.version>
-        <pitest.junit5.plugin.version>1.2.3</pitest.junit5.plugin.version>
+        <maven.dependency.plugin>3.9.0</maven.dependency.plugin>
 
         <!--    Dependencies versions    -->
-        <mango4j.version>4.0.0-SNAPSHOT</mango4j.version>
+        <mango4j.version>${project.version}</mango4j.version>
         <spring-boot.version>4.1.2</spring-boot.version>
         <commons-collections4.version>4.6.0</commons-collections4.version>
         <logstash-logback-encoder.version>9.0</logstash-logback-encoder.version>
@@ -75,21 +39,25 @@
 
     <build>
         <plugins>
+            <!-- This group is Spring: the no-spring rule from mango4j-parent does not apply -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven.compiler.plugin}</version>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                    <compilerArgument>-parameters</compilerArgument>
-                    <proc>full</proc>
-                </configuration>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>no-spring</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>${maven.deploy.plugin}</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <compilerArgument>-parameters</compilerArgument>
+                    <proc>full</proc>
+                </configuration>
             </plugin>
 
             <plugin>
@@ -100,14 +68,7 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-help-plugin</artifactId>
-                <version>${maven.help.plugin}</version>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven.surefire.plugin}</version>
                 <configuration>
                     <!-- Mockito as an explicit agent: dynamic self-attach is deprecated and breaks on modern JDKs -->
                     <argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
@@ -128,92 +89,20 @@
                 </executions>
             </plugin>
 
-            <!--     Versions     -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>versions-maven-plugin</artifactId>
-                <version>${maven.versions.plugin.version}</version>
-                <configuration>
-                    <ruleSet>
-                        <ignoreVersion>
-                            <type>regex</type>
-                            <version>(.+-.*)</version> <!-- this will disable -SNAPSHOTS too -->
-                        </ignoreVersion>
-                    </ruleSet>
-                </configuration>
-            </plugin>
-
-            <!--     JavaDocs     -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>${maven.javadoc.plugin.version}</version>
                 <configuration>
                     <doctitle>${project.name} ${project.version}</doctitle>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Checkstyle -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>${maven.checkstyle.plugin.version}</version>
-                <configuration>
-                    <configLocation>${project.basedir}/../mango4j-spring-parent/checkstyle.xml</configLocation>
-                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                    <sourceDirectories>
-                        <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
-                    </sourceDirectories>
-                    <excludes>**/generated/**/*</excludes>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>build</id>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>package</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.puppycrawl.tools</groupId>
-                        <artifactId>checkstyle</artifactId>
-                        <version>${checkstyle.version}</version>
-                    </dependency>
-                </dependencies>
             </plugin>
 
             <!-- PITEST mvn clean test-compile org.pitest:pitest-maven:mutationCoverage   -->
             <plugin>
                 <groupId>org.pitest</groupId>
                 <artifactId>pitest-maven</artifactId>
-                <version>${pitest.plugin.version}</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.pitest</groupId>
-                        <artifactId>pitest-junit5-plugin</artifactId>
-                        <version>${pitest.junit5.plugin.version}</version>
-                    </dependency>
-                </dependencies>
                 <configuration>
                     <verbose>true</verbose>
-                    <withHistory>false</withHistory>
-                    <mutationThreshold>100</mutationThreshold>
                     <targetClasses>
                         <param>ie.bitstep.mango.spring.*</param>
                     </targetClasses>
@@ -230,44 +119,22 @@
                         <param>putFieldMetaData</param>
                         <param>getConverter</param>
                     </excludedMethods>
-
-                    <avoidCallsTo>
-                    </avoidCallsTo>
                 </configuration>
             </plugin>
         </plugins>
     </build>
 
-    <profiles>
-        <!-- Mutation testing, fails the build below 100%: mvn clean verify -Phammer-time -->
-        <profile>
-            <id>hammer-time</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.pitest</groupId>
-                        <artifactId>pitest-maven</artifactId>
-                        <configuration>
-                            <mutationThreshold>100</mutationThreshold>
-                            <coverageThreshold>100</coverageThreshold>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>run-mutation-tests</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>mutationCoverage</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-
     <dependencyManagement>
         <dependencies>
+            <!-- First import wins: keeps every JUnit artifact on the version mango4j-parent declares -->
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit-jupiter.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>

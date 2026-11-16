@@ -35,7 +35,7 @@ public class MapUtils {
 	 * Take an object of type V and return an array with that object as the only element
 	 *
 	 * @param e The object
-	 * @return List<V>(e)</V></B>
+	 * @return a list containing only {@code e}
 	 */
 	private static <V> List<V> arrayWrap(V e) {
 		List<V> array = new ArrayList<>();
