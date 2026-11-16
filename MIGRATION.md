@@ -50,7 +50,7 @@ commons-lang3, httpclient5) for Boot 4 compatibility.
 Spring modules are now groupId `ie.bitstep.mango`, version `4.0.0-SNAPSHOT` (the whole family is 4.0.0-SNAPSHOT), packages
 `ie.bitstep.mango.spring.*`.
 Imports of core and crypto-core use `ie.bitstep.mango.*`; versions come from the
-`mango4j.version` and `mango4j-crypto.version` root properties.
+`mango4j.version` root property.
 
 ## Open-source clean-up done
 
@@ -90,12 +90,12 @@ Both families are still separate: the spring modules do not yet use these.
 Copied without history from `bitstep-ie/mango4j-crypto` (00a02bf), `mango4j-flowsink` (3f08758)
 and `mango4j-swarm` (e334a03). Crypto and flowsink are kept nested
 exactly as upstream: `mango4j-flowsink/` is the multi-module root holding its four
-modules, and `mango4j-crypto/` is the multi-module root, with `mango4j-crypto-core`,
-`mango4j-crypto/mango4j-crypto` and `mango4j-crypto-aws-kms-delegate` inside it, poms unmodified. Swarm is a single-module project, so it sits whole in `mango4j-swarm/`.
+modules. (`mango4j-crypto/` was also imported, then later removed from this repo.)
+Swarm is a single-module project, so it sits whole in `mango4j-swarm/`.
 `.github/`, docs sites, LICENSE and similar repo-level files were not copied (swarm's
 `docs/`, `examples/`, `scripts/` and `.redkite/` were, as part of the project).
 
-Builds, each independent (`<dir>` is `mango4j-crypto`, `mango4j-flowsink` or `mango4j-swarm`): `mvn -f <dir>/pom.xml clean verify -Dgpg.skip`
+Builds, each independent (`<dir>` is `mango4j-flowsink` or `mango4j-swarm`): `mvn -f <dir>/pom.xml clean verify -Dgpg.skip`
 (swarm checked with `-DskipTests`; its tests use Testcontainers).
 
 Cross-group dependencies seen in poms: crypto -> `mango4j-utils`; flowsink and swarm import nothing from the core modules.
@@ -108,7 +108,6 @@ level. There is no root pom; each group is a standalone Maven project.
 | Future repo | Parent / root pom | Modules |
 |---|---|---|
 | mango4j | `mango4j-parent/` | `mango4j-collections`, `-masking`, `-reflection`, `-utils`, `-validation`, `-hibernate-proxy-resolver` |
-| mango4j-crypto | `mango4j-crypto/` (nested, as upstream) | `mango4j-crypto-core`, `mango4j-crypto`, `mango4j-crypto-aws-kms-delegate` |
 | mango4j-flowsink | `mango4j-flowsink/` (nested) | `mango4j-flowsink-annotations`, `-core`, `-spring`, `-spring-boot` |
 | mango4j-swarm | `mango4j-swarm/` (single module) | n/a |
 | mango4j-spring | `mango4j-spring-parent/` | `mango4j-spring-aop`, `-logging`, `-insights`, `-data` |

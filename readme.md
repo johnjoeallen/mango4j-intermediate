@@ -17,7 +17,6 @@ Newest entries go at the bottom of the [log](#progress-log). Detail lives in
 | Future repo | Directory (parent pom) | Modules | Java 25 | Boot 4 / Spring 7 | Jackson 3 | Internal refs removed | Ready to split |
 |---|---|---|---|---|---|---|---|
 | `mango4j` | `mango4j-parent/` | collections, masking, reflection, utils, validation, hibernate-proxy-resolver | yes | n/a | yes | yes (upstream is public) | not yet |
-| `mango4j-crypto` | `mango4j-crypto/` | crypto-core, crypto, aws-kms-delegate | yes | n/a | yes | yes (upstream is public) | not yet |
 | `mango4j-flowsink` | `mango4j-flowsink/` | annotations, core, spring, spring-boot | yes | yes | n/a (no Jackson) | yes (upstream is public) | not yet |
 | `mango4j-swarm` | `mango4j-swarm/` | single module | yes | yes | yes | yes (upstream is public) | not yet |
 | `mango4j-spring` | `mango4j-spring-parent/` | aop, logging, insights, data | yes | yes | yes | yes, one open question | needs `mango4j-masking` (logging) |
@@ -203,7 +202,7 @@ engine carry no Spring dependency; merging them into `flowsink-spring` is the al
   nothing resolves a stale published artifact any more.
 - The dependency snippets in the spring docs use the real groupId
   `ie.bitstep.mango` and this version (an earlier rename had left `ie.bitstep.mango.spring` there).
-- Consequence: a group built on its own (`mvn -f mango4j-crypto/pom.xml ...`) needs the groups it
+- Consequence: a group built on its own (`mvn -f mango4j-spring-parent/pom.xml ...`) needs the groups it
   depends on installed first: spring needs core (`masking`). Crypto, flowsink and swarm need nothing else.
 
 ## Next
