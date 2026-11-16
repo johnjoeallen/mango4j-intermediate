@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <!--
-        Reactor only: builds the whole mango4j repository with one command. It is not a parent of
-        anything and is not published. Plain-Java modules inherit from mango4j-parent, Spring modules
-        from mango4j-spring-parent; the enforcer in mango4j-parent keeps Spring out of the former.
+        Reactor only: builds the whole mango4j repository (the plain-Java modules) with one command.
+        It is not a parent of anything and is not published. The enforcer in mango4j-parent keeps
+        Spring out of every module here; Spring modules live in the mango4j-spring repository.
     -->
     <groupId>ie.bitstep.mango</groupId>
     <artifactId>mango4j-reactor</artifactId>

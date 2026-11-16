@@ -8,7 +8,7 @@ Group ID: `ie.bitstep.mango`
 
 ## Modules
 
-### Plain Java (no Spring)
+No Spring dependencies. Spring support is in [mango4j-spring](https://github.com/bitstep-ie/mango4j-spring), which builds on this repository; the naming rule is `mango4j-*` for plain Java and `mango4j-spring-*` for Spring.
 
 | Artifact | What it is for |
 |---|---|
@@ -18,19 +18,10 @@ Group ID: `ie.bitstep.mango`
 | `mango4j-utils` | Date and calendar helpers, `EntityToStringBuilder`, `MappingUtils`, `NamedScheduledExecutorBuilder`, conformance helpers |
 | `mango4j-validation` | `ValidationUtils` and Jakarta Validation constraints such as `@Type4UUID`, `@IsValidKebabCase`, `@IsValidDottedCase` |
 | `mango4j-hibernate-proxy-resolver` | `HibernateProxyResolver` for unwrapping Hibernate proxies |
+| `mango4j-flowsink-annotations`, `mango4j-flowsink-core` | Flow and step instrumentation annotations and the Spring-free engine behind them |
+| `mango4j-build-tools` | Shared Checkstyle configuration used by the build (not for applications) |
 
-### Spring Boot
-
-| Artifact | What it is for |
-|---|---|
-| `mango4j-spring-aop` | Spring AOP support classes shared by the other Spring modules |
-| `mango4j-spring-logging` | Annotation-based logging (uses `mango4j-masking`) |
-| `mango4j-spring-insights` | Annotation-based metrics |
-| `mango4j-spring-data` | Spring Data helpers such as `OffsetLimitPageable` |
-
-Spring is kept out of the plain-Java modules by a Maven Enforcer rule (`no-spring` in
-`mango4j-parent`), so the build fails if one of them gains a Spring dependency, directly or
-transitively.
+A Maven Enforcer rule (`no-spring` in `mango4j-parent`) fails the build if any module here gains a Spring dependency, directly or transitively.
 
 ## Using the libraries
 
@@ -42,8 +33,7 @@ transitively.
 </dependency>
 ```
 
-See the [documentation](docs/index.md) for each module. Compatibility is listed in
-[version compatibility](docs/mango4j-spring/version-compatibility.md).
+See the [documentation](docs/index.md) for each module.
 
 ## Contributions
 
@@ -77,10 +67,9 @@ Publishing to Maven Central uses the `release` profile (GPG signing): `mvn deplo
 ```
 mango4j/
   pom.xml                  reactor: builds everything
-  mango4j-parent/          shared build config, checkstyle.xml, enforcer rule
-  mango4j-spring-parent/   Spring-specific config (Boot BOM), inherits from mango4j-parent
-  mango4j-<module>/        plain-Java modules
-  mango4j-spring-<module>/ Spring modules
+  mango4j-parent/          shared build config and the enforcer rule
+  mango4j-build-tools/     shared Checkstyle rules, consumed by mango4j-parent
+  mango4j-<module>/        the modules
   docs/                    documentation
 ```
 

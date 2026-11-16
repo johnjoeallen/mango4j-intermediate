@@ -1,12 +1,11 @@
 # mango4j
 
-Small, focused Java libraries. The plain-Java modules have no Spring dependency, and the Spring
-modules add Spring Boot support on top. All modules share one version.
+Small, focused plain-Java libraries. None of these modules depend on Spring, and the build
+enforces that. The Spring Boot support modules live in the separate
+[mango4j-spring](https://github.com/bitstep-ie/mango4j-spring) repository, which builds on these
+and shares their version.
 
-| Area | Page |
-|---|---|
-| Plain-Java utilities | [mango4j core](mango4j-core.md) |
-| Spring Boot support | [mango4j-spring](mango4j-spring.md) |
+See [modules](mango4j-core.md) for what each one does.
 
 ## Requirements
 
@@ -14,9 +13,6 @@ modules add Spring Boot support on top. All modules share one version.
 |---|---|
 | JDK | 25 |
 | Maven | 3.9 or later |
-| Spring Boot (Spring modules only) | 4.1 |
-
-Compatibility with earlier releases is in [version compatibility](mango4j-spring/version-compatibility.md).
 
 ## Getting the code
 

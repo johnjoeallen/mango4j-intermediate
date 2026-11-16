@@ -28,18 +28,4 @@ extra:
 
 nav:
   - Home: index.md
-  - Core:
-      - Overview: mango4j-core.md
-  - Spring:
-      - Overview: mango4j-spring.md
-      - Logging:
-          - mango4j-spring/mango4j-spring-logging.md
-          - Basic annotations: mango4j-spring/mango4j-spring-logging/annotations-basic.md
-          - Custom config: mango4j-spring/mango4j-spring-logging/custom-config.md
-          - Web context populators: mango4j-spring/mango4j-spring-logging/webcontext-populators.md
-      - Insights:
-          - mango4j-spring/mango4j-spring-insights.md
-          - Basic annotations: mango4j-spring/mango4j-spring-insights/annotations-basic.md
-          - Custom config: mango4j-spring/mango4j-spring-insights/custom-config.md
-      - Version compatibility: mango4j-spring/version-compatibility.md
-      - Change log: mango4j-spring/changelog.md
+  - Modules: mango4j-core.md

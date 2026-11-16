@@ -35,13 +35,15 @@
     </scm>
 
     <modules>
+        <module>../mango4j-build-tools</module>
         <module>../mango4j-collections</module>
         <module>../mango4j-masking</module>
         <module>../mango4j-utils</module>
         <module>../mango4j-hibernate-proxy-resolver</module>
         <module>../mango4j-validation</module>
         <module>../mango4j-reflection</module>
-        <module>../mango4j-spring-parent</module>
+        <module>../mango4j-flowsink-annotations</module>
+        <module>../mango4j-flowsink-core</module>
     </modules>
 
     <properties>
@@ -73,6 +75,7 @@
         <jackson.version>3.1.7</jackson.version>
         <commons-collections.version>4.5.0</commons-collections.version>
         <slf4j-api.version>2.0.17</slf4j-api.version>
+        <opentelemetry.api.version>1.53.0</opentelemetry.api.version>
     </properties>
 
     <build>
@@ -105,7 +108,7 @@
                 <version>${maven.help.plugin}</version>
             </plugin>
 
-            <!-- Keeps Spring out of the plain-Java modules (Spring modules inherit from mango4j-spring-parent) -->
+            <!-- Keeps Spring out of the plain-Java modules (the mango4j-spring repository disables this for its own modules) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -178,7 +181,8 @@
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>${maven.checkstyle.plugin.version}</version>
                 <configuration>
-                    <configLocation>${project.basedir}/../mango4j-parent/checkstyle.xml</configLocation>
+                    <!-- resolved from the mango4j-build-tools plugin dependency below, so it works in any checkout -->
+                    <configLocation>mango4j/checkstyle.xml</configLocation>
                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
                     <sourceDirectories>
                         <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
@@ -205,6 +209,11 @@
                         <groupId>com.puppycrawl.tools</groupId>
                         <artifactId>checkstyle</artifactId>
                         <version>${checkstyle.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>ie.bitstep.mango</groupId>
+                        <artifactId>mango4j-build-tools</artifactId>
+                        <version>${project.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>

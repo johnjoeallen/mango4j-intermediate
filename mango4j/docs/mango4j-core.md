@@ -1,4 +1,4 @@
-# mango4j core
+# Modules
 
 The plain-Java modules. None of them depend on Spring; the build enforces that. Add only the
 artifacts you need, all under group ID `ie.bitstep.mango`.
@@ -70,6 +70,20 @@ Depends on `mango4j-utils`.
 Package `ie.bitstep.mango.proxy`. `HibernateProxyResolver` unwraps Hibernate proxies to the real
 entity. It implements `ProxyResolver` from `mango4j-utils`, which it depends on.
 
+## mango4j-flowsink-annotations and mango4j-flowsink-core
+
+Package `ie.bitstep.mango.flowsink`. Annotation-based flow and step instrumentation. The
+annotations (`@OnFlowStarted`, `@OnFlowSuccess`, `@OnFlowFailure` and others) and the flow engine
+(`FlowContext`, `FlowEvent`, `FlowStatus`, the processor and async dispatch bus) are Spring-free;
+they depend only on slf4j and OpenTelemetry. Nothing here discovers handlers by itself: that is
+done by `mango4j-spring-flowsink` in the [mango4j-spring](https://github.com/bitstep-ie/mango4j-spring) repository.
+
+`mango4j-flowsink-core` depends on `mango4j-flowsink-annotations`.
+
+## mango4j-build-tools
+
+Shared Checkstyle rules, used by the build as a plugin dependency. Not for application use.
+
 ## Dependencies between modules
 
 ```
@@ -79,4 +93,6 @@ mango4j-reflection         (none)
 mango4j-utils              -> mango4j-reflection
 mango4j-validation         -> mango4j-utils
 mango4j-hibernate-proxy-resolver -> mango4j-utils
+mango4j-flowsink-annotations  (none)
+mango4j-flowsink-core      -> mango4j-flowsink-annotations
 ```

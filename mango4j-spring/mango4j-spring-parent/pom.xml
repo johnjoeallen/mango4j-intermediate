@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>ie.bitstep.mango</groupId>
+        <artifactId>mango4j</artifactId>
+        <version>4.0.0-SNAPSHOT</version>
+        <!-- in a split checkout this falls back to the published mango4j parent -->
+        <relativePath>../../mango4j/mango4j-parent/pom.xml</relativePath>
+    </parent>
+
+    <packaging>pom</packaging>
+    <modules>
+        <module>../mango4j-spring-aop</module>
+        <module>../mango4j-spring-logging</module>
+        <module>../mango4j-spring-insights</module>
+        <module>../mango4j-spring-data</module>
+        <module>../mango4j-spring-flowsink</module>
+        <module>../mango4j-spring-flowsink-boot</module>
+        <module>../mango4j-spring-swarm</module>
+    </modules>
+
+
+    <artifactId>mango4j-spring</artifactId>
+
+    <name>Mango4j Spring</name>
+    <description>Spring Boot support libraries for Mango4j</description>
+
+    <properties>
+        <maven.jar.plugin>3.5.1</maven.jar.plugin>
+        <maven.dependency.plugin>3.9.0</maven.dependency.plugin>
+
+        <!--    Dependencies versions    -->
+        <mango4j.version>${project.version}</mango4j.version>
+        <spring-boot.version>4.1.2</spring-boot.version>
+        <commons-collections4.version>4.6.0</commons-collections4.version>
+        <logstash-logback-encoder.version>9.0</logstash-logback-encoder.version>
+    </properties>
+
+
+    <build>
+        <plugins>
+            <!-- This group is Spring: the no-spring rule from mango4j-parent does not apply -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>no-spring</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <compilerArgument>-parameters</compilerArgument>
+                    <proc>full</proc>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven.jar.plugin}</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Mockito as an explicit agent: dynamic self-attach is deprecated and breaks on modern JDKs -->
+                    <argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>${maven.dependency.plugin}</version>
+                <executions>
+                    <execution>
+                        <id>mockito-agent-path</id>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <doctitle>${project.name} ${project.version}</doctitle>
+                </configuration>
+            </plugin>
+
+            <!-- PITEST mvn clean test-compile org.pitest:pitest-maven:mutationCoverage   -->
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <configuration>
+                    <verbose>true</verbose>
+                    <targetClasses>
+                        <param>ie.bitstep.mango.spring.*</param>
+                    </targetClasses>
+                    <targetTests>
+                        <param>ie.bitstep.mango.spring.*</param>
+                    </targetTests>
+
+                    <excludedClasses>
+                        <param>ie.bitstep.mango.spring.logging.config.DiagnosticLifecycleLogger</param>
+                    </excludedClasses>
+
+                    <excludedMethods>
+                        <param>putClassMetaData</param>
+                        <param>putFieldMetaData</param>
+                        <param>getConverter</param>
+                    </excludedMethods>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- First import wins: keeps every JUnit artifact on the version mango4j-parent declares -->
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit-jupiter.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-collections4</artifactId>
+                <version>${commons-collections4.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-test</artifactId>
+                <version>${spring-boot.version}</version>
+                <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.hamcrest</groupId>
+                        <artifactId>hamcrest</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <version>${spring-boot.version}</version>
+                <artifactId>spring-boot-starter-data-jpa</artifactId>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>${logstash-logback-encoder.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

@@ -14,12 +14,10 @@ Newest entries go at the bottom of the [log](#progress-log). Detail lives in
 
 ## Where we are
 
-| Future repo | Directory (parent pom) | Modules | Java 25 | Boot 4 / Spring 7 | Jackson 3 | Internal refs removed | Ready to split |
-|---|---|---|---|---|---|---|---|
-| `mango4j` | `mango4j/` (reactor; `mango4j-parent/` for core) | collections, masking, reflection, utils, validation, hibernate-proxy-resolver | yes | n/a | yes | yes (upstream is public) | not yet |
-| `mango4j-flowsink` | `mango4j-flowsink/` | annotations, core, spring, spring-boot | yes | yes | n/a (no Jackson) | yes (upstream is public) | not yet |
-| `mango4j-swarm` | `mango4j-swarm/` | single module | yes | yes | yes | yes (upstream is public) | not yet |
-| `mango4j` (same repo) | `mango4j/mango4j-spring-parent/` | spring: aop, logging, insights, data | yes | yes | yes | yes, one open question | same repo as core, so no ordering issue |
+| Future repo | Directory | Contents | Java 25 | Boot 4 / Spring 7 | Jackson 3 | Ready to split |
+|---|---|---|---|---|---|---|
+| `mango4j` | `mango4j/` | plain Java: collections, masking, reflection, utils, validation, hibernate-proxy-resolver, flowsink-annotations, flowsink-core, build-tools | yes | n/a | yes | not yet |
+| `mango4j-spring` | `mango4j-spring/` | Spring: aop, logging, insights, data, flowsink, flowsink-boot, swarm | yes | yes | yes | not yet (needs `mango4j` published first) |
 
 "Ready to split" stays "not yet" until the cross-group dependencies are broken and each group
 builds standalone from a fresh clone (see [Next](#next)).
@@ -227,3 +225,16 @@ engine carry no Spring dependency; merging them into `flowsink-spring` is the al
   modules import `junit-bom` ahead of the Boot BOM, so JUnit is 6.1.2 throughout (was 6.0.3) and
   they inherit `mango4j-parent`'s Central publishing config; the `no-spring` enforcer rule is
   switched off for the Spring modules. `mango4j/pom.xml` now just lists `mango4j-parent`.
+- **Restructure: two repos (`mango4j`, `mango4j-spring`), crypto separate.** Rule: `mango4j-*` is plain
+  Java, `mango4j-spring-*` needs Spring. Flowsink was split along it: `mango4j-flowsink-annotations` and
+  `-core` moved to `mango4j/`, `flowsink-spring` became `mango4j-spring-flowsink` and `flowsink-spring-boot`
+  became `mango4j-spring-flowsink-boot`. `mango-swarm` became `mango4j-spring-swarm`. The flowsink parent
+  pom is gone; every module now inherits from `mango4j-parent` or `mango4j-spring-parent`, and the swarm
+  pom was cut down to its own dependencies. Java package names are unchanged.
+- **What changed to make that build:** the Checkstyle rules now ship as a small `mango4j-build-tools`
+  artifact (a plugin dependency of `mango4j-parent`), because the old sibling-directory path cannot work across
+  repositories. Flowsink and swarm are now under Checkstyle instead of Spotless, so `{}` became `{ }`, `log` became `LOG`
+  and some test constants were renamed; Spotless, Sonar and the flowsink `coverage` profile were dropped. All tests pass
+  (swarm's use Testcontainers/Docker). `mango4j-spring` resolves `mango4j-parent` by relative path here and from the
+  repository once split, so `mango4j` must be installed or published first (`./build.sh` does that).
+- **Not yet done:** swarm's own docs site (`mango4j-spring-swarm/documentation`) still points at the old `mango4j-swarm` repo URLs.

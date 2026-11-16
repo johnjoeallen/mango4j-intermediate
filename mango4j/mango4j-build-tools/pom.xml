@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+        Shared build configuration (Checkstyle rules), consumed as a maven-checkstyle-plugin dependency
+        by mango4j-parent. Deliberately has no parent: mango4j-parent depends on it, so inheriting from
+        mango4j-parent would be a cycle. It must be published alongside mango4j-parent.
+    -->
+    <groupId>ie.bitstep.mango</groupId>
+    <artifactId>mango4j-build-tools</artifactId>
+    <version>4.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>Mango4j Build Tools</name>
+    <description>Shared Checkstyle configuration for the mango4j projects</description>
+    <url>https://github.com/bitstep-ie/mango4j</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>bitstep</id>
+            <name>Bitstep</name>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/bitstep-ie/mango4j.git</connection>
+        <developerConnection>scm:git:ssh://github.com/bitstep-ie/mango4j.git</developerConnection>
+        <url>https://github.com/bitstep-ie/mango4j</url>
+    </scm>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+</project>

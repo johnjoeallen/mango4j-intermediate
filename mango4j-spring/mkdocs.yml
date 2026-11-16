@@ -1,0 +1,41 @@
+site_name: mango4j-spring
+site_description: Spring Boot support libraries built on mango4j
+site_url: https://bitstep-ie.github.io/mango4j-spring/
+repo_url: https://github.com/bitstep-ie/mango4j-spring
+repo_name: bitstep-ie/mango4j-spring
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+
+extra:
+  version:
+    provider: mike
+    default: latest
+
+nav:
+  - Home: index.md
+  - Logging:
+      - mango4j-spring/mango4j-spring-logging.md
+      - Basic annotations: mango4j-spring/mango4j-spring-logging/annotations-basic.md
+      - Custom config: mango4j-spring/mango4j-spring-logging/custom-config.md
+      - Web context populators: mango4j-spring/mango4j-spring-logging/webcontext-populators.md
+  - Insights:
+      - mango4j-spring/mango4j-spring-insights.md
+      - Basic annotations: mango4j-spring/mango4j-spring-insights/annotations-basic.md
+      - Custom config: mango4j-spring/mango4j-spring-insights/custom-config.md
+  - Version compatibility: mango4j-spring/version-compatibility.md
+  - Change log: mango4j-spring/changelog.md
