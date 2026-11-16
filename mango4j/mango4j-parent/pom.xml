@@ -104,6 +104,34 @@
                 <version>${maven.help.plugin}</version>
             </plugin>
 
+            <!-- Keeps Spring out of the plain-Java modules (Spring modules inherit from mango4j-spring-parent) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>no-spring</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <bannedDependencies>
+                                    <searchTransitive>true</searchTransitive>
+                                    <excludes>
+                                        <exclude>org.springframework:*</exclude>
+                                        <exclude>org.springframework.boot:*</exclude>
+                                    </excludes>
+                                    <message>Spring is not allowed in plain-Java mango4j modules. Put Spring code in a mango4j-spring-* module.</message>
+                                </bannedDependencies>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!--      Surefire      -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

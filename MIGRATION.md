@@ -107,10 +107,10 @@ level. There is no root pom; each group is a standalone Maven project.
 
 | Future repo | Parent / root pom | Modules |
 |---|---|---|
-| mango4j | `mango4j-parent/` | `mango4j-collections`, `-masking`, `-reflection`, `-utils`, `-validation`, `-hibernate-proxy-resolver` |
+| mango4j (core + spring) | `mango4j/` (reactor), `mango4j/mango4j-parent/` | `mango4j-collections`, `-masking`, `-reflection`, `-utils`, `-validation`, `-hibernate-proxy-resolver` |
 | mango4j-flowsink | `mango4j-flowsink/` (nested) | `mango4j-flowsink-annotations`, `-core`, `-spring`, `-spring-boot` |
 | mango4j-swarm | `mango4j-swarm/` (single module) | n/a |
-| mango4j-spring | `mango4j-spring-parent/` | `mango4j-spring-aop`, `-logging`, `-insights`, `-data` |
+| mango4j (same repo) | `mango4j/mango4j-spring-parent/` | `mango4j-spring-aop`, `-logging`, `-insights`, `-data` |
 
 Spring modules carry their own `lombok.config`; checkstyle, docs, readme, contributing and
 LICENSE live in `mango4j-spring-parent/`. When splitting, move the parent directory's

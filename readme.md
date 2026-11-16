@@ -16,17 +16,17 @@ Newest entries go at the bottom of the [log](#progress-log). Detail lives in
 
 | Future repo | Directory (parent pom) | Modules | Java 25 | Boot 4 / Spring 7 | Jackson 3 | Internal refs removed | Ready to split |
 |---|---|---|---|---|---|---|---|
-| `mango4j` | `mango4j-parent/` | collections, masking, reflection, utils, validation, hibernate-proxy-resolver | yes | n/a | yes | yes (upstream is public) | not yet |
+| `mango4j` | `mango4j/` (reactor; `mango4j-parent/` for core) | collections, masking, reflection, utils, validation, hibernate-proxy-resolver | yes | n/a | yes | yes (upstream is public) | not yet |
 | `mango4j-flowsink` | `mango4j-flowsink/` | annotations, core, spring, spring-boot | yes | yes | n/a (no Jackson) | yes (upstream is public) | not yet |
 | `mango4j-swarm` | `mango4j-swarm/` | single module | yes | yes | yes | yes (upstream is public) | not yet |
-| `mango4j-spring` | `mango4j-spring-parent/` | aop, logging, insights, data | yes | yes | yes | yes, one open question | needs `mango4j-masking` (logging) |
+| `mango4j` (same repo) | `mango4j/mango4j-spring-parent/` | spring: aop, logging, insights, data | yes | yes | yes | yes, one open question | same repo as core, so no ordering issue |
 
 "Ready to split" stays "not yet" until the cross-group dependencies are broken and each group
 builds standalone from a fresh clone (see [Next](#next)).
 
 ```bash
 ./build.sh                                                     # all groups, in dependency order
-mvn -f mango4j-spring-parent/pom.xml clean verify -Dgpg.skip   # one group, as its future repo will build
+mvn -f mango4j/pom.xml clean verify -Dgpg.skip   # one group, as its future repo will build
 ```
 
 There is no root pom. Every group is a standalone Maven project, built with `mvn -f <group>/pom.xml`.
@@ -213,3 +213,11 @@ engine carry no Spring dependency; merging them into `flowsink-spring` is the al
 3. Per-group open-source hygiene: README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, `.github`
    workflows, changelog (the spring one is still the old internal history).
 4. Split each group into its own repo, publish, then bump versions in dependants.
+- **Restructure: three repos, not four groups** (crypto is already its own repo and is not here).
+  Core and spring now live together in `mango4j/` with a reactor `pom.xml` that builds both
+  (`mvn -f mango4j/pom.xml clean verify`). The `mango4j-parent` and `mango4j-spring-parent` poms
+  are kept as they were, so the Spring build config is unchanged. `maven-enforcer-plugin` in
+  `mango4j-parent` (`no-spring`, transitive) fails the build if any plain-Java module gains a
+  Spring dependency; verified by adding `spring-core` to `mango4j-collections`. The remaining repos
+  are `mango4j-flowsink` and `mango4j-swarm`, unchanged. Open item: merge the two parent poms
+  (Checkstyle is still 10.26.1 vs 14.3.0).
