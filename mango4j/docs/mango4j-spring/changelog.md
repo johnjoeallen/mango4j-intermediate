@@ -1,5 +1,10 @@
 # mango4j-spring - Change log
 
+## 4.0.0
+
+ * Java 25, Spring Boot 4.1, Jackson 3
+ * Moved into the `mango4j` repository and released with the core modules at one version
+
 ## 2.21.0
 
  * Feature/2.21.0 upgrade
