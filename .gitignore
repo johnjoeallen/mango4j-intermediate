@@ -6,3 +6,6 @@
 *.class
 *.log
 hs_err_pid*
+
+# mkdocs build output
+/**/site/
