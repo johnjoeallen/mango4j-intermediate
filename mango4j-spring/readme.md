@@ -11,8 +11,6 @@ Group ID: `ie.bitstep.mango`
 | Artifact | What it is for |
 |---|---|
 | `mango4j-spring-aop` | Spring AOP support classes shared by the other modules |
-| `mango4j-spring-logging` | Annotation-based logging (uses `mango4j-masking`) |
-| `mango4j-spring-insights` | Annotation-based metrics |
 | `mango4j-spring-data` | Spring Data helpers such as `OffsetLimitPageable` |
 | `mango4j-spring-flowsink` | Annotation-based flow and step instrumentation (uses `mango4j-flowsink-core`) |
 | `mango4j-spring-flowsink-boot` | Spring Boot auto-configuration for flowsink |

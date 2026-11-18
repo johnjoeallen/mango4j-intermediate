@@ -39,7 +39,7 @@ Counts are import statements of the external class in that module, from
 | logging, insights | `com.mastercard.enterprise:logging-rest` | none | Internal artifact, removed. It was never imported but supplied Spring, Servlet, Lombok, commons-collections and mango4j-utils transitively, so those are now declared explicitly (framework ones `provided`). |
 | root pom | `com.mastercard:parent:3.0.0`, `finicity` profile | n/a | Removed. Root pom is self-contained. JDK 23+ needed `<proc>full</proc>` for Lombok. |
 
-Intra-group (stay together): `aop` <- `logging` <- `insights`. `data` is a leaf.
+Intra-group (stay together): `aop` <- `logging`. `data` is a leaf.
 
 Still to analyse when each module arrives: what `mango4j-utils` and `mango4j-crypto-core`
 themselves pull in transitively, and third-party dependencies (Jackson, AspectJ,
@@ -108,7 +108,7 @@ level. There is no root pom; each group is a standalone Maven project.
 | Future repo | Parent / root pom | Modules |
 |---|---|---|
 | mango4j | `mango4j/` (reactor), `mango4j/mango4j-parent/` | `mango4j-collections`, `-masking`, `-reflection`, `-utils`, `-validation`, `-hibernate-proxy-resolver` |
-| mango4j-spring | `mango4j-spring/` (reactor), `mango4j-spring/mango4j-spring-parent/` | `mango4j-spring-aop`, `-logging`, `-insights`, `-data`, `-flowsink`, `-flowsink-boot`, `-swarm` |
+| mango4j-spring | `mango4j-spring/` (reactor), `mango4j-spring/mango4j-spring-parent/` | `mango4j-spring-aop`, `-logging`, `-data`, `-flowsink`, `-flowsink-boot`, `-swarm` |
 
 Spring modules carry their own `lombok.config`; checkstyle, docs, readme, contributing and
 LICENSE live in `mango4j-spring-parent/`. When splitting, move the parent directory's

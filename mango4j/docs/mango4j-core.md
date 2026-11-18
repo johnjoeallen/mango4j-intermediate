@@ -23,7 +23,7 @@ Package `ie.bitstep.mango.collections`.
 
 ## mango4j-masking
 
-Package `ie.bitstep.mango.utils.masking`.
+Package `ie.bitstep.mango.masking`.
 
 - `Masker`: functional interface that masks a sensitive value, for example before logging it.
 - Implementations: `PanMasker`, `AccountIdMasker`, `FullMasker`, `NoMasker`, and the

@@ -17,7 +17,8 @@ Newest entries go at the bottom of the [log](#progress-log). Detail lives in
 | Future repo | Directory | Contents | Java 25 | Boot 4 / Spring 7 | Jackson 3 | Ready to split |
 |---|---|---|---|---|---|---|
 | `mango4j` | `mango4j/` | plain Java: collections, masking, reflection, utils, validation, hibernate-proxy-resolver, flowsink-annotations, flowsink-core, build-tools | yes | n/a | yes | not yet |
-| `mango4j-spring` | `mango4j-spring/` | Spring: aop, logging, insights, data, flowsink, flowsink-boot, swarm | yes | yes | yes | not yet (needs `mango4j` published first) |
+| `mango4j-spring` | `mango4j-spring/` | Spring: aop, data, flowsink, flowsink-boot, swarm | yes | yes | yes | not yet (needs `mango4j` published first) |
+| `mango4j-logging` | `mango4j-logging/` | `mango4j-logging-core` (plain Java) and `mango4j-spring-logging` (Spring) | yes | yes (Spring module) | yes | not yet (needs `mango4j` and `mango4j-spring`'s aop and parent published first) |
 
 "Ready to split" stays "not yet" until the cross-group dependencies are broken and each group
 builds standalone from a fresh clone (see [Next](#next)).
@@ -53,8 +54,8 @@ Spring-free (no Spring in sources or the full dependency tree): `collections`, `
 `crypto-aws-kms-delegate`, `flowsink-annotations`, `flowsink-core`.
 
 Need Spring: `flowsink-spring`, `flowsink-spring-boot`, `spring-aop`, `spring-logging`,
-`spring-insights`, `spring-data` and `swarm`.
-`spring-aop`, `spring-logging`, and `spring-insights` declare Spring as `provided`, so
+`spring-data` and `swarm`.
+`spring-aop` and `spring-logging` declare Spring as `provided`, so
 consumers must bring their own; the others put it on the compile classpath.
 
 `flowsink-annotations` and `flowsink-core` are Spring-free but only useful through `flowsink-spring`
@@ -135,7 +136,7 @@ engine carry no Spring dependency; merging them into `flowsink-spring` is the al
 - New core module `mango4j-masking`: the `masking` package moved out of `mango4j-utils` with its
   tests (59 of the old 221 utils tests). Its only dependency is commons-lang3, so API code can use
   it without pulling Jackson, commons-text or the rest of utils.
-- The Java package is unchanged (`ie.bitstep.mango.utils.masking`). `mango4j-utils` 1.0.0 is on
+- The Java package is unchanged (`ie.bitstep.mango.masking`). `mango4j-utils` 1.0.0 is on
   Maven Central with that package, so this keeps the move source-compatible: consumers moving to
   1.1.0 add the `mango4j-masking` dependency and keep their imports. Renaming the package to
   `ie.bitstep.mango.masking` is a possible follow-up, but a breaking one.

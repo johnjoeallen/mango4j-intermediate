@@ -15,8 +15,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>../mango4j-spring-aop</module>
-        <module>../mango4j-spring-logging</module>
-        <module>../mango4j-spring-insights</module>
         <module>../mango4j-spring-data</module>
         <module>../mango4j-spring-flowsink</module>
         <module>../mango4j-spring-flowsink-boot</module>
