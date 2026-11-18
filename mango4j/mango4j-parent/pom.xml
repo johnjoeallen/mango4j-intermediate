@@ -42,8 +42,6 @@
         <module>../mango4j-hibernate-proxy-resolver</module>
         <module>../mango4j-validation</module>
         <module>../mango4j-reflection</module>
-        <module>../mango4j-flowsink-annotations</module>
-        <module>../mango4j-flowsink-core</module>
     </modules>
 
     <properties>

@@ -8,7 +8,7 @@
         <groupId>ie.bitstep.mango</groupId>
         <artifactId>mango4j-spring</artifactId>
         <version>4.0.0-SNAPSHOT</version>
-        <relativePath>../mango4j-spring-parent/pom.xml</relativePath>
+        <relativePath>../../mango4j-spring/mango4j-spring-parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>mango4j-spring-flowsink</artifactId>

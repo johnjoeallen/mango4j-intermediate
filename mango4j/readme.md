@@ -18,7 +18,6 @@ No Spring dependencies. Spring support is in [mango4j-spring](https://github.com
 | `mango4j-utils` | Date and calendar helpers, `EntityToStringBuilder`, `MappingUtils`, `NamedScheduledExecutorBuilder`, conformance helpers |
 | `mango4j-validation` | `ValidationUtils` and Jakarta Validation constraints such as `@Type4UUID`, `@IsValidKebabCase`, `@IsValidDottedCase` |
 | `mango4j-hibernate-proxy-resolver` | `HibernateProxyResolver` for unwrapping Hibernate proxies |
-| `mango4j-flowsink-annotations`, `mango4j-flowsink-core` | Flow and step instrumentation annotations and the Spring-free engine behind them |
 | `mango4j-build-tools` | Shared Checkstyle configuration used by the build (not for applications) |
 
 A Maven Enforcer rule (`no-spring` in `mango4j-parent`) fails the build if any module here gains a Spring dependency, directly or transitively.

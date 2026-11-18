@@ -16,9 +16,11 @@ Newest entries go at the bottom of the [log](#progress-log). Detail lives in
 
 | Future repo | Directory | Contents | Java 25 | Boot 4 / Spring 7 | Jackson 3 | Ready to split |
 |---|---|---|---|---|---|---|
-| `mango4j` | `mango4j/` | plain Java: collections, masking, reflection, utils, validation, hibernate-proxy-resolver, flowsink-annotations, flowsink-core, build-tools | yes | n/a | yes | not yet |
-| `mango4j-spring` | `mango4j-spring/` | Spring: aop, data, flowsink, flowsink-boot, swarm | yes | yes | yes | not yet (needs `mango4j` published first) |
+| `mango4j` | `mango4j/` | plain Java: collections, masking, reflection, utils, validation, hibernate-proxy-resolver, build-tools | yes | n/a | yes | not yet |
+| `mango4j-spring` | `mango4j-spring/` | Spring: aop, data | yes | yes | yes | not yet (needs `mango4j` published first) |
 | `mango4j-logging` | `mango4j-logging/` | `mango4j-logging-core` (plain Java) and `mango4j-spring-logging` (Spring) | yes | yes (Spring module) | yes | not yet (needs `mango4j` and `mango4j-spring`'s aop and parent published first) |
+| `mango4j-flowsink` | `mango4j-flowsink/` | `mango4j-flowsink-annotations`, `mango4j-flowsink-core` (plain Java) and `mango4j-spring-flowsink`, `mango4j-spring-flowsink-boot` (Spring) | yes | yes (Spring modules) | yes | not yet (needs `mango4j` and `mango4j-spring`'s parent published first) |
+| `mango4j-swarm` | `mango4j-swarm/` | `mango4j-spring-swarm` (Spring) with a standalone `reference-email-app` example | yes | yes | yes | not yet (needs `mango4j-spring`'s parent published first) |
 
 "Ready to split" stays "not yet" until the cross-group dependencies are broken and each group
 builds standalone from a fresh clone (see [Next](#next)).
@@ -239,3 +241,4 @@ engine carry no Spring dependency; merging them into `flowsink-spring` is the al
   (swarm's use Testcontainers/Docker). `mango4j-spring` resolves `mango4j-parent` by relative path here and from the
   repository once split, so `mango4j` must be installed or published first (`./build.sh` does that).
 - **Not yet done:** swarm's own docs site (`mango4j-spring-swarm/documentation`) still points at the old `mango4j-swarm` repo URLs.
+- **Flowsink and swarm are their own groups.** `mango4j-flowsink/` (annotations, core, spring-flowsink, spring-flowsink-boot) and `mango4j-swarm/` (spring-swarm) each have a reactor `pom.xml`, like `mango4j-logging/`. The plain modules still inherit `mango4j-parent` and the Spring ones `mango4j-spring`, so `./build.sh` builds `mango4j`, `mango4j-spring`, `mango4j-logging`, `mango4j-flowsink`, `mango4j-swarm` in that order. Tests pass in both (218 flowsink, 219 swarm).

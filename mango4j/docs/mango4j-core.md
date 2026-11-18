@@ -76,7 +76,7 @@ Package `ie.bitstep.mango.flowsink`. Annotation-based flow and step instrumentat
 annotations (`@OnFlowStarted`, `@OnFlowSuccess`, `@OnFlowFailure` and others) and the flow engine
 (`FlowContext`, `FlowEvent`, `FlowStatus`, the processor and async dispatch bus) are Spring-free;
 they depend only on slf4j and OpenTelemetry. Nothing here discovers handlers by itself: that is
-done by `mango4j-spring-flowsink` in the [mango4j-spring](https://github.com/bitstep-ie/mango4j-spring) repository.
+done by `mango4j-spring-flowsink`. Both live in the `mango4j-flowsink` group of this repository, not in `mango4j-parent`.
 
 `mango4j-flowsink-core` depends on `mango4j-flowsink-annotations`.
 

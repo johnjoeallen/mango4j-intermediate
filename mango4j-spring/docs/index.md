@@ -12,9 +12,6 @@ Code repository [*is available here*](https://github.com/bitstep-ie/mango4j-spri
 | `mango4j-spring-aop` | Spring AOP support classes |
 | `mango4j-spring-logging` | Annotation-based logging, see [logging](mango4j-spring/mango4j-spring-logging.md) |
 | `mango4j-spring-data` | Spring Data helpers such as `OffsetLimitPageable` |
-| `mango4j-spring-flowsink` | Annotation-based flow and step instrumentation for Spring applications. The engine (`mango4j-flowsink-core`, `mango4j-flowsink-annotations`) lives in the mango4j repository |
-| `mango4j-spring-flowsink-boot` | Spring Boot auto-configuration for `mango4j-spring-flowsink` |
-| `mango4j-spring-swarm` | PostgreSQL-backed, rate-limited, distributed task executor. Has its own [documentation site](https://github.com/bitstep-ie/mango4j-spring/tree/main/mango4j-spring-swarm/documentation) |
 
 ## Requirements
 

@@ -12,9 +12,6 @@ Group ID: `ie.bitstep.mango`
 |---|---|
 | `mango4j-spring-aop` | Spring AOP support classes shared by the other modules |
 | `mango4j-spring-data` | Spring Data helpers such as `OffsetLimitPageable` |
-| `mango4j-spring-flowsink` | Annotation-based flow and step instrumentation (uses `mango4j-flowsink-core`) |
-| `mango4j-spring-flowsink-boot` | Spring Boot auto-configuration for flowsink |
-| `mango4j-spring-swarm` | PostgreSQL-backed, rate-limited, distributed task executor |
 
 Naming rule across both repositories: `mango4j-*` is plain Java, `mango4j-spring-*` needs Spring.
 
@@ -41,11 +38,10 @@ All contributions are welcome. Please read [contributing.md](contributing.md) fi
 - JDK 25
 - Maven 3.9 or later
 - Git
-- Docker, for the `mango4j-spring-swarm` tests (Testcontainers)
 
 ### Build
 
-This repository depends on `mango4j` (the parent pom, `mango4j-masking`, `mango4j-flowsink-*`), so
+This repository depends on `mango4j` (the parent pom), so
 build and install that first, then run from this directory:
 
 ```bash

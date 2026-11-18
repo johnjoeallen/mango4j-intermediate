@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+        Reactor only: builds the whole mango4j-flowsink group with one command. It is not a parent of
+        anything and is not published. Needs the mango4j and mango4j-spring groups installed first (./build.sh): the plain modules inherit mango4j-parent, the Spring ones inherit mango4j-spring.
+    -->
+    <groupId>ie.bitstep.mango</groupId>
+    <artifactId>mango4j-flowsink-reactor</artifactId>
+    <version>4.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Mango4j Flowsink Reactor</name>
+
+    <modules>
+        <module>mango4j-flowsink-annotations</module>
+        <module>mango4j-flowsink-core</module>
+        <module>mango4j-spring-flowsink</module>
+        <module>mango4j-spring-flowsink-boot</module>
+    </modules>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+</project>
