@@ -20,18 +20,18 @@ Newest entries go at the bottom of the [log](#progress-log). Detail lives in
 | `mango4j-crypto` | `mango4j-crypto/` | crypto-core, crypto, aws-kms-delegate | yes | n/a | yes | yes (upstream is public) | not yet |
 | `mango4j-flowsink` | `mango4j-flowsink/` | annotations, core, spring, spring-boot | yes | yes | n/a (no Jackson) | yes (upstream is public) | not yet |
 | `mango4j-swarm` | `mango4j-swarm/` | single module | yes | yes | yes | yes (upstream is public) | not yet |
-| `mango4j-spring` | `mango4j-spring-parent/` | aop, logging, insights, observe, data, crypto-caas-delegate | yes | yes | yes | yes, one open question | needs `mango4j-masking` (logging), `crypto-core` (CaaS delegate) |
+| `mango4j-spring` | `mango4j-spring-parent/` | aop, logging, insights, data | yes | yes | yes | yes, one open question | needs `mango4j-masking` (logging) |
 
 "Ready to split" stays "not yet" until the cross-group dependencies are broken and each group
 builds standalone from a fresh clone (see [Next](#next)).
 
 ```bash
-mvn clean verify -Dgpg.skip                              # build and test everything
+./build.sh                                                     # all groups, in dependency order
 mvn -f mango4j-spring-parent/pom.xml clean verify -Dgpg.skip   # one group, as its future repo will build
 ```
 
-Nothing inherits from the root pom. It is a throw-away aggregator; every group is a standalone
-Maven project.
+There is no root pom. Every group is a standalone Maven project, built with `mvn -f <group>/pom.xml`.
+Build the groups in publishing order: core, then spring (needs `masking`). Crypto, flowsink and swarm depend on no other group.
 
 ### Mutation testing and formatting
 
@@ -47,7 +47,7 @@ mvn spotless:apply    # flowsink and swarm only; format sources on demand
   this profile is active.
 - Thresholds are per module. They sit at each module's current score rather than 100, so the profile
   passes today and a regression fails the build. Raise a threshold when you raise the score.
-- `mango-swarm` takes about 10 minutes under PIT; the rest of the reactor takes about 6.
+- `mango-swarm` takes about 10 minutes under PIT; the rest takes about 6.
 
 ### Which modules need Spring
 
@@ -56,8 +56,8 @@ Spring-free (no Spring in sources or the full dependency tree): `collections`, `
 `crypto-aws-kms-delegate`, `flowsink-annotations`, `flowsink-core`.
 
 Need Spring: `flowsink-spring`, `flowsink-spring-boot`, `spring-aop`, `spring-logging`,
-`spring-insights`, `spring-observe`, `spring-data`, `spring-crypto-caas-delegate` and `swarm`.
-`spring-aop`, `spring-logging`, `spring-insights` and `spring-observe` declare Spring as `provided`, so
+`spring-insights`, `spring-data` and `swarm`.
+`spring-aop`, `spring-logging`, and `spring-insights` declare Spring as `provided`, so
 consumers must bring their own; the others put it on the compile classpath.
 
 `flowsink-annotations` and `flowsink-core` are Spring-free but only useful through `flowsink-spring`
@@ -83,8 +83,6 @@ engine carry no Spring dependency; merging them into `flowsink-spring` is the al
 - Renamed the spring modules to groupId `ie.bitstep.mango`, packages `ie.bitstep.mango.spring.*`,
   to match the public modules. Scrubbed internal class names and an email from test fixtures.
 - Added Apache-2.0 LICENSE and pom metadata (licenses, scm, developers).
-- Open question: `mango4j-spring-crypto-caas-delegate` talks to a CaaS gateway. We still need to
-  confirm that API is not internal before publishing that module.
 
 ### Java 25 and Spring Boot 4
 - Spring modules and swarm are on Spring Boot 4.1.2 (Spring Framework 7.0.10), flowsink on
@@ -122,15 +120,15 @@ engine carry no Spring dependency; merging them into `flowsink-spring` is the al
 ### Breaking spring's dependencies on core
 - Spring depended on four core modules (`reflection`, `collections`, `utils`, `validation`) and on
   `crypto-core`. After analysing real usage, spring now depends only on `mango4j-utils` (logging,
-  for masking and converters) and, in the CaaS delegate, on `crypto-core`.
+  for masking and converters).
   - `validation`: declared, never used. Removed.
   - `reflection`: test-only. `MDCTestUtils` is now a plain-reflection helper in
     `mango4j-spring-logging`'s test sources; `ReflectionUtils.getMethod` became a three-line
     helper in the aop tests.
   - `collections`: `MapBuilder` was used in six places in main code, all replaced by plain
     `LinkedHashMap`/`HashMap` (values can be null, so `Map.of` was not an option). Tests use slim
-    `MapBuilder`/`ListBuilder` helpers from the logging test-jar, which insights and observe
-    consume (test scope).
+    `MapBuilder`/`ListBuilder` helpers from the logging test-jar, which insights
+    consumes (test scope).
   - `utils`: only the `masking` and `converters` packages are used. First attempt: copy them
     into logging. **Reversed**: masking is reusable beyond logging (API responses can use it too),
     so it was instead extracted from `mango4j-utils` into its own module, `mango4j-masking`
@@ -167,9 +165,10 @@ engine carry no Spring dependency; merging them into `flowsink-spring` is the al
 - `mango4j-crypto` tests also used `mango4j-reflection`'s `ReflectionUtils`, which only arrived
   transitively through utils. One test helper now uses plain reflection. Crypto's main code already
   has its own `ReflectionUtils`.
-- **Decision: `ConcurrentCache` stays in `mango4j-collections`**, so `crypto-core -> collections`
-  remains the one core dependency of the crypto group. Its class Javadoc explains why it is not a
-  plain cache (current entry, sliding expiry, grace-period close of key material).
+- **Decision: the cache moved into `mango4j-crypto-core` as `LingeringCloseCache`**
+  (`ie.bitstep.mango.crypto.core.cache`), so the crypto group no longer depends on any other group.
+  Its class Javadoc explains why it is not a plain cache (current entry, sliding expiry, a lingering
+  close of key material after eviction).
 - Note: the crypto parent used to pin `mango4j.version` to the *released* `1.0.0`, so crypto built
   against the published `mango4j-collections`, not the one in this repo. Fixed by the version bump
   below.
@@ -202,19 +201,16 @@ engine carry no Spring dependency; merging them into `flowsink-spring` is the al
   swarm 0.1.9, spring 1.0.0), and every cross-group dependency (`mango4j.version`,
   `mango4j-crypto.version`) points at `4.0.0-SNAPSHOT`, so the family releases in lockstep and
   nothing resolves a stale published artifact any more.
-- The dependency snippets in the spring docs and the CaaS delegate readme use the real groupId
+- The dependency snippets in the spring docs use the real groupId
   `ie.bitstep.mango` and this version (an earlier rename had left `ie.bitstep.mango.spring` there).
 - Consequence: a group built on its own (`mvn -f mango4j-crypto/pom.xml ...`) needs the groups it
-  depends on installed first, in this order: core, crypto, then spring. In the root reactor this is
-  automatic.
+  depends on installed first: spring needs core (`masking`). Crypto, flowsink and swarm need nothing else.
 
 ## Next
 1. Cross-group dependencies that remain, all deliberate:
-   `crypto-core -> collections` (`ConcurrentCache`), `spring-logging -> masking`,
-   `spring-crypto-caas-delegate -> crypto-core`.
-2. Confirm the CaaS delegate is publishable.
-3. Make each group build standalone from a clean clone against published (or `-SNAPSHOT`)
+   `spring-logging -> masking`.
+2. Make each group build standalone from a clean clone against published (or `-SNAPSHOT`)
    artifacts of the others, not the reactor.
-4. Per-group open-source hygiene: README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, `.github`
+3. Per-group open-source hygiene: README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, `.github`
    workflows, changelog (the spring one is still the old internal history).
-5. Split each group into its own repo, publish, then bump versions in dependants.
+4. Split each group into its own repo, publish, then bump versions in dependants.

@@ -28,7 +28,6 @@
 ## 2.14.0
 
  * Replace fresh() with copy*()
- * Experimental/add support for advanced caas EXPERIMENTAL
  * Documentation to markdown
 
 
@@ -79,15 +78,12 @@
 ## 2.4.0
 
  * Fixed module name
- * Fixed caas delegate module version in readme
 
 
 
 ## 2.3.0
 
- * Fixed caas delegate module version
  * Updated to latest mango4j-crypto-core release
- * Crypto caas delegate 1
  * Added the concept of the Root Diagnostic context
 
 

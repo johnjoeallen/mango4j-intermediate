@@ -9,7 +9,6 @@ Three are currently three modules available:
 - mango4j-spring-logging - Annotation based logging
 - mango4j-spring-insights - Annotation based metrics
 - mango4j-spring-aop - SpringAOP support classes
-- mango4j-spring-observe - Generalised annotation based observability
 
 
 ## Using the libraries
