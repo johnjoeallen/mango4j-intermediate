@@ -1,5 +1,7 @@
 # Exception logging — end-to-end scenarios
 
+*Generated from the tests, do not edit by hand. To regenerate, run `mvn -o test -Dtest=ExceptionLoggingScenariosTest` in `mango4j-logging`, then `python3 tools/generate_exception_logging_scenarios.py` in `mango4j-spring-logging`.*
+
 Generated from `ExceptionLoggingScenariosTest` (`mango4j-spring-logging`), which writes each scenario's captured output to `target/scenario-output/`. Each scenario runs the real aspect delegate, the real `DiagnosticContextLogger` and the real level strategy; a capturing adapter records what would be logged. Each **Setup** is the annotated method(s) the scenario runs, taken from the test fixtures (a parent `void parent()` calls `child()`; a global-rules scenario shows the `ExceptionDetailRules` bean). Timestamps and response times are fixed. `stacktrace` is an object (`exception`, `message`, `frames`, and with CAUSE a nested `cause` of the same shape); frames are shortened to the first one per exception here.
 
 **56 scenarios — 56 passed, 0 failed.**
@@ -42,6 +44,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -53,6 +58,9 @@ log:
           "method": "singleMethod_default_logsMessageCauseAndStackTrace",
           "file": "ExceptionLoggingScenariosTest.java",
           "line": 425
+        },
+        {
+          "…": "10 more frames"
         }
       ]
     }
@@ -164,6 +172,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ]
   },
@@ -201,6 +212,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ]
   },
@@ -239,6 +253,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ]
   },
@@ -277,6 +294,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -288,6 +308,9 @@ log:
           "method": "singleMethod_messageCauseAndStackTrace_causeNodeHasMessageAndOwnTrace",
           "file": "ExceptionLoggingScenariosTest.java",
           "line": 489
+        },
+        {
+          "…": "10 more frames"
         }
       ]
     }
@@ -326,6 +349,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -336,6 +362,9 @@ log:
           "method": "singleMethod_causeAndStackTrace_causeNodeHasClassNamesOnly",
           "file": "ExceptionLoggingScenariosTest.java",
           "line": 501
+        },
+        {
+          "…": "10 more frames"
         }
       ]
     }
@@ -375,6 +404,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ]
   },
@@ -414,6 +446,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -425,6 +460,9 @@ log:
           "method": "cause_reasonAndCause_causeIsNestedInTheStackTraceWithItsOwnReason",
           "file": "ExceptionLoggingScenariosTest.java",
           "line": 520
+        },
+        {
+          "…": "10 more frames"
         }
       ]
     }
@@ -492,6 +530,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -503,6 +544,9 @@ log:
           "method": "cause_chainOfThreeExceptions_nestedOneInsideTheOther",
           "file": "ExceptionLoggingScenariosTest.java",
           "line": 539
+        },
+        {
+          "…": "10 more frames"
         }
       ],
       "cause": {
@@ -514,6 +558,9 @@ log:
             "method": "cause_chainOfThreeExceptions_nestedOneInsideTheOther",
             "file": "ExceptionLoggingScenariosTest.java",
             "line": 539
+          },
+          {
+            "…": "10 more frames"
           }
         ]
       }
@@ -555,6 +602,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -565,6 +615,9 @@ log:
           "method": "cause_causeWithoutMessage_reasonIsClassName",
           "file": "ExceptionLoggingScenariosTest.java",
           "line": 551
+        },
+        {
+          "…": "10 more frames"
         }
       ]
     }
@@ -605,6 +658,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ]
   },
@@ -644,6 +700,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -655,6 +714,9 @@ log:
           "method": "cause_defaultDetail_causeNodeHasItsOwnStackTrace",
           "file": "ExceptionLoggingScenariosTest.java",
           "line": 566
+        },
+        {
+          "…": "10 more frames"
         }
       ]
     }
@@ -693,6 +755,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -703,6 +768,9 @@ log:
           "method": "cause_deepChainWithStackTraceOnly_eachCauseIsNestedInItsParentsTrace",
           "file": "ExceptionLoggingScenariosTest.java",
           "line": 575
+        },
+        {
+          "…": "10 more frames"
         }
       ],
       "cause": {
@@ -713,6 +781,9 @@ log:
             "method": "cause_deepChainWithStackTraceOnly_eachCauseIsNestedInItsParentsTrace",
             "file": "ExceptionLoggingScenariosTest.java",
             "line": 575
+          },
+          {
+            "…": "10 more frames"
           }
         ]
       }
@@ -754,6 +825,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -765,6 +839,9 @@ log:
           "method": "cause_depthLimit_onlyFiveNestedLevels",
           "file": "ExceptionLoggingScenariosTest.java",
           "line": 589
+        },
+        {
+          "…": "10 more frames"
         }
       ],
       "cause": {
@@ -776,6 +853,9 @@ log:
             "method": "cause_depthLimit_onlyFiveNestedLevels",
             "file": "ExceptionLoggingScenariosTest.java",
             "line": 589
+          },
+          {
+            "…": "10 more frames"
           }
         ],
         "cause": {
@@ -787,6 +867,9 @@ log:
               "method": "cause_depthLimit_onlyFiveNestedLevels",
               "file": "ExceptionLoggingScenariosTest.java",
               "line": 589
+            },
+            {
+              "…": "10 more frames"
             }
           ],
           "cause": {
@@ -798,6 +881,9 @@ log:
                 "method": "cause_depthLimit_onlyFiveNestedLevels",
                 "file": "ExceptionLoggingScenariosTest.java",
                 "line": 589
+              },
+              {
+                "…": "10 more frames"
               }
             ],
             "cause": {
@@ -809,6 +895,9 @@ log:
                   "method": "cause_depthLimit_onlyFiveNestedLevels",
                   "file": "ExceptionLoggingScenariosTest.java",
                   "line": 589
+                },
+                {
+                  "…": "10 more frames"
                 }
               ]
             }
@@ -861,6 +950,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -872,6 +964,9 @@ log:
           "method": "declinedBecauseLocked",
           "file": "ExceptionLoggingScenariosTest.java",
           "line": 608
+        },
+        {
+          "…": "10 more frames"
         }
       ],
       "cause": {
@@ -883,6 +978,9 @@ log:
             "method": "declinedBecauseLocked",
             "file": "ExceptionLoggingScenariosTest.java",
             "line": 608
+          },
+          {
+            "…": "10 more frames"
           }
         ]
       }
@@ -959,6 +1057,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -970,6 +1071,9 @@ log:
           "method": "singleMethod_messageAndCause_causeIsNestedInTheStackTrace",
           "file": "ExceptionLoggingScenariosTest.java",
           "line": 638
+        },
+        {
+          "…": "10 more frames"
         }
       ]
     }
@@ -1350,6 +1454,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -1361,6 +1468,9 @@ log:
           "method": "onException_fullDetail_reasonCauseNodeAndStackTraces",
           "file": "ExceptionLoggingScenariosTest.java",
           "line": 750
+        },
+        {
+          "…": "10 more frames"
         }
       ]
     }
@@ -1466,6 +1576,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ]
   },
@@ -1832,6 +1945,9 @@ log:
             "method": "doLoggableMethod",
             "file": "AspectLoggerDelegate.java",
             "line": 228
+          },
+          {
+            "…": "10 more frames"
           }
         ]
       },
@@ -2079,6 +2195,9 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
+      },
+      {
+        "…": "10 more frames"
       }
     ]
   },

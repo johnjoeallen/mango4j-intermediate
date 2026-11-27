@@ -31,6 +31,8 @@ nav:
   - Logging:
       - mango4j-spring/mango4j-spring-logging.md
       - Basic annotations: mango4j-spring/mango4j-spring-logging/annotations-basic.md
+      - Exception logging: mango4j-spring/mango4j-spring-logging/exception-logging.md
+      - Exception logging scenarios: mango4j-spring/mango4j-spring-logging/exception-logging-scenarios.md
       - Custom config: mango4j-spring/mango4j-spring-logging/custom-config.md
       - Web context populators: mango4j-spring/mango4j-spring-logging/webcontext-populators.md
   - Version compatibility: mango4j-spring/version-compatibility.md

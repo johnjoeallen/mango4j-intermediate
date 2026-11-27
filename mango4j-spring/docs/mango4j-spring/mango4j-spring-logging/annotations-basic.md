@@ -1,9 +1,10 @@
 # mango4j-spring-logging - Basic Annotating
 
-WARNING: This framework relies on Spring AOP, therefore:
-Any method calls need to cross service boundaries or be called via a WithAOP<>proxy() in order to be intercepted by Spring AOP.
+!!! warning "Spring AOP"
+    This framework relies on Spring AOP, therefore any method calls need to cross service boundaries or be called via a
+    `WithAOP<>proxy()` in order to be intercepted by Spring AOP.
 
-### Annotate loggable classes
+## Annotate loggable classes
 
 ```java language=java
 @Service
@@ -11,164 +12,72 @@ Any method calls need to cross service boundaries or be called via a WithAOP<>pr
 public class FunService {
 ```
 
-<!--name=admonition;type=info;title=NOTE;body=
-This works on any Java class.
--->
+!!! note
+    This works on any Java class.
 
-### Annotate loggable methods
-
-
-<!--name=admonition;type=info;title=NOTE;body=
-This works on any type of method with the exception of private methods.
--->
-
+## Annotate loggable methods
 
 ```java language=java
 @LoggableMethod
 public void funMethod() {
 ```
 
-#### LoggableMethod parameters
+!!! note
+    This works on any type of method with the exception of private methods.
+
+### LoggableMethod parameters
 
 * isolated, default false
 
-  Causes a log message on return from this method even if it's nested inside an existing @LoggableMethod
+    Causes a log message on return from this method even if it's nested inside an existing @LoggableMethod
 
 * tracking, default TrackingType.TRACK
- ** TRACK, Track the flow by keeping the current tracking cookie (correlation id)
- ** DONT_TRACK, Don't track the flow (clear the correlation id)
- ** SPLIT, Split from the flow (new correlation id)
- ** TRAIL, Create a trail from the flow to a new flow (previous correlation id + new correlation id)
+    * TRACK, Track the flow by keeping the current tracking cookie (correlation id)
+    * DONT_TRACK, Don't track the flow (clear the correlation id)
+    * SPLIT, Split from the flow (new correlation id)
+    * TRAIL, Create a trail from the flow to a new flow (previous correlation id + new correlation id)
 
 * logReturn, default false
 
-  If set to true will log the response from the method
+    If set to true will log the response from the method
 
 * logException, default `{ REASON, MESSAGE, CAUSE, EXCEPTION, STACK_TRACE }`
 
-  What to log when this method throws. An array of `ExceptionDetail`. Each concern has its own output key:
+    What to log when this method throws, as an array of `ExceptionDetail` values. `{}` logs nothing about the
+    exception. `@OnException` and global rules can override it per exception type. See
+    [exception logging](exception-logging.md) for the values, the output, and how an exception is logged once, at the
+    method that threw it.
 
-  | Value | Output key | Logs |
-  |---|---|---|
-  | `REASON` | `reason` | switches the text reason on. `CLASS_NAME` and `MESSAGE` shape its content; with neither it is the message |
-  | `CLASS_NAME` | `reason` | the exception class name |
-  | `MESSAGE` | `reason`, `stacktrace.message` | the (sanitised) message: in the `reason` text with `REASON`, and as `message` in the stack trace object with `STACK_TRACE` |
-  | `CAUSE` | `stacktrace.cause` | adds the cause inside the stack trace object: `stacktrace.cause` has the same shape (`exception`, `message`, `frames`, and its own `cause`), up to 5 levels deep. It only adds to `STACK_TRACE`: on its own, or without `STACK_TRACE`, it does nothing |
-  | `EXCEPTION` | `exception` | for the exception that was thrown, if its class is annotated `@LoggableClass`: `{"class": "com.acme.PaymentException", "code": "X-42"}`, its `@LoggableField`s with `@Mask` applied. A `@LoggableField` named `class` cannot override `class`. Nothing for other exceptions, and nothing for causes |
-  | `STACK_TRACE` | `stacktrace` | the stack trace as an object: `exception` (the exception class), `message` (only with `MESSAGE`, and only if it has one), and `frames`, a list of `{class, method, file, line}` objects (`file` and `line` are left out when unknown). With `CAUSE` the cause is nested as `cause` |
+    ```java language=java
+    @LoggableMethod(logException = { ExceptionDetail.REASON, ExceptionDetail.CLASS_NAME })
+    public void funMethodThatThrows() {
+    ```
 
-  `CLASS_NAME` and `MESSAGE` have no effect without `REASON`, and `CAUSE` has no effect without `STACK_TRACE`. `{}` logs nothing about the exception
-  (use it when the caller or a global handler logs it). Class name and message together render as `ClassName: message`.
-
-  Example with the default detail, for `PaymentDeclinedException` (a `@LoggableClass`) caused by an `IOException`:
-
-  ```json
-  {
-    "reason": "Payment declined for order 1042",
-    "exception": { "class": "com.acme.PaymentDeclinedException", "orderId": "1042", "cardNumber": "4111********1111" },
-    "stacktrace": {
-      "exception": "com.acme.PaymentDeclinedException",
-      "message": "Payment declined for order 1042",
-      "frames": [
-        { "class": "com.acme.PaymentService", "method": "charge", "file": "PaymentService.java", "line": 42 }
-      ],
-      "cause": {
-        "exception": "java.io.IOException",
-        "message": "Connection reset",
-        "frames": [
-          { "class": "com.acme.Gateway", "method": "send", "file": "Gateway.java", "line": 17 }
-        ]
-      }
-    }
-  }
-  ```
-
-  Every key has one type at every depth (`frames` is always a list of objects, `cause` always a single object),
-  so the output indexes cleanly in Splunk and Elasticsearch and reads into a typed class. In Splunk the fields
-  are `stacktrace.exception`, `stacktrace.frames{}.method`, `stacktrace.cause.message`,
-  `stacktrace.cause.frames{}.line`, and so on. The top-level `exception` (the `@LoggableClass` fields) and
-  `stacktrace.exception` (the class name) are different paths.
+    !!! warning "Changed from a boolean"
+        `logException = true` and `logException = false` no longer compile. See
+        [moving from the boolean](exception-logging.md#moving-from-the-boolean).
 
 * forceErrorOnException default false
 
-  If set to true will force log level to ERROR
+    If set to true will force log level to ERROR
 
-#### OnException
+### Examples
 
-When a `@LoggableMethod` throws, the exception is recorded against the method that threw it. A parent
-`@LoggableMethod` that simply lets the same exception instance propagate does **not** record it again,
-so it is logged once, at its source.
-
-A parent opts in to recording it as well with `@OnException`:
-
-```java language=java
-@LoggableMethod
-@OnException(type = PaymentException.class, detail = { ExceptionDetail.REASON, ExceptionDetail.MESSAGE })
-public Order placeOrder(OrderRequest r) {
-    paymentService.charge(r.card());   // throws PaymentException
-    ...
-}
-```
-
-* `type` is an array of exception classes (subclasses match). Default is `Throwable`, i.e. any exception.
-* `@OnException` is repeatable; rules are checked in declaration order and the first match wins.
-* A wrapper exception (a new instance with the child's exception as its cause) is a different exception
-  and is always recorded by the parent.
-* `detail` takes the same values as `logException` and overrides it for the exceptions the rule matches.
-  Exceptions not matched by any `@OnException` use the method's `logException`.
-
-#### Global exception rules
-
-Register an `ExceptionDetailStrategy` bean to set exception detail once for the whole application:
-
-```java language=java
-@Bean
-ExceptionDetailStrategy exceptionDetailStrategy() {
-    return ExceptionDetailRules.builder()
-        .on(NotFoundException.class)                          // log nothing
-        .on(ValidationException.class, REASON, CLASS_NAME)
-        .on(DataAccessException.class, REASON, MESSAGE, CAUSE)
-        .build();
-}
-```
-
-Rules are checked in order and the first matching type (subclasses included) wins. What gets used for an exception:
-
-1. a matching `@OnException` on the method that threw it
-2. the global rules
-3. that method's `logException`
-4. the default (`REASON`, `MESSAGE`, `CAUSE`, `EXCEPTION`, `STACK_TRACE`)
-
-An exception matching no global rule falls through to `logException`. Global rules do not make a parent
-re-record a child's exception; only a matching `@OnException` does that.
-
-<!--name=admonition;type=info;title=NOTE;body=
-Behaviour changes: (1) exceptions are now recorded on the method that threw them rather than on the root
-method, so the root's top-level reason/stacktrace is no longer present for propagated exceptions;
-(2) the structured fields of a `@LoggableClass` exception are logged under `exception` (with a `class` field) instead of inside `reason`,
-and `reason` is now always text; (3) `stacktrace` is an object with `frames` objects, and causes are nested inside it as `cause` (at most 5 deep), not a list of lines with `Caused by:` and not a `; Cause: ...` suffix on `reason`.
--->
-
-<!--name=admonition;type=info;title=NOTE;body=
-Example, logs the response from the method.
--->
-
+Logs the response from the method:
 
 ```java language=java
 @LoggableMethod(logReturn = true)
 public int funMethodWithReturn() {
 ```
 
-
-<!--name=admonition;type=info;title=NOTE;body=
-Loggable parameters into methods
--->
-
+Loggable parameters into methods:
 
 ```java language=java
 @LoggableMethod(logReturn = true)
 public int funMethodWithParametersAndResponse(@LoggableParam(name = "hiParam") String serviceParam) {
 ```
 
-
 ## Customisation & Configuration
+
+See [custom configuration](custom-config.md) for the beans you can provide or override: the logger adapter, the
+exception log level, and the exception detail rules.
