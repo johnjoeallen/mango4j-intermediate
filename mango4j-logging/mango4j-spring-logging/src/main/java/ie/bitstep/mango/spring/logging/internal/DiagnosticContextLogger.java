@@ -16,8 +16,11 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -96,20 +99,31 @@ public class DiagnosticContextLogger {
 		}
 
 		try {
+			// exceptions whose resolved detail is empty are not logged at all
+			List<ThrowableInfo> toLog = thrown.stream()
+				.filter(ti -> !ExceptionDetailResolver.resolve(ti.getMethodInfo(), ti.getThrowable()).isEmpty())
+				.toList();
+
+			if (toLog.isEmpty()) {
+				return;
+			}
+
 			Logger dcLogger = getLogger(dc.getRootItem());
 
-			Level logLevel = thrown.stream()
+			Level logLevel = toLog.stream()
 				.map(ti -> exceptionLogLevelStrategy.getLogLevel(ti.getThrowable(), ti.getMethodInfo()))
 				.max(Comparator.reverseOrder())
 				.orElse(Level.INFO);
 
-			String exceptionMessage = "";
-
-			if (loggableMethod.logException()) {
-				exceptionMessage = thrown.stream()
-					.map(ti -> LogUtils.toLogSafeValue(ti.getThrowable().getMessage()))
-					.collect(Collectors.joining("; "));
-			}
+			// the same exception can be recorded on several items (a parent opting in with @OnException):
+			// it is emitted as an exception node on each, but its text is only joined into the message once
+			Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+			String exceptionMessage = toLog.stream()
+				.filter(ti -> seen.add(ti.getThrowable()))
+				.map(ti -> LogUtils.toLogSafeValue(ExceptionDetailResolver.describe(
+					ti.getThrowable(), ExceptionDetailResolver.resolve(ti.getMethodInfo(), ti.getThrowable()))))
+				.filter(m -> m != null && !m.isEmpty())
+				.collect(Collectors.joining("; "));
 
 			loggerAdapter.logException(dcLogger,
 				logLevel,

@@ -626,13 +626,13 @@ class DummyAspectDelegateTest {
 		}
 
 		// then
-		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTrace(ex));
+		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTraceNode(ex, true, 5));
 		assertThat(logExitOrExceptionCaptured).startsWith(
 			"{\"ts\":\"2018-06-14T18:13:20Z\"," +
 				"\"correlationid\":\"TID55\"," +
 				"\"method\":\"TestController.perform\"," +
 				"\"params\":{\"p1\":{\"lname\":\"val1\"},\"accId\":\"12345XXXXX\",\"list\":3}," +
-				"\"reason\":\"failed5; Cause: cause6\"," +
+				"\"reason\":\"failed5\"," +
 				"\"stacktrace\":" + jsonStackTrace + "," +
 				"\"responsetime\":");
 	}
@@ -666,13 +666,13 @@ class DummyAspectDelegateTest {
 		}
 
 		// then
-		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTrace(ex));
+		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTraceNode(ex, true, 5));
 		assertThat(logExitOrExceptionCaptured).startsWith(
 			"{\"ts\":\"2018-06-14T18:13:20Z\"," +
 				"\"correlationid\":\"TID55\"," +
 				"\"method\":\"TestController.perform\"," +
 				"\"params\":{\"p1\":{\"lname\":\"val1\"},\"accId\":\"12345XXXXX\",\"list\":3}," +
-				"\"reason\":\"failed5; Cause: cause6\"," +
+				"\"reason\":\"failed5\"," +
 				"\"stacktrace\":" + jsonStackTrace + "," +
 				"\"response\":{\"lname\":\"resp9\"}," +
 				"\"responsetime\":");

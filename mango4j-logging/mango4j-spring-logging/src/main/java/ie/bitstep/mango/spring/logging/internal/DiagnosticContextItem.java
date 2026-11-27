@@ -7,6 +7,7 @@ import ie.bitstep.mango.logging.internal.ToLoggable;
 
 import ie.bitstep.mango.spring.aop.MethodInfo;
 import ie.bitstep.mango.logging.LogUtils;
+import ie.bitstep.mango.logging.annotations.ExceptionDetail;
 import ie.bitstep.mango.logging.annotations.LoggableClass;
 import ie.bitstep.mango.spring.logging.config.DiagnosticLifecycleLogger;
 import org.apache.commons.lang3.StringUtils;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Diagnostic context item related to a single method.
@@ -32,6 +34,11 @@ public class DiagnosticContextItem implements ToLoggable {
 	public static final String KEY_RESPONSE = "response";
 	public static final String KEY_RESPONSE_STATUS = "responsestatus";
 	public static final String KEY_REASON = "reason";
+	public static final String KEY_EXCEPTION = "exception";
+	public static final String KEY_EXCEPTION_CLASS = "class";
+
+	/** Maximum number of nested {@code cause} levels logged inside {@code stacktrace}. */
+	public static final int MAX_CAUSE_DEPTH = 5;
 	public static final String KEY_STACK_TRACE = "stacktrace";
 	public static final String KEY_RESPONSE_TIME = "responsetime";
 
@@ -39,6 +46,9 @@ public class DiagnosticContextItem implements ToLoggable {
 	private final Map<String, Object> values = new LinkedHashMap<>();
 	private final Map<String, Object> resultValues = new LinkedHashMap<>();
 	private Throwable throwable;
+
+	/** An exception that passed through this item but was deliberately not recorded (already recorded by a child). Never serialised. */
+	private Throwable propagatedThrowable;
 	private boolean isFinalMethodInfo = true;
 	private boolean isWithExternalExceptionHandler;
 
@@ -127,6 +137,15 @@ public class DiagnosticContextItem implements ToLoggable {
 		return throwable;
 	}
 
+	public Throwable getPropagatedThrowable() {
+		return propagatedThrowable;
+	}
+
+	public DiagnosticContextItem putPropagatedThrowable(Throwable propagatedThrowable) {
+		this.propagatedThrowable = propagatedThrowable;
+		return this;
+	}
+
 	public DiagnosticContextItem putThrowable(Throwable throwable) {
 		this.throwable = throwable;
 		return this;
@@ -192,6 +211,7 @@ public class DiagnosticContextItem implements ToLoggable {
 
 		// Clear throwable reference
 		throwable = null;
+		propagatedThrowable = null;
 
 		// Note: parent is a WeakReference and will be automatically garbage collected
 		// Clearing children breaks the strong reference chain from parent → child
@@ -209,15 +229,11 @@ public class DiagnosticContextItem implements ToLoggable {
 			loggable.put(KEY_CALLED, LoggerMapper.toLoggable(getChildren()));
 		}
 		if (throwable != null) {
-			LoggableClass loggableClass = throwable.getClass().getAnnotation(LoggableClass.class);
+			Set<ExceptionDetail> details = ExceptionDetailResolver.resolve(methodInfo, throwable);
 
-			if (loggableClass != null) {
-				setThrowableAsReason(loggable);
-			} else {
-				setMessageAsReason(loggable);
+			if (!details.isEmpty()) {
+				loggable.putAll(throwableNode(throwable, details));
 			}
-
-			loggable.put(KEY_STACK_TRACE, LogUtils.getStackTrace(throwable));
 		}
 
 		loggable.putAll(getResultValues());        // already converted to loggables
@@ -225,16 +241,44 @@ public class DiagnosticContextItem implements ToLoggable {
 		return loggable;
 	}
 
-	private void setThrowableAsReason(Map<String, Object> loggable) {
-		Map<String, Object> throwableAsLoggable = new LinkedHashMap<>();
-		throwableAsLoggable.put(throwable.getClass().getName(), LoggerMapper.toLoggable(throwable));
-		loggable.put(KEY_REASON, throwableAsLoggable);
+	/**
+	 * What to log about the thrown exception: {@code reason}, {@code exception} and {@code stacktrace}.
+	 * The stack trace is an object ({@code reason} = class, {@code message} with MESSAGE, {@code frames}) and, with
+	 * CAUSE, a nested {@code cause} of the same shape, at most {@link #MAX_CAUSE_DEPTH} levels deep. CAUSE has no
+	 * effect without STACK_TRACE.
+	 */
+	private static Map<String, Object> throwableNode(Throwable t, Set<ExceptionDetail> details) {
+		Map<String, Object> node = new LinkedHashMap<>();
+
+		String reason = ExceptionDetailResolver.describe(t, details);
+		if (!StringUtils.isEmpty(reason)) {
+			node.put(KEY_REASON, reason);
+		}
+
+		if (details.contains(ExceptionDetail.EXCEPTION) && t.getClass().getAnnotation(LoggableClass.class) != null) {
+			node.put(KEY_EXCEPTION, exceptionFields(t));
+		}
+
+		if (details.contains(ExceptionDetail.STACK_TRACE)) {
+			node.put(KEY_STACK_TRACE, LogUtils.getStackTraceNode(t, details.contains(ExceptionDetail.MESSAGE),
+				details.contains(ExceptionDetail.CAUSE) ? MAX_CAUSE_DEPTH : 0));
+		}
+
+		return node;
 	}
 
-	private void setMessageAsReason(Map<String, Object> loggable) {
-		String message = LogUtils.exception2Message(throwable);
-		if (!StringUtils.isEmpty(message)) {
-			loggable.put(KEY_REASON, message);
+	/**
+	 * {@code {"class": "<fqcn>", <loggable fields...>}}. The class name is always present
+	 * and cannot be overridden by a loggable field that happens to be called "class".
+	 */
+	private static Map<String, Object> exceptionFields(Throwable t) {
+		Map<String, Object> exception = new LinkedHashMap<>();
+		exception.put(KEY_EXCEPTION_CLASS, t.getClass().getName());
+
+		Object fields = LoggerMapper.toLoggable(t);
+		if (fields instanceof Map<?, ?> map) {
+			map.forEach((k, v) -> exception.putIfAbsent(String.valueOf(k), v));
 		}
+		return exception;
 	}
 }

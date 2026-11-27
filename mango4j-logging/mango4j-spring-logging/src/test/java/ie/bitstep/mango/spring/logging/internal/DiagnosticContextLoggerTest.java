@@ -86,7 +86,7 @@ class DiagnosticContextLoggerTest {
 		MDCTestUtils.cleanup();
 	}
 
-	@LoggableMethod(logException = false)
+	@LoggableMethod(logException = {})
 	public void logExceptionDisabled() {
 
 	}
@@ -213,19 +213,14 @@ class DiagnosticContextLoggerTest {
 		dci = dc.getRootItem();
 		RuntimeException ex = new RuntimeException("failed");
 		dc.getThrown().add(new ThrowableInfo(ex, methodInfo));
-		when(exceptionLogLevelStrategy.getLogLevel(any(), any())).thenReturn(Level.ERROR);
+		
 
 
 		// when
 		diagnosticContextLogger.logExitOrException(loggableMethod, dc);
 
 		// then
-		verify(mockLoggerAdapter).logException(eq(testLogger), eq(Level.ERROR), loggableCaptor.capture(), messageCaptor.capture());
-		Map<String, Object> captured = (Map<String, Object>) loggableCaptor.getValue();
-		captured.remove(DiagnosticContext.LOG_KEY_TIMESTAMP);
-
-		assertThat(LoggerMapper.loggableToJsonString(captured)).isEqualTo("{\"method\":\"DiagnosticContextLoggerTest.logExceptionDisabled\"}");
-		assertThat(messageCaptor.getValue()).isEmpty();
+		verify(mockLoggerAdapter, never()).logException(any(), any(), any(), any());
 	}
 
 	@Test

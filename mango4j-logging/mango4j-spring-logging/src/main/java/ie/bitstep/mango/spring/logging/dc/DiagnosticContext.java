@@ -5,6 +5,7 @@ import ie.bitstep.mango.spring.aop.ThrowableInfo;
 import ie.bitstep.mango.logging.adapter.AbstractLoggerAdapter;
 import ie.bitstep.mango.spring.logging.config.DiagnosticLifecycleLogger;
 import ie.bitstep.mango.spring.logging.internal.DiagnosticContextItem;
+import ie.bitstep.mango.spring.logging.internal.ExceptionDetailResolver;
 import ie.bitstep.mango.logging.internal.LoggerMapper;
 import ie.bitstep.mango.logging.internal.ToLoggable;
 import org.apache.commons.collections4.CollectionUtils;
@@ -310,9 +311,22 @@ public class DiagnosticContext implements ToLoggable {
 	public void putThrowable(Throwable t) {
 		DiagnosticContextItem dci = getCurrentItem();
 		if (dci != null && dci.getThrowable() != t) {    // ignore if the very same exception is put again (might happen in exception handler)
+			if (isRethrownFromLastChild(dci, t) && !ExceptionDetailResolver.hasMatchingOnException(dci.getMethodInfo(), t)) {
+				dci.putPropagatedThrowable(t);    // remember it passed through, so grandparents can recognise it too
+				return;    // already recorded by the child; parent only records it if it opts in with @OnException
+			}
 			dci.putThrowable(t);
 			thrown.add(new ThrowableInfo(t, dci.getMethodInfo()));
 		}
+	}
+
+	private static boolean isRethrownFromLastChild(DiagnosticContextItem dci, Throwable t) {
+		List<DiagnosticContextItem> children = dci.getChildren();
+		if (CollectionUtils.isEmpty(children)) {
+			return false;
+		}
+		DiagnosticContextItem last = children.get(children.size() - 1);
+		return last.getThrowable() == t || last.getPropagatedThrowable() == t;
 	}
 
 	public Throwable getThrowable() {

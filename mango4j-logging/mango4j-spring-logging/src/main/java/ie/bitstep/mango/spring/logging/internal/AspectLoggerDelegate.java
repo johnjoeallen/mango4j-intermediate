@@ -233,9 +233,8 @@ public class AspectLoggerDelegate {
 
 			return response;
 		} catch (Throwable t) {
-			if (!dci.hasParent()) {
-				putThrowable(t);
-			}
+			// record on every item: DiagnosticContext skips it in parents that merely propagate a child's exception
+			putThrowable(t);
 
 			throw t;
 		} finally {

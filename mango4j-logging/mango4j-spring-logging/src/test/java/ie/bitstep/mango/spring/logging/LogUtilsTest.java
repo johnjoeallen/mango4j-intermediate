@@ -260,6 +260,364 @@ public class LogUtilsTest { // WARNING! Some tests here rely on line numbers so 
 		assertThat(removeLineNumbers(result)).isEqualTo(removeLineNumbers(expected));
 	}
 
+	// ---- getStackTraceWithoutMessages: like getStackTrace but never includes exception messages -------------
+
+	@Test
+	void getStackTraceWithoutMessages_whenSimpleException_headerIsClassNameOnly() {
+		// given
+		List<String> expected = ListBuilder.<String>list()
+			.add("java.lang.RuntimeException")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.do2(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.do1(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.doException(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.spring.logging.LogUtilsTest.getStackTraceWithoutMessages_whenSimpleException_headerIsClassNameOnly(LogUtilsTest.java)")
+			.build();
+
+		Exception exception = null;
+		try {
+			new TestClassForExceptions().doException();
+		} catch (Exception ex) {
+			exception = ex;
+		}
+
+		// when
+		List<String> result = LogUtils.getStackTraceWithoutMessages(exception);
+
+		// then
+		assertThat(removeLineNumbers(result)).isEqualTo(removeLineNumbers(expected));
+	}
+
+	@Test
+	void getStackTraceWithoutMessages_whenExceptionWithCause_causeHeaderHasNoMessage() {
+		// given
+		List<String> expected = ListBuilder.<String>list()
+			.add("java.lang.RuntimeException")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.doWithCause2(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.doWithCause1(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.doExceptionWithCause(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.spring.logging.LogUtilsTest.getStackTraceWithoutMessages_whenExceptionWithCause_causeHeaderHasNoMessage(LogUtilsTest.java)")
+			.add("Caused by: java.lang.RuntimeException")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.do2(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.do1(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.doWithCause2(TestClassForExceptions.java)")
+			.build();
+
+		Exception exception = null;
+		try {
+			new TestClassForExceptions().doExceptionWithCause();
+		} catch (Exception ex) {
+			exception = ex;
+		}
+
+		// when
+		List<String> result = LogUtils.getStackTraceWithoutMessages(exception);
+
+		// then: same shape as getStackTrace (frames shared with the enclosing trace are omitted), just no messages
+		assertThat(removeLineNumbers(result)).isEqualTo(removeLineNumbers(expected));
+	}
+
+	@Test
+	void getStackTraceWithoutMessages_whenExceptionWithSuppressed_suppressedHeaderHasNoMessage() {
+		// given
+		List<String> expected = ListBuilder.<String>list()
+			.add("java.lang.RuntimeException")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.doWithSuppressed2(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.doWithSuppressed1(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.doExceptionWithSuppressed(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.spring.logging.LogUtilsTest.getStackTraceWithoutMessages_whenExceptionWithSuppressed_suppressedHeaderHasNoMessage(LogUtilsTest.java)")
+			.add("Suppressed: java.lang.RuntimeException")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.do2(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.do1(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.doWithSuppressed2(TestClassForExceptions.java)")
+			.build();
+
+		Exception exception = null;
+		try {
+			new TestClassForExceptions().doExceptionWithSuppressed();
+		} catch (Exception ex) {
+			exception = ex;
+		}
+
+		// when
+		List<String> result = LogUtils.getStackTraceWithoutMessages(exception);
+
+		// then
+		assertThat(removeLineNumbers(result)).isEqualTo(removeLineNumbers(expected));
+	}
+
+	@Test
+	void getStackTraceWithoutMessages_secretMessagesNeverAppear() {
+		RuntimeException ex = new RuntimeException("top-SECRETA", new IllegalStateException("cause-SECRETB"));
+		ex.addSuppressed(new IllegalArgumentException("suppressed-SECRETC"));
+
+		List<String> result = LogUtils.getStackTraceWithoutMessages(ex);
+
+		assertThat(String.join("\n", result)).doesNotContain("SECRET");
+		assertThat(result).contains("java.lang.RuntimeException", "Suppressed: java.lang.IllegalArgumentException", "Caused by: java.lang.IllegalStateException");
+		// and the default does leak them (the reason this method exists)
+		assertThat(String.join("\n", LogUtils.getStackTrace(ex))).contains("top-SECRETA");
+	}
+
+	@Test
+	void getStackTraceWithoutMessages_nullMessage_sameAsAnyOther() {
+		List<String> result = LogUtils.getStackTraceWithoutMessages(new IllegalStateException());
+
+		assertThat(result.get(0)).isEqualTo("java.lang.IllegalStateException");
+	}
+
+	@Test
+	void getStackTraceWithoutMessages_circularCause_terminates() {
+		RuntimeException a = new RuntimeException("a");
+		RuntimeException b = new RuntimeException("b", a);
+		a.initCause(b);
+
+		List<String> result = LogUtils.getStackTraceWithoutMessages(a);
+
+		assertThat(result).contains("java.lang.RuntimeException", "Caused by: java.lang.RuntimeException",
+			"Caused by: [CIRCULAR REFERENCE: java.lang.RuntimeException]");
+	}
+
+	@Test
+	void getStackTraceWithoutMessages_appliesStackTraceSanitisers() {
+		List<String> result = LogUtils.getStackTraceWithoutMessages(new RuntimeException("x"));
+
+		// org.junit. frames are ignored by the sanitiser registered in setup()
+		assertThat(result).noneMatch(line -> line.startsWith("at org.junit."));
+	}
+
+	// ---- getStackTrace(throwable, withMessages, withCauses) ------------------------------------------------
+
+	private Exception thrownWithCauseAndSuppressed() {
+		RuntimeException ex = new RuntimeException("top-MSGA", new IllegalStateException("cause-MSGB"));
+		ex.addSuppressed(new IllegalArgumentException("suppressed-MSGC"));
+		return ex;
+	}
+
+	@Test
+	void getStackTraceFlags_messagesAndCauses_sameAsDefaultGetStackTrace() throws Exception {
+		for (Runnable r : List.<Runnable>of(
+			() -> new TestClassForExceptions().doException(),
+			() -> new TestClassForExceptions().doExceptionWithCause(),
+			() -> new TestClassForExceptions().doExceptionWithSuppressed())) {
+			Exception exception = null;
+			try {
+				r.run();
+			} catch (Exception ex) {
+				exception = ex;
+			}
+
+			assertThat(removeLineNumbers(LogUtils.getStackTrace(exception, true, true)))
+				.isEqualTo(removeLineNumbers(LogUtils.getStackTrace(exception)));
+		}
+	}
+
+	@Test
+	void getStackTraceFlags_messagesWithoutCauses_headerHasMessageAndNoCauseOrSuppressedLines() {
+		List<String> trace = LogUtils.getStackTrace(thrownWithCauseAndSuppressed(), true, false);
+
+		assertThat(trace.get(0)).isEqualTo("java.lang.RuntimeException: top-MSGA");
+		assertThat(trace).noneMatch(l -> l.startsWith("Caused by") || l.startsWith("Suppressed"));
+		assertThat(String.join("\n", trace)).doesNotContain("MSGB").doesNotContain("MSGC");
+	}
+
+	@Test
+	void getStackTraceFlags_causesWithoutMessages_classNamesOnlyButCausesAndSuppressedPresent() {
+		List<String> trace = LogUtils.getStackTrace(thrownWithCauseAndSuppressed(), false, true);
+
+		assertThat(trace).contains("java.lang.RuntimeException", "Caused by: java.lang.IllegalStateException",
+			"Suppressed: java.lang.IllegalArgumentException");
+		assertThat(String.join("\n", trace)).doesNotContain("MSG");
+	}
+
+	@Test
+	void getStackTraceFlags_neitherMessagesNorCauses_exceptionClassAndFramesOnly() {
+		List<String> trace = LogUtils.getStackTrace(thrownWithCauseAndSuppressed(), false, false);
+
+		assertThat(trace.get(0)).isEqualTo("java.lang.RuntimeException");
+		assertThat(trace.subList(1, trace.size())).allMatch(l -> l.startsWith("at "));
+		assertThat(String.join("\n", trace)).doesNotContain("MSG").doesNotContain("IllegalStateException");
+	}
+
+	@Test
+	void getStackTraceFlags_wrapperWhoseMessageIsTheCause_causeTextNotLeakedWithoutCauses() {
+		RuntimeException wrapper = new RuntimeException(new IllegalStateException("cause-MSGB"));
+		assertThat(wrapper.getMessage()).contains("MSGB");    // the JDK derives the wrapper's message from the cause
+
+		List<String> withoutCauses = LogUtils.getStackTrace(wrapper, true, false);
+		List<String> withCauses = LogUtils.getStackTrace(wrapper, true, true);
+
+		assertThat(withoutCauses.get(0)).isEqualTo("java.lang.RuntimeException");
+		assertThat(String.join("\n", withoutCauses)).doesNotContain("MSGB");
+		assertThat(String.join("\n", withCauses)).contains("Caused by: java.lang.IllegalStateException: cause-MSGB");
+	}
+
+	// ---- getStackTraceNode: the stack trace as a structure ---------------------------------------------------
+
+	@SuppressWarnings("unchecked")
+	private static List<Map<String, Object>> framesOf(Map<String, Object> node) {
+		return (List<Map<String, Object>>) node.get("frames");
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Map<String, Object> causeNodeOf(Map<String, Object> node) {
+		return (Map<String, Object>) node.get("cause");
+	}
+
+	private static RuntimeException withFrames(String message, Throwable cause, StackTraceElement... frames) {
+		RuntimeException ex = new RuntimeException(message, cause);
+		ex.setStackTrace(frames);
+		return ex;
+	}
+
+	@Test
+	void getStackTraceNode_reasonIsTheClassAndMessageIsSeparate_framesAreObjectsInOrder() {
+		RuntimeException ex = withFrames("boom", null,
+			new StackTraceElement("com.acme.Service", "call", "Service.java", 42),
+			new StackTraceElement("com.acme.Controller", "handle", "Controller.java", 17));
+
+		Map<String, Object> node = LogUtils.getStackTraceNode(ex, true, 5);
+
+		assertThat(node).containsOnlyKeys("exception", "message", "frames");
+		assertThat(node).containsEntry("exception", "java.lang.RuntimeException").containsEntry("message", "boom");
+		assertThat(framesOf(node)).containsExactly(
+			Map.of("class", "com.acme.Service", "method", "call", "file", "Service.java", "line", 42),
+			Map.of("class", "com.acme.Controller", "method", "handle", "file", "Controller.java", "line", 17));
+		assertThat(framesOf(node).get(0).keySet()).containsExactly("class", "method", "file", "line");
+		assertThat(framesOf(node).get(0).get("line")).isInstanceOf(Integer.class);
+	}
+
+	@Test
+	void getStackTraceNode_withoutMessage_noMessageKey() {
+		RuntimeException ex = withFrames("boom-SECRET", null, new StackTraceElement("com.acme.Service", "call", "Service.java", 42));
+
+		Map<String, Object> node = LogUtils.getStackTraceNode(ex, false, 5);
+
+		assertThat(node).doesNotContainKey("message").containsEntry("exception", "java.lang.RuntimeException");
+		assertThat(node.toString()).doesNotContain("SECRET");
+	}
+
+	@Test
+	void getStackTraceNode_noMessageOrEmptyMessage_noMessageKey() {
+		assertThat(LogUtils.getStackTraceNode(withFrames(null, null), true, 5)).doesNotContainKey("message");
+		assertThat(LogUtils.getStackTraceNode(withFrames("", null), true, 5)).doesNotContainKey("message")
+			.containsEntry("exception", "java.lang.RuntimeException");
+	}
+
+	@Test
+	void getStackTraceNode_wrapperWhoseMessageIsTheCause_noMessageKey() {
+		RuntimeException wrapper = new RuntimeException(new IllegalStateException("inner-MSG"));
+
+		Map<String, Object> node = LogUtils.getStackTraceNode(wrapper, true, 5);
+
+		assertThat(node).doesNotContainKey("message");
+		assertThat(causeNodeOf(node)).containsEntry("exception", "java.lang.IllegalStateException").containsEntry("message", "inner-MSG");
+	}
+
+	@Test
+	void getStackTraceNode_unusualFrames_nativeUnknownSourceAndModules() {
+		RuntimeException ex = withFrames("x", null,
+			new StackTraceElement("com.acme.Outer$Inner", "lambda$run$0", "Outer.java", 5),            // nested class and lambda (first frame: always kept)
+			new StackTraceElement("com.acme.Nat", "call", null, -2),                                    // native method
+			new StackTraceElement("com.acme.Gen", "call", null, -1),                                    // unknown source
+			new StackTraceElement("com.acme.NoLine", "call", "NoLine.java", -1),                        // file, no line
+			new StackTraceElement("custom", "mod", "1.0", "com.acme.Mod", "call", "Mod.java", 9));      // class loader + module
+
+		List<Map<String, Object>> frames = framesOf(LogUtils.getStackTraceNode(ex, true, 5));
+
+		assertThat(frames.get(0)).containsEntry("class", "com.acme.Outer$Inner").containsEntry("method", "lambda$run$0")
+			.containsEntry("file", "Outer.java").containsEntry("line", 5);
+		assertThat(frames.get(1)).containsOnlyKeys("class", "method").containsEntry("class", "com.acme.Nat");
+		assertThat(frames.get(2)).containsOnlyKeys("class", "method");
+		assertThat(frames.get(3)).containsOnlyKeys("class", "method", "file").containsEntry("file", "NoLine.java");
+		assertThat(frames.get(4)).containsEntry("class", "com.acme.Mod").containsEntry("method", "call").containsEntry("line", 9);
+	}
+
+	@Test
+	void getStackTraceNode_causesNestedInsideCause_eachWithItsOwnFrames() {
+		RuntimeException ex = withFrames("outer", withFrames("middle",
+				withFrames("inner", null, new StackTraceElement("com.acme.C", "c", "C.java", 3)),
+				new StackTraceElement("com.acme.B", "b", "B.java", 2)),
+			new StackTraceElement("com.acme.A", "a", "A.java", 1));
+
+		Map<String, Object> node = LogUtils.getStackTraceNode(ex, true, 5);
+
+		assertThat(node).containsEntry("message", "outer");
+		assertThat(causeNodeOf(node)).containsEntry("message", "middle");
+		assertThat(framesOf(causeNodeOf(node)).get(0)).containsEntry("class", "com.acme.B");
+		assertThat(causeNodeOf(causeNodeOf(node))).containsEntry("message", "inner").doesNotContainKey("cause");
+		assertThat(framesOf(causeNodeOf(causeNodeOf(node))).get(0)).containsEntry("class", "com.acme.C");
+	}
+
+	@Test
+	void getStackTraceNode_maxCausesLimitsTheNesting() {
+		Throwable chain = null;
+		for (int i = 7; i >= 0; i--) {
+			chain = new RuntimeException("level-" + i, chain);
+		}
+
+		for (int max : new int[]{0, 1, 5}) {
+			int depth = 0;
+			for (Map<String, Object> n = causeNodeOf(LogUtils.getStackTraceNode(chain, true, max)); n != null; n = causeNodeOf(n)) {
+				depth++;
+			}
+			assertThat(depth).isEqualTo(max);
+		}
+		assertThat(LogUtils.getStackTraceNode(chain, true, 0)).doesNotContainKey("cause");
+	}
+
+	@Test
+	void getStackTraceNode_circularCause_stopsAtTheRepeat() {
+		RuntimeException a = new RuntimeException("a");
+		RuntimeException b = new RuntimeException("b", a);
+		a.initCause(b);
+
+		Map<String, Object> node = LogUtils.getStackTraceNode(a, true, 5);
+
+		assertThat(causeNodeOf(node)).containsEntry("message", "b").doesNotContainKey("cause");
+	}
+
+	@Test
+	void getStackTraceNode_everyLevelHasTheSameKeyTypes() {
+		Map<String, Object> node = LogUtils.getStackTraceNode(thrownWithCauseAndSuppressed(), true, 5);
+
+		for (Map<String, Object> n = node; n != null; n = causeNodeOf(n)) {
+			assertThat(n.get("exception")).isInstanceOf(String.class);
+			assertThat(n.get("frames")).isInstanceOf(List.class);
+			assertThat(n.get("cause") == null || n.get("cause") instanceof Map).isTrue();
+			framesOf(n).forEach(f -> {
+				assertThat(f.get("class")).isInstanceOf(String.class);
+				assertThat(f.get("method")).isInstanceOf(String.class);
+			});
+		}
+	}
+
+	@Test
+	void getStackTraceNode_methodArgumentNotValid_messageOnlyWhenSelected() throws Exception {
+		MapBindingResult bindingResult = new MapBindingResult(Collections.emptyMap(), "TEST_OBJECT_NAME");
+		bindingResult.addError(new FieldError("TEST_OBJECT_NAME", "TEST_FIELD", "TEST_MESSAGE"));
+		MethodArgumentNotValidException ex = new MethodArgumentNotValidException(buildMethodParameter(), bindingResult);
+
+		Map<String, Object> withMessage = LogUtils.getStackTraceNode(ex, true, 5);
+		Map<String, Object> withoutMessage = LogUtils.getStackTraceNode(ex, false, 5);
+
+		assertThat(withMessage).containsEntry("exception", "org.springframework.web.bind.MethodArgumentNotValidException");
+		assertThat((String) withMessage.get("message")).contains("TEST_FIELD").contains("TEST_MESSAGE");   // via the sanitiser
+		assertThat(withoutMessage).doesNotContainKey("message");                                            // the sanitiser cannot add it
+		assertThat(withoutMessage.toString()).doesNotContain("TEST_MESSAGE");
+	}
+
+	@Test
+	void getStackTraceNode_appliesStackTraceSanitisers() {
+		RuntimeException ex = withFrames("x", null,
+			new StackTraceElement("com.acme.A", "a", "A.java", 1),
+			new StackTraceElement("com.acme.B", "b", "B.java", 2),
+			new StackTraceElement("org.junit.platform.Runner", "run", "Runner.java", 3));   // ignored by the sanitiser in setup()
+
+		List<Map<String, Object>> frames = framesOf(LogUtils.getStackTraceNode(ex, true, 5));
+
+		assertThat(frames).extracting(f -> f.get("class")).containsExactly("com.acme.A", "com.acme.B");
+	}
+
 	@Test
 	void testPropagateToMDCAllFields() {
 		// when

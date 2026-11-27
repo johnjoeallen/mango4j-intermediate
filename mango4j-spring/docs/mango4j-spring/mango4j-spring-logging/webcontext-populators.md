@@ -11,7 +11,7 @@ Each Pre and Post populators adhere to the spring `@Order` precedence.
 
 ## Custom sample Pre populator
 
-```java language=java
+```java
 @Component
 @Order(value = Integer.MIN_VALUE)
 public class HighestOrderPrePopulator implements WebContextPrePopulator {
@@ -26,7 +26,7 @@ public class HighestOrderPrePopulator implements WebContextPrePopulator {
 
 ## Custom sample Post populator
 
-```java language=java
+```java
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE)
 public class LowestOrderPostPopulator implements WebContextPostPopulator {
