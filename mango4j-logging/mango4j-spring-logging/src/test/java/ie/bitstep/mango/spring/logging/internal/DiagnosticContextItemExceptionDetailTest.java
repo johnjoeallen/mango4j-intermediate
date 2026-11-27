@@ -57,6 +57,14 @@ class DiagnosticContextItemExceptionDetailTest {
 		public void classNameWithStackTrace() {
 		}
 
+		@LoggableMethod(logException = {MESSAGE, CAUSE, STACK_TRACE})
+		public void messageCauseStackTrace() {
+		}
+
+		@LoggableMethod(logException = {CAUSE, STACK_TRACE})
+		public void causeStackTrace() {
+		}
+
 		@LoggableMethod(logException = {STACK_TRACE})
 		public void stackTraceOnly() {
 		}
@@ -148,7 +156,7 @@ class DiagnosticContextItemExceptionDetailTest {
 	void stackTrace_withMessageSelected_includesMessagesOnExceptionAndCause() throws Exception {
 		RuntimeException ex = new RuntimeException("outer-msg", new IllegalStateException("inner-msg"));
 
-		List<String> trace = stackTraceOf(loggable("messageWithoutReason", ex));
+		List<String> trace = stackTraceOf(loggable("messageCauseStackTrace", ex));
 
 		assertThat(trace.get(0)).isEqualTo("java.lang.RuntimeException: outer-msg");
 		assertThat(trace).contains("Caused by: java.lang.IllegalStateException: inner-msg");
@@ -170,9 +178,34 @@ class DiagnosticContextItemExceptionDetailTest {
 			List<String> trace = stackTraceOf(loggable(method, ex));
 
 			assertThat(trace.get(0)).isEqualTo("java.lang.RuntimeException");
-			assertThat(trace).contains("Caused by: java.lang.IllegalStateException");
 			assertThat(String.join("\n", trace)).doesNotContain("outer-msg").doesNotContain("inner-msg");
 		}
+	}
+
+	@Test
+	void stackTrace_causesOnlyWhenCauseSelected() throws Exception {
+		RuntimeException ex = new RuntimeException("outer-msg", new IllegalStateException("inner-msg"));
+		ex.addSuppressed(new IllegalArgumentException("suppressed-msg"));
+
+		for (String method : new String[]{"messageWithoutReason", "classNameWithStackTrace", "stackTraceOnly"}) {
+			assertThat(stackTraceOf(loggable(method, ex)))
+				.noneMatch(l -> l.startsWith("Caused by") || l.startsWith("Suppressed"));
+		}
+		assertThat(stackTraceOf(loggable("messageWithoutReason", ex)).get(0)).isEqualTo("java.lang.RuntimeException: outer-msg");
+		assertThat(stackTraceOf(loggable("messageCauseStackTrace", ex)))
+			.anyMatch(l -> l.startsWith("Caused by: java.lang.IllegalStateException"))
+			.anyMatch(l -> l.startsWith("Suppressed: java.lang.IllegalArgumentException"));
+	}
+
+	@Test
+	void stackTrace_causeWithoutMessage_showsCauseClassNamesOnly() throws Exception {
+		RuntimeException ex = new RuntimeException("outer-msg", new IllegalStateException("inner-msg"));
+
+		List<String> trace = stackTraceOf(loggable("causeStackTrace", ex));
+
+		assertThat(trace.get(0)).isEqualTo("java.lang.RuntimeException");
+		assertThat(trace).contains("Caused by: java.lang.IllegalStateException");
+		assertThat(String.join("\n", trace)).doesNotContain("outer-msg").doesNotContain("inner-msg");
 	}
 
 	@Test

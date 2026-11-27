@@ -55,7 +55,7 @@ public void funMethod() {
   | `MESSAGE` | `reason` | the (sanitised) message |
   | `CAUSE` | `reason` | the cause chain appended to the message (on its own it behaves as message + causes) |
   | `EXCEPTION` | `exception` | for exception classes annotated `@LoggableClass`: their `@LoggableField`s, as an object with a `class` field: `{"class": "com.acme.PaymentException", "code": "X-42"}`. A `@LoggableField` named `class` cannot override it. Nothing for other exceptions |
-  | `STACK_TRACE` | `stacktrace` | the stack trace as a list of lines. Exception messages are included only when `MESSAGE` is selected (on the exception, cause and suppressed lines); otherwise class names only |
+  | `STACK_TRACE` | `stacktrace` | the stack trace as a list of lines. Exception messages are included only with `MESSAGE`; the cause chain (`Caused by:`) and suppressed exceptions only with `CAUSE`. Otherwise just the exception class name and its frames |
 
   `CLASS_NAME`, `MESSAGE` and `CAUSE` have no effect without `REASON`. `{}` logs nothing about the exception
   (use it when the caller or a global handler logs it). Class name and message together render as `ClassName: message`.

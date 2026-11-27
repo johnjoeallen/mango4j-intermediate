@@ -82,24 +82,38 @@ public class LogUtils {
 	/**
 	 * Like {@link #getStackTrace(Throwable)} but never includes exception messages: each exception
 	 * (including causes and suppressed exceptions) is shown as its class name only, followed by its frames.
-	 * Use this when the message must be controlled separately (it can hold sensitive data).
-	 * <p>
-	 * Shape: {@code "java.lang.RuntimeException", "at ...", "Caused by: java.io.IOException", "at ...", ...}.
-	 * Frames shared with the enclosing exception are omitted, as in {@link Throwable#printStackTrace()}.
+	 *
+	 * @see #getStackTrace(Throwable, boolean, boolean)
 	 */
 	public static List<String> getStackTraceWithoutMessages(Throwable throwable) {
+		return getStackTrace(throwable, false, true);
+	}
+
+	/**
+	 * Stack trace as a list of lines, with the parts that can hold sensitive data under the caller's control.
+	 * Shape: {@code "java.lang.RuntimeException: msg", "at ...", "Caused by: java.io.IOException: msg", "at ...", ...}.
+	 * Frames shared with the enclosing exception are omitted, as in {@link Throwable#printStackTrace()}.
+	 * With both flags true the result is the same as {@link #getStackTrace(Throwable)}.
+	 *
+	 * @param withMessages include exception messages (otherwise each exception is just its class name; an exception
+	 *                     whose message is only its cause's text shows no message when causes are not included)
+	 * @param withCauses   include the cause chain and suppressed exceptions
+	 */
+	public static List<String> getStackTrace(Throwable throwable, boolean withMessages, boolean withCauses) {
 		List<String> lines = new ArrayList<>();
-		addTrace(throwable, "", new StackTraceElement[0], lines, Collections.newSetFromMap(new IdentityHashMap<>()));
+		addTrace(throwable, "", new StackTraceElement[0], lines, Collections.newSetFromMap(new IdentityHashMap<>()),
+			withMessages, withCauses);
 		return ExceptionSanitiserManager.sanitiseStackTrace(throwable, lines);
 	}
 
-	private static void addTrace(Throwable t, String caption, StackTraceElement[] enclosingTrace, List<String> lines, Set<Throwable> seen) {
+	private static void addTrace(Throwable t, String caption, StackTraceElement[] enclosingTrace, List<String> lines,
+								 Set<Throwable> seen, boolean withMessages, boolean withCauses) {
 		if (!seen.add(t)) {
 			lines.add(caption + "[CIRCULAR REFERENCE: " + t.getClass().getName() + "]");
 			return;
 		}
 
-		lines.add(caption + t.getClass().getName());
+		lines.add((caption + traceHeader(t, withMessages, withCauses)).stripTrailing());    // same trimming as getStackTrace
 
 		StackTraceElement[] trace = t.getStackTrace();
 		int m = trace.length - 1;
@@ -113,14 +127,33 @@ public class LogUtils {
 			lines.add("at " + trace[i]);
 		}
 
-		for (Throwable suppressed : t.getSuppressed()) {
-			addTrace(suppressed, "Suppressed: ", trace, lines, seen);
+		if (withCauses) {
+			for (Throwable suppressed : t.getSuppressed()) {
+				addTrace(suppressed, "Suppressed: ", trace, lines, seen, withMessages, true);
+			}
+
+			Throwable cause = t.getCause();
+			if (cause != null) {
+				addTrace(cause, "Caused by: ", trace, lines, seen, withMessages, true);
+			}
+		}
+	}
+
+	private static String traceHeader(Throwable t, boolean withMessages, boolean withCauses) {
+		String className = t.getClass().getName();
+		String message = withMessages ? t.getLocalizedMessage() : null;
+
+		if (message == null) {
+			return className;
 		}
 
+		// the JDK derives a wrapper's message from its cause (cause.toString()); don't leak that when causes are excluded
 		Throwable cause = t.getCause();
-		if (cause != null) {
-			addTrace(cause, "Caused by: ", trace, lines, seen);
+		if (!withCauses && cause != null && message.equals(cause.toString())) {
+			return className;
 		}
+
+		return className + ": " + message;
 	}
 
 	/**

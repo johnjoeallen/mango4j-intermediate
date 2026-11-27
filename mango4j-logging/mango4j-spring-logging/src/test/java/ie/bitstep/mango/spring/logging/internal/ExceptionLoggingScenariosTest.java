@@ -103,6 +103,18 @@ class ExceptionLoggingScenariosTest {
 		}
 	}
 
+	public static class MessageCauseAndStackTrace {
+		@LoggableMethod(logException = {MESSAGE, CAUSE, STACK_TRACE})
+		public void call() {
+		}
+	}
+
+	public static class CauseAndStackTrace {
+		@LoggableMethod(logException = {CAUSE, STACK_TRACE})
+		public void call() {
+		}
+	}
+
 	public static class ClassNameAndStackTrace {
 		@LoggableMethod(logException = {REASON, CLASS_NAME, STACK_TRACE})
 		public void call() {
@@ -296,7 +308,7 @@ class ExceptionLoggingScenariosTest {
 
 		assertThat(only()).contains("\"stacktrace\"")
 			.contains("java.lang.IllegalStateException")
-			.contains("Caused by: java.lang.IllegalArgumentException")
+			.doesNotContain("Caused by")
 			.doesNotContain("LEAK");
 	}
 
@@ -306,7 +318,24 @@ class ExceptionLoggingScenariosTest {
 
 		assertThat(only()).doesNotContain("\"reason\"")
 			.contains("java.lang.IllegalStateException: boom-MSG")
+			.doesNotContain("Caused by").doesNotContain("inner-MSG");
+	}
+
+	@Test
+	void singleMethod_messageCauseAndStackTrace_traceHasMessagesAndCauses() throws Throwable {
+		run(new IllegalStateException("boom-MSG", new IllegalArgumentException("inner-MSG")), Hop.of(new MessageCauseAndStackTrace()));
+
+		assertThat(only()).contains("java.lang.IllegalStateException: boom-MSG")
 			.contains("Caused by: java.lang.IllegalArgumentException: inner-MSG");
+	}
+
+	@Test
+	void singleMethod_causeAndStackTrace_traceHasCauseClassNamesOnly() throws Throwable {
+		run(new IllegalStateException("boom-MSG", new IllegalArgumentException("inner-MSG")), Hop.of(new CauseAndStackTrace()));
+
+		assertThat(only()).contains("\"java.lang.IllegalStateException\"")
+			.contains("Caused by: java.lang.IllegalArgumentException\"")
+			.doesNotContain("MSG");
 	}
 
 	@Test
@@ -314,7 +343,7 @@ class ExceptionLoggingScenariosTest {
 		run(new IllegalStateException("boom-MSG", new IllegalArgumentException("inner-MSG")), Hop.of(new ClassNameAndStackTrace()));
 
 		assertThat(only()).contains("\"reason\":\"java.lang.IllegalStateException\"")
-			.contains("Caused by: java.lang.IllegalArgumentException\"")
+			.doesNotContain("Caused by")
 			.doesNotContain("MSG");
 	}
 

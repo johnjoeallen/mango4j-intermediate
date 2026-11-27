@@ -385,6 +385,72 @@ public class LogUtilsTest { // WARNING! Some tests here rely on line numbers so 
 		assertThat(result).noneMatch(line -> line.startsWith("at org.junit."));
 	}
 
+	// ---- getStackTrace(throwable, withMessages, withCauses) ------------------------------------------------
+
+	private Exception thrownWithCauseAndSuppressed() {
+		RuntimeException ex = new RuntimeException("top-MSGA", new IllegalStateException("cause-MSGB"));
+		ex.addSuppressed(new IllegalArgumentException("suppressed-MSGC"));
+		return ex;
+	}
+
+	@Test
+	void getStackTraceFlags_messagesAndCauses_sameAsDefaultGetStackTrace() throws Exception {
+		for (Runnable r : List.<Runnable>of(
+			() -> new TestClassForExceptions().doException(),
+			() -> new TestClassForExceptions().doExceptionWithCause(),
+			() -> new TestClassForExceptions().doExceptionWithSuppressed())) {
+			Exception exception = null;
+			try {
+				r.run();
+			} catch (Exception ex) {
+				exception = ex;
+			}
+
+			assertThat(removeLineNumbers(LogUtils.getStackTrace(exception, true, true)))
+				.isEqualTo(removeLineNumbers(LogUtils.getStackTrace(exception)));
+		}
+	}
+
+	@Test
+	void getStackTraceFlags_messagesWithoutCauses_headerHasMessageAndNoCauseOrSuppressedLines() {
+		List<String> trace = LogUtils.getStackTrace(thrownWithCauseAndSuppressed(), true, false);
+
+		assertThat(trace.get(0)).isEqualTo("java.lang.RuntimeException: top-MSGA");
+		assertThat(trace).noneMatch(l -> l.startsWith("Caused by") || l.startsWith("Suppressed"));
+		assertThat(String.join("\n", trace)).doesNotContain("MSGB").doesNotContain("MSGC");
+	}
+
+	@Test
+	void getStackTraceFlags_causesWithoutMessages_classNamesOnlyButCausesAndSuppressedPresent() {
+		List<String> trace = LogUtils.getStackTrace(thrownWithCauseAndSuppressed(), false, true);
+
+		assertThat(trace).contains("java.lang.RuntimeException", "Caused by: java.lang.IllegalStateException",
+			"Suppressed: java.lang.IllegalArgumentException");
+		assertThat(String.join("\n", trace)).doesNotContain("MSG");
+	}
+
+	@Test
+	void getStackTraceFlags_neitherMessagesNorCauses_exceptionClassAndFramesOnly() {
+		List<String> trace = LogUtils.getStackTrace(thrownWithCauseAndSuppressed(), false, false);
+
+		assertThat(trace.get(0)).isEqualTo("java.lang.RuntimeException");
+		assertThat(trace.subList(1, trace.size())).allMatch(l -> l.startsWith("at "));
+		assertThat(String.join("\n", trace)).doesNotContain("MSG").doesNotContain("IllegalStateException");
+	}
+
+	@Test
+	void getStackTraceFlags_wrapperWhoseMessageIsTheCause_causeTextNotLeakedWithoutCauses() {
+		RuntimeException wrapper = new RuntimeException(new IllegalStateException("cause-MSGB"));
+		assertThat(wrapper.getMessage()).contains("MSGB");    // the JDK derives the wrapper's message from the cause
+
+		List<String> withoutCauses = LogUtils.getStackTrace(wrapper, true, false);
+		List<String> withCauses = LogUtils.getStackTrace(wrapper, true, true);
+
+		assertThat(withoutCauses.get(0)).isEqualTo("java.lang.RuntimeException");
+		assertThat(String.join("\n", withoutCauses)).doesNotContain("MSGB");
+		assertThat(String.join("\n", withCauses)).contains("Caused by: java.lang.IllegalStateException: cause-MSGB");
+	}
+
 	@Test
 	void testPropagateToMDCAllFields() {
 		// when
