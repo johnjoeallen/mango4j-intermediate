@@ -362,6 +362,31 @@ class ExceptionLoggingScenariosTest {
 	}
 
 	@Test
+	void parentThrowsUnrelatedExceptionWithoutCause_childDetailsStillLogged() throws Throwable {
+		run(new PaymentException("card declined"),
+			Hop.wrapping(new MessageOnly(), t -> new IllegalStateException("order failed")),    // no cause: child exception is dropped
+			Hop.of(new MessageAndCause()));
+
+		assertThat(logged).hasSize(1);
+		assertThat(logged.get(0).message()).isEqualTo("card declined; order failed");
+		assertThat(only())
+			.contains("\"called\":[{\"method\":\"MessageAndCause.call\",\"reason\":\"card declined\"")    // child's detail kept
+			.contains("\"reason\":\"order failed\"");                                                          // parent's own
+		assertThat(countOccurrences(only(), "\"reason\"")).isEqualTo(2);
+	}
+
+	@Test
+	void childWithEmptyDetailParentThrowsUnrelatedException_onlyParentExceptionLogged() throws Throwable {
+		run(new PaymentException("card-secret"),
+			Hop.wrapping(new MessageOnly(), t -> new IllegalStateException("order failed")),
+			Hop.of(new NoDetail()));
+
+		assertThat(logged).hasSize(1);
+		assertThat(logged.get(0).message()).isEqualTo("order failed");
+		assertThat(only()).doesNotContain("card-secret");
+	}
+
+	@Test
 	void exceptionPropagatesThroughTwoParents_loggedOnce() throws Throwable {
 		run(new IllegalStateException("boom"), Hop.of(new DefaultDetail()), Hop.of(new DefaultDetail()), Hop.of(new MessageOnly()));
 
