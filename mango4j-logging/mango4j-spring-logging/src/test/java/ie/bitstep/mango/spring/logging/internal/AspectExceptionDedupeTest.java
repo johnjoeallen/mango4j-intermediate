@@ -2,6 +2,7 @@ package ie.bitstep.mango.spring.logging.internal;
 
 import ie.bitstep.mango.logging.annotations.LoggableMethod;
 import ie.bitstep.mango.logging.annotations.OnException;
+import ie.bitstep.mango.logging.internal.LoggerMapper;
 import ie.bitstep.mango.logging.test.MDCTestUtils;
 import ie.bitstep.mango.spring.aop.ThrowableInfo;
 import ie.bitstep.mango.spring.logging.dc.DiagnosticContext;
@@ -16,6 +17,7 @@ import org.mockito.Mockito;
 import java.util.ArrayList;
 import java.util.List;
 
+import static ie.bitstep.mango.logging.annotations.ExceptionDetail.CLASS_NAME;
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.MESSAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -30,6 +32,19 @@ class AspectExceptionDedupeTest {
 
 	static class Child {
 		@LoggableMethod
+		public void fail() {
+		}
+	}
+
+	static class ClassNameOnlyChild {
+		@LoggableMethod(logException = {CLASS_NAME})
+		public void fail() {
+		}
+	}
+
+	static class OnExceptionChild {
+		@LoggableMethod
+		@OnException(type = IllegalStateException.class, detail = {})
 		public void fail() {
 		}
 	}
@@ -50,6 +65,7 @@ class AspectExceptionDedupeTest {
 	private final DiagnosticContextLogger dcLogger = Mockito.mock(DiagnosticContextLogger.class);
 	private final AspectLoggerDelegate delegate = new AspectLoggerDelegate(dcLogger);
 	private List<ThrowableInfo> thrownAtExit;
+	private String jsonAtExit;
 
 	@BeforeEach
 	void setup() {
@@ -58,6 +74,7 @@ class AspectExceptionDedupeTest {
 		doAnswer(i -> {
 			DiagnosticContext dc = i.getArgument(1);
 			thrownAtExit = new ArrayList<>(dc.getThrown());
+			jsonAtExit = LoggerMapper.loggableToJsonString(dc.toLoggable());
 			return null;
 		}).when(dcLogger).logExitOrException(any(LoggableMethod.class), any(DiagnosticContext.class));
 	}
@@ -78,7 +95,11 @@ class AspectExceptionDedupeTest {
 	}
 
 	private void parentCallsFailingChild(Object parent, IllegalStateException ex) throws Throwable {
-		ProceedingJoinPoint childJp = joinPoint(new Child(), "fail");
+		parentCallsFailingChild(parent, new Child(), ex);
+	}
+
+	private void parentCallsFailingChild(Object parent, Object child, IllegalStateException ex) throws Throwable {
+		ProceedingJoinPoint childJp = joinPoint(child, "fail");
 		Mockito.when(childJp.proceed()).thenThrow(ex);
 
 		ProceedingJoinPoint parentJp = joinPoint(parent, "call");
@@ -106,5 +127,29 @@ class AspectExceptionDedupeTest {
 
 		assertThat(thrownAtExit).hasSize(2);
 		assertThat(thrownAtExit).extracting(t -> t.getMethodInfo().getMethodName()).containsExactly("fail", "call");
+	}
+
+	@Test
+	void defaultDetail_outputHasReasonAndStackTrace() throws Throwable {
+		parentCallsFailingChild(new PlainParent(), new IllegalStateException("boom-secret"));
+
+		assertThat(jsonAtExit).contains("\"reason\":\"boom-secret\"").contains("\"stacktrace\"");
+	}
+
+	@Test
+	void classNameOnly_outputHasClassNameButNoMessageOrStackTrace() throws Throwable {
+		parentCallsFailingChild(new PlainParent(), new ClassNameOnlyChild(), new IllegalStateException("boom-secret"));
+
+		assertThat(jsonAtExit)
+			.contains("\"reason\":\"java.lang.IllegalStateException\"")
+			.doesNotContain("boom-secret")
+			.doesNotContain("\"stacktrace\"");
+	}
+
+	@Test
+	void onExceptionWithEmptyDetail_nothingLoggedForException() throws Throwable {
+		parentCallsFailingChild(new PlainParent(), new OnExceptionChild(), new IllegalStateException("boom-secret"));
+
+		assertThat(jsonAtExit).doesNotContain("boom-secret").doesNotContain("\"reason\"").doesNotContain("\"stacktrace\"");
 	}
 }

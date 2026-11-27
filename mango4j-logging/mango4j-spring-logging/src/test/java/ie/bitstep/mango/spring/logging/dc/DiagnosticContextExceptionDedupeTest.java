@@ -5,7 +5,9 @@ import ie.bitstep.mango.logging.annotations.OnException;
 import ie.bitstep.mango.logging.test.MDCTestUtils;
 import ie.bitstep.mango.spring.aop.MethodInfo;
 import ie.bitstep.mango.spring.aop.ThrowableInfo;
+import ie.bitstep.mango.spring.logging.detail.ExceptionDetailRules;
 import ie.bitstep.mango.spring.logging.internal.DiagnosticContextItem;
+import ie.bitstep.mango.spring.logging.internal.ExceptionDetailResolver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import static ie.bitstep.mango.logging.annotations.ExceptionDetail.CAUSE;
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.CLASS_NAME;
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.MESSAGE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -78,6 +81,11 @@ class DiagnosticContextExceptionDedupeTest {
 		@LoggableMethod
 		@OnException(type = IOException.class, detail = {})
 		public void parentMatchesOtherType() {
+		}
+
+		@LoggableMethod
+		@OnException(type = IllegalStateException.class, detail = {})
+		public void parentMatchesWithEmptyDetail() {
 		}
 
 		public void parentNotLoggable() {
@@ -188,6 +196,35 @@ class DiagnosticContextExceptionDedupeTest {
 
 		assertThat(dc.getRootItem().getThrowable()).isNull();
 		assertThat(thrown).hasSize(1);
+	}
+
+	@Test
+	void sameInstanceAsLastChild_onExceptionWithEmptyDetail_parentStillRecordsInContext() throws Exception {
+		IllegalStateException ex = new IllegalStateException("boom");
+
+		List<ThrowableInfo> thrown = parentRethrowsChild("parentMatchesWithEmptyDetail", ex);
+
+		// recorded (opted in); whether anything is logged for it is decided later by its (empty) detail
+		assertThat(dc.getRootItem().getThrowable()).isSameAs(ex);
+		assertThat(thrown).hasSize(2);
+		assertThat(ExceptionDetailResolver.resolve(thrown.get(1).getMethodInfo(), ex)).isEmpty();
+	}
+
+	@Test
+	void sameInstanceAsLastChild_globalRuleButNoOnException_parentStillDoesNotRecord() throws Exception {
+		ExceptionDetailResolver.setStrategy(ExceptionDetailRules.builder()
+			.on(IllegalStateException.class, MESSAGE, CAUSE)
+			.build());
+		try {
+			IllegalStateException ex = new IllegalStateException("boom");
+
+			List<ThrowableInfo> thrown = parentRethrowsChild("parentNoRules", ex);
+
+			assertThat(dc.getRootItem().getThrowable()).isNull();
+			assertThat(thrown).hasSize(1);
+		} finally {
+			ExceptionDetailResolver.setStrategy(null);
+		}
 	}
 
 	// ---- not the same instance as the last child -------------------------------------------------
