@@ -6,7 +6,7 @@
 
 ## Annotate loggable classes
 
-```java language=java
+```java
 @Service
 @LoggableClass
 public class FunService {
@@ -17,7 +17,7 @@ public class FunService {
 
 ## Annotate loggable methods
 
-```java language=java
+```java
 @LoggableMethod
 public void funMethod() {
 ```
@@ -48,7 +48,7 @@ public void funMethod() {
     [exception logging](exception-logging.md) for the values, the output, and how an exception is logged once, at the
     method that threw it.
 
-    ```java language=java
+    ```java
     @LoggableMethod(logException = { ExceptionDetail.REASON, ExceptionDetail.CLASS_NAME })
     public void funMethodThatThrows() {
     ```
@@ -65,14 +65,14 @@ public void funMethod() {
 
 Logs the response from the method:
 
-```java language=java
+```java
 @LoggableMethod(logReturn = true)
 public int funMethodWithReturn() {
 ```
 
 Loggable parameters into methods:
 
-```java language=java
+```java
 @LoggableMethod(logReturn = true)
 public int funMethodWithParametersAndResponse(@LoggableParam(name = "hiParam") String serviceParam) {
 ```

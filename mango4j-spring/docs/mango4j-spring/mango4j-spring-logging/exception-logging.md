@@ -10,7 +10,7 @@ Elasticsearch and reads into a typed class.
 Out of the box a method that throws logs a `reason` (the message), the fields of the exception if its class is
 a `@LoggableClass`, and the stack trace with its causes:
 
-```java language=java
+```java
 @LoggableMethod
 public Order placeOrder(OrderRequest request) {
     paymentService.charge(request.card());   // throws PaymentDeclinedException, caused by an IOException
@@ -64,7 +64,7 @@ exception.
 
 ### Per method: logException
 
-```java language=java
+```java
 @LoggableMethod(logException = {})                                    // log nothing, the caller handles it
 public Order lookup(long id) { ... }
 
@@ -77,10 +77,10 @@ public void reconcile() { ... }
 
 ### Per exception type: @OnException
 
-`@OnException` sets the detail for particular exception types on one method. It is repeatable, and the first rule
-whose type matches wins, so put specific types first.
+`@OnException` sets the detail for particular exception types on one method. It is repeatable, and the rule with the
+most specific matching type wins, whatever order the rules are written in.
 
-```java language=java
+```java
 @LoggableMethod
 @OnException(type = NotFoundException.class, detail = {})                               // nothing
 @OnException(type = { IOException.class, TimeoutException.class }, detail = { REASON, CLASS_NAME })
@@ -89,17 +89,20 @@ public Order saveOrder(Order order) { ... }
 ```
 
 * `type` is an array of exception classes, and subclasses match. It defaults to `Throwable`, so a rule without a
-  `type` matches any exception.
+  `type` matches any exception, and is used only when no more specific rule matches.
+* The most specific match wins: the exact class beats its superclass, which beats that class's superclass, and so on.
+  Every type in a `type` array is ranked on its own. If the same type appears in two rules, the first one written is
+  used.
 * `detail` takes the same values as `logException`, and `{}` means nothing.
 * An exception that matches no rule uses the method's `logException`.
 
 ### Global rules
 
 Register an `ExceptionDetailStrategy` bean to set the detail once for the whole application. `ExceptionDetailRules`
-builds one from ordered rules; the first matching type wins, and an exception that matches no rule falls through
-to the method's `logException`.
+builds one from rules; as with `@OnException`, the most specific matching type wins whatever order the rules are
+declared in, and an exception that matches no rule falls through to the method's `logException`.
 
-```java language=java
+```java
 @Bean
 ExceptionDetailStrategy exceptionDetailStrategy() {
     return ExceptionDetailRules.builder()
@@ -112,7 +115,7 @@ ExceptionDetailStrategy exceptionDetailStrategy() {
 
 You can also implement the interface yourself, to decide from the exception and the method:
 
-```java language=java
+```java
 public interface ExceptionDetailStrategy {
     /** the detail to log, or empty to defer to the method's logException */
     Optional<Set<ExceptionDetail>> getDetail(Throwable t, MethodInfo methodInfo);
@@ -135,7 +138,7 @@ The detail used for an exception thrown by a method is the first of these that a
 Each exception is recorded on the method that threw it. A parent `@LoggableMethod` that simply lets the very same
 exception instance propagate does not record it again, so a call tree does not log one failure at every level.
 
-```java language=java
+```java
 @LoggableMethod
 public Order placeOrder(OrderRequest request) {
     paymentService.charge(request.card());     // charge() throws and logs the exception; placeOrder() adds nothing
@@ -203,7 +206,7 @@ mapping. The fields of an `@LoggableClass` exception vary by class, so if two cl
 different types, map `exception` as `flattened` to avoid a mapping conflict. A typed reader needs one recursive
 class:
 
-```java language=java
+```java
 class StackTrace { String exception; String message; List<Frame> frames; StackTrace cause; }
 class Frame { @JsonProperty("class") String clazz; String method; String file; Integer line; }
 ```

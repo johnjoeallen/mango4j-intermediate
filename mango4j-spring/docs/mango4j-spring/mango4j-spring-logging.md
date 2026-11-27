@@ -11,13 +11,13 @@ In order to make use of the library, you need to import the following dependency
 
 #### Gradle Dependency
 
-```groovy language=groovy
+```groovy
 implementation("ie.bitstep.mango:mango4j-spring-logging:4.0.0-SNAPSHOT")
 ```
 
 #### Maven Dependency
 
-```xml language=xml
+```xml
 <dependency>
     <groupId>ie.bitstep.mango</groupId>
     <artifactId>mango4j-spring-logging</artifactId>

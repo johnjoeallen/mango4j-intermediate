@@ -10,7 +10,7 @@ The base configuration allows for the following beans to be overriden or provide
 
 In order to customize the looger adapter used, you can create a `@Configuration` class and provide a custom logger adapter to be used.
 
-```java language=java
+```java
 @Configuration
 public class MangoLoggingConfig {
 
@@ -33,7 +33,7 @@ The log level used for an exception is chosen by an `ExceptionLogLevelStrategy`.
 common request validation failures, honours `@LoggableLevel` on the exception class, and uses `ERROR` when
 `forceErrorOnException` is set on the method. Provide your own bean to change that:
 
-```java language=java
+```java
 @Configuration
 public class MangoLoggingConfig {
 
@@ -56,7 +56,7 @@ What is logged about an exception (the reason, the stack trace, the cause chain,
 whole application with an `ExceptionDetailStrategy` bean. There is none by default, so each method's
 `logException` applies.
 
-```java language=java
+```java
 @Configuration
 public class MangoLoggingConfig {
 
