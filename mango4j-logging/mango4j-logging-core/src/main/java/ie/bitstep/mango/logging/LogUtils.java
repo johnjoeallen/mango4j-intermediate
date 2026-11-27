@@ -6,8 +6,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.event.Level;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Helper methods for logging.
@@ -73,6 +77,50 @@ public class LogUtils {
 			.filter(s -> !s.startsWith("... "))
 			.toList();
 		return ExceptionSanitiserManager.sanitiseStackTrace(throwable, stackList);
+	}
+
+	/**
+	 * Like {@link #getStackTrace(Throwable)} but never includes exception messages: each exception
+	 * (including causes and suppressed exceptions) is shown as its class name only, followed by its frames.
+	 * Use this when the message must be controlled separately (it can hold sensitive data).
+	 * <p>
+	 * Shape: {@code "java.lang.RuntimeException", "at ...", "Caused by: java.io.IOException", "at ...", ...}.
+	 * Frames shared with the enclosing exception are omitted, as in {@link Throwable#printStackTrace()}.
+	 */
+	public static List<String> getStackTraceWithoutMessages(Throwable throwable) {
+		List<String> lines = new ArrayList<>();
+		addTrace(throwable, "", new StackTraceElement[0], lines, Collections.newSetFromMap(new IdentityHashMap<>()));
+		return ExceptionSanitiserManager.sanitiseStackTrace(throwable, lines);
+	}
+
+	private static void addTrace(Throwable t, String caption, StackTraceElement[] enclosingTrace, List<String> lines, Set<Throwable> seen) {
+		if (!seen.add(t)) {
+			lines.add(caption + "[CIRCULAR REFERENCE: " + t.getClass().getName() + "]");
+			return;
+		}
+
+		lines.add(caption + t.getClass().getName());
+
+		StackTraceElement[] trace = t.getStackTrace();
+		int m = trace.length - 1;
+		int n = enclosingTrace.length - 1;
+		while (m >= 0 && n >= 0 && trace[m].equals(enclosingTrace[n])) {
+			m--;
+			n--;
+		}
+
+		for (int i = 0; i <= m; i++) {
+			lines.add("at " + trace[i]);
+		}
+
+		for (Throwable suppressed : t.getSuppressed()) {
+			addTrace(suppressed, "Suppressed: ", trace, lines, seen);
+		}
+
+		Throwable cause = t.getCause();
+		if (cause != null) {
+			addTrace(cause, "Caused by: ", trace, lines, seen);
+		}
 	}
 
 	/**

@@ -260,6 +260,131 @@ public class LogUtilsTest { // WARNING! Some tests here rely on line numbers so 
 		assertThat(removeLineNumbers(result)).isEqualTo(removeLineNumbers(expected));
 	}
 
+	// ---- getStackTraceWithoutMessages: like getStackTrace but never includes exception messages -------------
+
+	@Test
+	void getStackTraceWithoutMessages_whenSimpleException_headerIsClassNameOnly() {
+		// given
+		List<String> expected = ListBuilder.<String>list()
+			.add("java.lang.RuntimeException")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.do2(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.do1(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.doException(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.spring.logging.LogUtilsTest.getStackTraceWithoutMessages_whenSimpleException_headerIsClassNameOnly(LogUtilsTest.java)")
+			.build();
+
+		Exception exception = null;
+		try {
+			new TestClassForExceptions().doException();
+		} catch (Exception ex) {
+			exception = ex;
+		}
+
+		// when
+		List<String> result = LogUtils.getStackTraceWithoutMessages(exception);
+
+		// then
+		assertThat(removeLineNumbers(result)).isEqualTo(removeLineNumbers(expected));
+	}
+
+	@Test
+	void getStackTraceWithoutMessages_whenExceptionWithCause_causeHeaderHasNoMessage() {
+		// given
+		List<String> expected = ListBuilder.<String>list()
+			.add("java.lang.RuntimeException")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.doWithCause2(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.doWithCause1(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.doExceptionWithCause(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.spring.logging.LogUtilsTest.getStackTraceWithoutMessages_whenExceptionWithCause_causeHeaderHasNoMessage(LogUtilsTest.java)")
+			.add("Caused by: java.lang.RuntimeException")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.do2(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.do1(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.doWithCause2(TestClassForExceptions.java)")
+			.build();
+
+		Exception exception = null;
+		try {
+			new TestClassForExceptions().doExceptionWithCause();
+		} catch (Exception ex) {
+			exception = ex;
+		}
+
+		// when
+		List<String> result = LogUtils.getStackTraceWithoutMessages(exception);
+
+		// then: same shape as getStackTrace (frames shared with the enclosing trace are omitted), just no messages
+		assertThat(removeLineNumbers(result)).isEqualTo(removeLineNumbers(expected));
+	}
+
+	@Test
+	void getStackTraceWithoutMessages_whenExceptionWithSuppressed_suppressedHeaderHasNoMessage() {
+		// given
+		List<String> expected = ListBuilder.<String>list()
+			.add("java.lang.RuntimeException")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.doWithSuppressed2(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.doWithSuppressed1(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.doExceptionWithSuppressed(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.spring.logging.LogUtilsTest.getStackTraceWithoutMessages_whenExceptionWithSuppressed_suppressedHeaderHasNoMessage(LogUtilsTest.java)")
+			.add("Suppressed: java.lang.RuntimeException")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.do2(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.do1(TestClassForExceptions.java)")
+			.add("at ie.bitstep.mango.logging.TestClassForExceptions.doWithSuppressed2(TestClassForExceptions.java)")
+			.build();
+
+		Exception exception = null;
+		try {
+			new TestClassForExceptions().doExceptionWithSuppressed();
+		} catch (Exception ex) {
+			exception = ex;
+		}
+
+		// when
+		List<String> result = LogUtils.getStackTraceWithoutMessages(exception);
+
+		// then
+		assertThat(removeLineNumbers(result)).isEqualTo(removeLineNumbers(expected));
+	}
+
+	@Test
+	void getStackTraceWithoutMessages_secretMessagesNeverAppear() {
+		RuntimeException ex = new RuntimeException("top-SECRETA", new IllegalStateException("cause-SECRETB"));
+		ex.addSuppressed(new IllegalArgumentException("suppressed-SECRETC"));
+
+		List<String> result = LogUtils.getStackTraceWithoutMessages(ex);
+
+		assertThat(String.join("\n", result)).doesNotContain("SECRET");
+		assertThat(result).contains("java.lang.RuntimeException", "Suppressed: java.lang.IllegalArgumentException", "Caused by: java.lang.IllegalStateException");
+		// and the default does leak them (the reason this method exists)
+		assertThat(String.join("\n", LogUtils.getStackTrace(ex))).contains("top-SECRETA");
+	}
+
+	@Test
+	void getStackTraceWithoutMessages_nullMessage_sameAsAnyOther() {
+		List<String> result = LogUtils.getStackTraceWithoutMessages(new IllegalStateException());
+
+		assertThat(result.get(0)).isEqualTo("java.lang.IllegalStateException");
+	}
+
+	@Test
+	void getStackTraceWithoutMessages_circularCause_terminates() {
+		RuntimeException a = new RuntimeException("a");
+		RuntimeException b = new RuntimeException("b", a);
+		a.initCause(b);
+
+		List<String> result = LogUtils.getStackTraceWithoutMessages(a);
+
+		assertThat(result).contains("java.lang.RuntimeException", "Caused by: java.lang.RuntimeException",
+			"Caused by: [CIRCULAR REFERENCE: java.lang.RuntimeException]");
+	}
+
+	@Test
+	void getStackTraceWithoutMessages_appliesStackTraceSanitisers() {
+		List<String> result = LogUtils.getStackTraceWithoutMessages(new RuntimeException("x"));
+
+		// org.junit. frames are ignored by the sanitiser registered in setup()
+		assertThat(result).noneMatch(line -> line.startsWith("at org.junit."));
+	}
+
 	@Test
 	void testPropagateToMDCAllFields() {
 		// when

@@ -232,7 +232,7 @@ public class DiagnosticContextItem implements ToLoggable {
 				putReason(loggable, details);
 
 				if (details.contains(ExceptionDetail.STACK_TRACE)) {
-					loggable.put(KEY_STACK_TRACE, LogUtils.getStackTrace(throwable));
+					loggable.put(KEY_STACK_TRACE, LogUtils.getStackTraceWithoutMessages(throwable));
 				}
 			}
 		}

@@ -718,7 +718,7 @@ class DiagnosticContextTest {
 		// then
 		Map<String, Object> actual = DiagnosticContextThreadLocal.get().toLoggable();
 
-		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTrace(ex));
+		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTraceWithoutMessages(ex));
 		assertThat(objectMapper.writeValueAsString(actual)).isEqualTo(
 			"{\"ts\":\"2018-06-14T18:13:20Z\",\"correlationid\":\"TID55\"," +
 				"\"method\":\"DiagnosticContextTest.push_whenRoot\"," +
@@ -779,7 +779,7 @@ class DiagnosticContextTest {
 		// then
 		Map<String, Object> actual = DiagnosticContextThreadLocal.get().toLoggable();
 
-		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTrace(ex));
+		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTraceWithoutMessages(ex));
 		assertThat(objectMapper.writeValueAsString(actual)).isEqualTo(
 			"{\"ts\":\"2018-06-14T18:13:20Z\",\"correlationid\":\"TID55\"," +
 				"\"method\":\"DiagnosticContextTest.push_whenRoot\"," +

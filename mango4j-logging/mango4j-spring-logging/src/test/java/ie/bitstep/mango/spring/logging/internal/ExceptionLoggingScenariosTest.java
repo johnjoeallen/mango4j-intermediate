@@ -279,6 +279,16 @@ class ExceptionLoggingScenariosTest {
 	}
 
 	@Test
+	void singleMethod_stackTraceOnly_neverLeaksMessagesFromTheExceptionOrItsCauses() throws Throwable {
+		run(new IllegalStateException("outer-LEAKA", new IllegalArgumentException("inner-LEAKB")), Hop.of(new StackTraceOnly()));
+
+		assertThat(only()).contains("\"stacktrace\"")
+			.contains("java.lang.IllegalStateException")
+			.contains("Caused by: java.lang.IllegalArgumentException")
+			.doesNotContain("LEAK");
+	}
+
+	@Test
 	void singleMethod_messageAndCause_messageIncludesCause() throws Throwable {
 		run(new IllegalStateException("boom", new IllegalArgumentException("inner")), Hop.of(new MessageAndCause()));
 
