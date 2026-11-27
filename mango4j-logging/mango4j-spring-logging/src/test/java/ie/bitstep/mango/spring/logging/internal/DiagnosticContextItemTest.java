@@ -94,7 +94,7 @@ class DiagnosticContextItemTest {
 		// then
 		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTrace(ex));
 		assertThat(actual).isEqualTo(
-			"{\"method\":\"DiagnosticContextItemTest.testContextItemExceptionIsLoggableClass\",\"reason\":\"ie.bitstep.mango.spring.logging.internal.DiagnosticContextItemTest$TestLoggableException\",\"exception\":{\"ie.bitstep.mango.spring.logging.internal.DiagnosticContextItemTest$TestLoggableException\":{\"name\":\"BadThingHappened\"}}," +
+			"{\"method\":\"DiagnosticContextItemTest.testContextItemExceptionIsLoggableClass\",\"reason\":\"ie.bitstep.mango.spring.logging.internal.DiagnosticContextItemTest$TestLoggableException\",\"exception\":{\"class\":\"ie.bitstep.mango.spring.logging.internal.DiagnosticContextItemTest$TestLoggableException\",\"name\":\"BadThingHappened\"}," +
 				"\"stacktrace\":" + jsonStackTrace + "}"
 		);
 	}

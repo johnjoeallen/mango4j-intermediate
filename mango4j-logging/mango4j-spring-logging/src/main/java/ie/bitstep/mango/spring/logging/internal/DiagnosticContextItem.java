@@ -35,6 +35,7 @@ public class DiagnosticContextItem implements ToLoggable {
 	public static final String KEY_RESPONSE_STATUS = "responsestatus";
 	public static final String KEY_REASON = "reason";
 	public static final String KEY_EXCEPTION = "exception";
+	public static final String KEY_EXCEPTION_CLASS = "class";
 	public static final String KEY_STACK_TRACE = "stacktrace";
 	public static final String KEY_RESPONSE_TIME = "responsetime";
 
@@ -252,9 +253,18 @@ public class DiagnosticContextItem implements ToLoggable {
 		}
 	}
 
+	/**
+	 * {@code exception: {"class": "<fqcn>", <loggable fields...>}}. The class name is always present
+	 * and cannot be overridden by a loggable field that happens to be called "class".
+	 */
 	private void setThrowableAsException(Map<String, Object> loggable) {
-		Map<String, Object> throwableAsLoggable = new LinkedHashMap<>();
-		throwableAsLoggable.put(throwable.getClass().getName(), LoggerMapper.toLoggable(throwable));
-		loggable.put(KEY_EXCEPTION, throwableAsLoggable);
+		Map<String, Object> exception = new LinkedHashMap<>();
+		exception.put(KEY_EXCEPTION_CLASS, throwable.getClass().getName());
+
+		Object fields = LoggerMapper.toLoggable(throwable);
+		if (fields instanceof Map<?, ?> map) {
+			map.forEach((k, v) -> exception.putIfAbsent(String.valueOf(k), v));
+		}
+		loggable.put(KEY_EXCEPTION, exception);
 	}
 }

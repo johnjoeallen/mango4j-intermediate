@@ -77,8 +77,27 @@ class DiagnosticContextItemExceptionDetailTest {
 		Map<String, Object> loggable = loggable("defaults", new SecretException("X-42"));
 
 		assertThat(loggable).containsEntry("reason", "failed").containsKey("stacktrace");
-		assertThat(exceptionOf(loggable)).containsOnlyKeys(SecretException.class.getName());
-		assertThat(LoggerMapper.loggableToJsonString(loggable)).contains("\"exception\":{\"" + SecretException.class.getName() + "\":{\"code\":\"X-42\"}}");
+		assertThat(exceptionOf(loggable)).containsExactly(
+			Map.entry("class", SecretException.class.getName()), Map.entry("code", "X-42"));
+		assertThat(LoggerMapper.loggableToJsonString(loggable)).contains("\"exception\":{\"class\":\"" + SecretException.class.getName() + "\",\"code\":\"X-42\"}");
+	}
+
+	@LoggableClass
+	static class ClashingFieldException extends RuntimeException {
+		@LoggableField(name = "class")
+		private final String clazz = "from-field";
+
+		ClashingFieldException() {
+			super("clash");
+		}
+	}
+
+	@Test
+	void exception_classIsAFieldAndCannotBeOverriddenByALoggableFieldNamedClass() throws Exception {
+		Map<String, Object> loggable = loggable("defaults", new ClashingFieldException());
+
+		assertThat(exceptionOf(loggable)).containsEntry("class", ClashingFieldException.class.getName());
+		assertThat(LoggerMapper.loggableToJsonString(loggable)).doesNotContain("from-field");
 	}
 
 	@Test

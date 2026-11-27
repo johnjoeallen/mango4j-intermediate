@@ -434,7 +434,7 @@ class ExceptionLoggingScenariosTest {
 
 		assertThat(only())
 			.contains("\"reason\":\"secret failure\"")
-			.contains("\"exception\":{\"" + SecretException.class.getName() + "\":{\"code\":\"X-42\"}}");
+			.contains("\"exception\":{\"class\":\"" + SecretException.class.getName() + "\",\"code\":\"X-42\"}");
 	}
 
 	@Test

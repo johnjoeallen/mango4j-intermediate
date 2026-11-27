@@ -54,7 +54,7 @@ public void funMethod() {
   | `CLASS_NAME` | `reason` | the exception class name |
   | `MESSAGE` | `reason` | the (sanitised) message |
   | `CAUSE` | `reason` | the cause chain appended to the message (on its own it behaves as message + causes) |
-  | `EXCEPTION` | `exception` | for exception classes annotated `@LoggableClass`: their `@LoggableField`s, e.g. `{"com.acme.PaymentException": {"code": "X-42"}}`. Nothing for other exceptions |
+  | `EXCEPTION` | `exception` | for exception classes annotated `@LoggableClass`: their `@LoggableField`s, as an object with a `class` field: `{"class": "com.acme.PaymentException", "code": "X-42"}`. A `@LoggableField` named `class` cannot override it. Nothing for other exceptions |
   | `STACK_TRACE` | `stacktrace` | the stack trace |
 
   `CLASS_NAME`, `MESSAGE` and `CAUSE` have no effect without `REASON`. `{}` logs nothing about the exception
@@ -116,7 +116,7 @@ re-record a child's exception; only a matching `@OnException` does that.
 <!--name=admonition;type=info;title=NOTE;body=
 Behaviour changes: (1) exceptions are now recorded on the method that threw them rather than on the root
 method, so the root's top-level reason/stacktrace is no longer present for propagated exceptions;
-(2) the structured fields of a `@LoggableClass` exception are logged under `exception` instead of inside `reason`,
+(2) the structured fields of a `@LoggableClass` exception are logged under `exception` (with a `class` field) instead of inside `reason`,
 and `reason` is now always text.
 -->
 
