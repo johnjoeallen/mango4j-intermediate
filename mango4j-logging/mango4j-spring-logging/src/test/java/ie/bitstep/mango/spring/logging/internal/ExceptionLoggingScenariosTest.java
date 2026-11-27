@@ -7,7 +7,6 @@ import ie.bitstep.mango.logging.annotations.LoggableMethod;
 import ie.bitstep.mango.logging.annotations.OnException;
 import ie.bitstep.mango.logging.internal.LoggerMapper;
 import ie.bitstep.mango.logging.test.MDCTestUtils;
-import ie.bitstep.mango.spring.aop.MethodInfo;
 import ie.bitstep.mango.spring.logging.dc.DiagnosticContext;
 import ie.bitstep.mango.spring.logging.dc.DiagnosticContextThreadLocal;
 import ie.bitstep.mango.spring.logging.detail.ExceptionDetailRules;

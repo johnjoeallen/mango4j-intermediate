@@ -1,10 +1,8 @@
 package ie.bitstep.mango.spring.logging.internal;
 
-import ie.bitstep.mango.logging.annotations.ExceptionDetail;
 import ie.bitstep.mango.logging.annotations.LoggableMethod;
 import ie.bitstep.mango.logging.annotations.OnException;
 import ie.bitstep.mango.spring.aop.MethodInfo;
-import ie.bitstep.mango.spring.logging.dc.DiagnosticContext;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
