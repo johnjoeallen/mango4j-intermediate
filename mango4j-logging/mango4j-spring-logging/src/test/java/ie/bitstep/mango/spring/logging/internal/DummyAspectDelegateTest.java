@@ -626,7 +626,7 @@ class DummyAspectDelegateTest {
 		}
 
 		// then
-		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTraceWithoutMessages(ex));
+		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTrace(ex));
 		assertThat(logExitOrExceptionCaptured).startsWith(
 			"{\"ts\":\"2018-06-14T18:13:20Z\"," +
 				"\"correlationid\":\"TID55\"," +
@@ -666,7 +666,7 @@ class DummyAspectDelegateTest {
 		}
 
 		// then
-		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTraceWithoutMessages(ex));
+		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTrace(ex));
 		assertThat(logExitOrExceptionCaptured).startsWith(
 			"{\"ts\":\"2018-06-14T18:13:20Z\"," +
 				"\"correlationid\":\"TID55\"," +

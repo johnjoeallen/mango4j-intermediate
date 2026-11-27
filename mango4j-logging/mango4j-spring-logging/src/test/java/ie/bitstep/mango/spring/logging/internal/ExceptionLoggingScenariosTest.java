@@ -97,6 +97,18 @@ class ExceptionLoggingScenariosTest {
 		}
 	}
 
+	public static class MessageAndStackTrace {
+		@LoggableMethod(logException = {MESSAGE, STACK_TRACE})
+		public void call() {
+		}
+	}
+
+	public static class ClassNameAndStackTrace {
+		@LoggableMethod(logException = {REASON, CLASS_NAME, STACK_TRACE})
+		public void call() {
+		}
+	}
+
 	public static class MessageOnly {
 		@LoggableMethod(logException = {REASON, MESSAGE})
 		public void call() {
@@ -286,6 +298,24 @@ class ExceptionLoggingScenariosTest {
 			.contains("java.lang.IllegalStateException")
 			.contains("Caused by: java.lang.IllegalArgumentException")
 			.doesNotContain("LEAK");
+	}
+
+	@Test
+	void singleMethod_messageAndStackTrace_messageShownInTraceNotAsReason() throws Throwable {
+		run(new IllegalStateException("boom-MSG", new IllegalArgumentException("inner-MSG")), Hop.of(new MessageAndStackTrace()));
+
+		assertThat(only()).doesNotContain("\"reason\"")
+			.contains("java.lang.IllegalStateException: boom-MSG")
+			.contains("Caused by: java.lang.IllegalArgumentException: inner-MSG");
+	}
+
+	@Test
+	void singleMethod_classNameAndStackTrace_traceHasNoMessages() throws Throwable {
+		run(new IllegalStateException("boom-MSG", new IllegalArgumentException("inner-MSG")), Hop.of(new ClassNameAndStackTrace()));
+
+		assertThat(only()).contains("\"reason\":\"java.lang.IllegalStateException\"")
+			.contains("Caused by: java.lang.IllegalArgumentException\"")
+			.doesNotContain("MSG");
 	}
 
 	@Test

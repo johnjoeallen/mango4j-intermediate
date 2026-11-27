@@ -7,6 +7,7 @@ import ie.bitstep.mango.logging.internal.LoggerMapper;
 import ie.bitstep.mango.spring.aop.MethodInfo;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Map;
 
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.CAUSE;
@@ -50,6 +51,14 @@ class DiagnosticContextItemExceptionDetailTest {
 
 		@LoggableMethod(logException = {MESSAGE, STACK_TRACE})
 		public void messageWithoutReason() {
+		}
+
+		@LoggableMethod(logException = {REASON, CLASS_NAME, STACK_TRACE})
+		public void classNameWithStackTrace() {
+		}
+
+		@LoggableMethod(logException = {STACK_TRACE})
+		public void stackTraceOnly() {
 		}
 
 		@LoggableMethod(logException = {})
@@ -128,6 +137,42 @@ class DiagnosticContextItemExceptionDetailTest {
 		Map<String, Object> loggable = loggable("messageWithoutReason", new SecretException("X-42"));
 
 		assertThat(loggable).doesNotContainKeys("reason", "exception").containsKey("stacktrace");
+	}
+
+	@SuppressWarnings("unchecked")
+	private static List<String> stackTraceOf(Map<String, Object> loggable) {
+		return (List<String>) loggable.get("stacktrace");
+	}
+
+	@Test
+	void stackTrace_withMessageSelected_includesMessagesOnExceptionAndCause() throws Exception {
+		RuntimeException ex = new RuntimeException("outer-msg", new IllegalStateException("inner-msg"));
+
+		List<String> trace = stackTraceOf(loggable("messageWithoutReason", ex));
+
+		assertThat(trace.get(0)).isEqualTo("java.lang.RuntimeException: outer-msg");
+		assertThat(trace).contains("Caused by: java.lang.IllegalStateException: inner-msg");
+	}
+
+	@Test
+	void stackTrace_withMessageSelectedButNoReason_stillShowsMessageInTraceOnly() throws Exception {
+		Map<String, Object> loggable = loggable("messageWithoutReason", new RuntimeException("outer-msg"));
+
+		assertThat(loggable).doesNotContainKey("reason");
+		assertThat(stackTraceOf(loggable).get(0)).contains("outer-msg");
+	}
+
+	@Test
+	void stackTrace_withoutMessageSelected_isClassNamesOnly() throws Exception {
+		RuntimeException ex = new RuntimeException("outer-msg", new IllegalStateException("inner-msg"));
+
+		for (String method : new String[]{"classNameWithStackTrace", "stackTraceOnly"}) {
+			List<String> trace = stackTraceOf(loggable(method, ex));
+
+			assertThat(trace.get(0)).isEqualTo("java.lang.RuntimeException");
+			assertThat(trace).contains("Caused by: java.lang.IllegalStateException");
+			assertThat(String.join("\n", trace)).doesNotContain("outer-msg").doesNotContain("inner-msg");
+		}
 	}
 
 	@Test

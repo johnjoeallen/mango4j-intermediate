@@ -232,7 +232,10 @@ public class DiagnosticContextItem implements ToLoggable {
 				putReason(loggable, details);
 
 				if (details.contains(ExceptionDetail.STACK_TRACE)) {
-					loggable.put(KEY_STACK_TRACE, LogUtils.getStackTraceWithoutMessages(throwable));
+					// messages are part of the trace only when MESSAGE is selected
+					loggable.put(KEY_STACK_TRACE, details.contains(ExceptionDetail.MESSAGE)
+						? LogUtils.getStackTrace(throwable)
+						: LogUtils.getStackTraceWithoutMessages(throwable));
 				}
 			}
 		}
