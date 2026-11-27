@@ -71,8 +71,9 @@ public final class ExceptionDetailResolver {
 	}
 
 	/**
-	 * The text for the {@code reason}: empty unless REASON is selected. CLASS_NAME, MESSAGE and CAUSE shape the
-	 * content (CAUSE appends the cause chain; with none of the three, the message is used).
+	 * The text for the {@code reason} of one exception: empty unless REASON is selected. CLASS_NAME and MESSAGE shape
+	 * the content (with neither, the message is used). Causes are not part of the text: with CAUSE they are logged
+	 * as a nested {@code cause} node instead.
 	 */
 	public static String describe(Throwable t, Set<ExceptionDetail> details) {
 		if (!details.contains(REASON)) {
@@ -81,15 +82,27 @@ public final class ExceptionDetailResolver {
 
 		boolean withClass = details.contains(CLASS_NAME);
 		boolean withMessage = details.contains(MESSAGE);
-		boolean withCause = details.contains(CAUSE);
+		String className = t.getClass().getName();
 
-		if (withClass && !withMessage && !withCause) {
-			return t.getClass().getName();
+		if (withClass && !withMessage) {
+			return className;
 		}
 
-		String text = LogUtils.exception2Message(t, withCause);
-		String className = t.getClass().getName();
+		String text = ownMessage(t);
 		return withClass && !text.startsWith(className) ? className + ": " + text : text;
+	}
+
+	/**
+	 * The exception's own message, or its class name when it has none. The JDK derives the message of
+	 * {@code new RuntimeException(cause)} from the cause's text; that is the cause's information, not this
+	 * exception's, so it is not used here.
+	 */
+	private static String ownMessage(Throwable t) {
+		Throwable cause = t.getCause();
+		if (cause != null && cause.toString().equals(t.getMessage())) {
+			return t.getClass().getName();
+		}
+		return LogUtils.exception2Message(t, false);
 	}
 
 	private static OnException findOnException(Method method, Throwable t) {

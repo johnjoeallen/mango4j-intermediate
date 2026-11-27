@@ -87,27 +87,26 @@ class ExceptionDetailResolverTest {
 		assertThat(ExceptionDetailResolver.describe(ex, Set.of(STACK_TRACE, EXCEPTION))).isEmpty();
 		assertThat(ExceptionDetailResolver.describe(ex, Set.of(REASON, CLASS_NAME))).isEqualTo("java.lang.RuntimeException");
 		assertThat(ExceptionDetailResolver.describe(ex, Set.of(REASON, MESSAGE))).isEqualTo("outer");
-		assertThat(ExceptionDetailResolver.describe(ex, Set.of(REASON, MESSAGE, CAUSE))).isEqualTo("outer; Cause: inner");
-		assertThat(ExceptionDetailResolver.describe(ex, Set.of(REASON, CAUSE))).isEqualTo("outer; Cause: inner");
+		assertThat(ExceptionDetailResolver.describe(ex, Set.of(REASON, MESSAGE, CAUSE))).isEqualTo("outer");
+		assertThat(ExceptionDetailResolver.describe(ex, Set.of(REASON, CAUSE))).isEqualTo("outer");
 		assertThat(ExceptionDetailResolver.describe(ex, Set.of(REASON, CLASS_NAME, MESSAGE))).isEqualTo("java.lang.RuntimeException: outer");
 	}
 
 	@Test
-	void describe_cause_chainOfCausesAppendedInOrder() {
+	void describe_cause_causesAreNotPartOfTheText() {
 		RuntimeException chain = new RuntimeException("outer",
 			new IllegalStateException("middle", new IllegalArgumentException("inner")));
 
-		assertThat(ExceptionDetailResolver.describe(chain, Set.of(REASON, MESSAGE, CAUSE)))
-			.isEqualTo("outer; Cause: middle; Cause: inner");
+		assertThat(ExceptionDetailResolver.describe(chain, Set.of(REASON, MESSAGE, CAUSE))).isEqualTo("outer");
 		assertThat(ExceptionDetailResolver.describe(chain, Set.of(REASON, MESSAGE))).isEqualTo("outer");
 	}
 
 	@Test
-	void describe_cause_causeWithoutMessageShownAsClassName() {
-		RuntimeException ex = new RuntimeException("outer", new IllegalArgumentException());
+	void describe_wrapperWhoseMessageIsOnlyTheCause_showsClassNameNotTheCauseText() {
+		RuntimeException wrapper = new RuntimeException(new IllegalStateException("inner-MSG"));
+		assertThat(wrapper.getMessage()).contains("inner-MSG");    // the JDK derives it from the cause
 
-		assertThat(ExceptionDetailResolver.describe(ex, Set.of(REASON, MESSAGE, CAUSE)))
-			.isEqualTo("outer; Cause: java.lang.IllegalArgumentException");
+		assertThat(ExceptionDetailResolver.describe(wrapper, Set.of(REASON, MESSAGE))).isEqualTo("java.lang.RuntimeException");
 	}
 
 	@Test
@@ -117,11 +116,10 @@ class ExceptionDetailResolverTest {
 	}
 
 	@Test
-	void describe_cause_withClassName_classNameThenMessageAndCauses() {
+	void describe_cause_withClassNameButNoMessage_classNameOnly() {
 		RuntimeException ex = new RuntimeException("outer", new IllegalArgumentException("inner"));
 
-		assertThat(ExceptionDetailResolver.describe(ex, Set.of(REASON, CLASS_NAME, CAUSE)))
-			.isEqualTo("java.lang.RuntimeException: outer; Cause: inner");
+		assertThat(ExceptionDetailResolver.describe(ex, Set.of(REASON, CLASS_NAME, CAUSE))).isEqualTo("java.lang.RuntimeException");
 	}
 
 	@Test
@@ -139,7 +137,7 @@ class ExceptionDetailResolverTest {
 	void item_toLoggable_honoursDetail() throws Exception {
 		assertThat(loggableFor("none", ex)).doesNotContainKeys("reason", "stacktrace", "exception");
 		assertThat(loggableFor("classOnly", ex)).containsEntry("reason", "java.lang.RuntimeException").doesNotContainKey("stacktrace");
-		assertThat(loggableFor("defaults", ex)).containsEntry("reason", "outer; Cause: inner").containsKey("stacktrace");
+		assertThat(loggableFor("defaults", ex)).containsEntry("reason", "outer").containsKey("stacktrace").containsKey("cause");
 	}
 
 	private Map<String, Object> loggableFor(String method, Throwable t) throws Exception {

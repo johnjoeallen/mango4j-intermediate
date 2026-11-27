@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +38,10 @@ public class DiagnosticContextItem implements ToLoggable {
 	public static final String KEY_REASON = "reason";
 	public static final String KEY_EXCEPTION = "exception";
 	public static final String KEY_EXCEPTION_CLASS = "class";
+	public static final String KEY_CAUSE = "cause";
+
+	/** Maximum number of nested {@code cause} levels logged below the exception itself. */
+	public static final int MAX_CAUSE_DEPTH = 5;
 	public static final String KEY_STACK_TRACE = "stacktrace";
 	public static final String KEY_RESPONSE_TIME = "responsetime";
 
@@ -229,13 +235,9 @@ public class DiagnosticContextItem implements ToLoggable {
 			Set<ExceptionDetail> details = ExceptionDetailResolver.resolve(methodInfo, throwable);
 
 			if (!details.isEmpty()) {
-				putReason(loggable, details);
-
-				if (details.contains(ExceptionDetail.STACK_TRACE)) {
-					// messages and the cause chain are part of the trace only when MESSAGE / CAUSE are selected
-					loggable.put(KEY_STACK_TRACE, LogUtils.getStackTrace(throwable,
-						details.contains(ExceptionDetail.MESSAGE), details.contains(ExceptionDetail.CAUSE)));
-				}
+				Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+				seen.add(throwable);
+				loggable.putAll(throwableNode(throwable, details, 0, seen));
 			}
 		}
 
@@ -244,29 +246,50 @@ public class DiagnosticContextItem implements ToLoggable {
 		return loggable;
 	}
 
-	private void putReason(Map<String, Object> loggable, Set<ExceptionDetail> details) {
-		String reason = ExceptionDetailResolver.describe(throwable, details);
+	/**
+	 * What to log about one exception: {@code reason}, {@code exception}, {@code stacktrace} and, with CAUSE,
+	 * a nested {@code cause} node built the same way for the cause (at most {@link #MAX_CAUSE_DEPTH} levels deep).
+	 * The stack trace holds only this exception's own header and frames; its message only with MESSAGE.
+	 */
+	private static Map<String, Object> throwableNode(Throwable t, Set<ExceptionDetail> details, int depth, Set<Throwable> seen) {
+		Map<String, Object> node = new LinkedHashMap<>();
+
+		String reason = ExceptionDetailResolver.describe(t, details);
 		if (!StringUtils.isEmpty(reason)) {
-			loggable.put(KEY_REASON, reason);
+			node.put(KEY_REASON, reason);
 		}
 
-		if (details.contains(ExceptionDetail.EXCEPTION) && throwable.getClass().getAnnotation(LoggableClass.class) != null) {
-			setThrowableAsException(loggable);
+		if (details.contains(ExceptionDetail.EXCEPTION) && t.getClass().getAnnotation(LoggableClass.class) != null) {
+			node.put(KEY_EXCEPTION, exceptionFields(t));
 		}
+
+		if (details.contains(ExceptionDetail.STACK_TRACE)) {
+			node.put(KEY_STACK_TRACE, LogUtils.getStackTrace(t, details.contains(ExceptionDetail.MESSAGE), false));
+		}
+
+		Throwable cause = t.getCause();
+		if (details.contains(ExceptionDetail.CAUSE) && cause != null && depth < MAX_CAUSE_DEPTH && seen.add(cause)) {
+			Map<String, Object> causeNode = throwableNode(cause, details, depth + 1, seen);
+			if (!causeNode.isEmpty()) {
+				node.put(KEY_CAUSE, causeNode);
+			}
+		}
+
+		return node;
 	}
 
 	/**
-	 * {@code exception: {"class": "<fqcn>", <loggable fields...>}}. The class name is always present
+	 * {@code {"class": "<fqcn>", <loggable fields...>}}. The class name is always present
 	 * and cannot be overridden by a loggable field that happens to be called "class".
 	 */
-	private void setThrowableAsException(Map<String, Object> loggable) {
+	private static Map<String, Object> exceptionFields(Throwable t) {
 		Map<String, Object> exception = new LinkedHashMap<>();
-		exception.put(KEY_EXCEPTION_CLASS, throwable.getClass().getName());
+		exception.put(KEY_EXCEPTION_CLASS, t.getClass().getName());
 
-		Object fields = LoggerMapper.toLoggable(throwable);
+		Object fields = LoggerMapper.toLoggable(t);
 		if (fields instanceof Map<?, ?> map) {
 			map.forEach((k, v) -> exception.putIfAbsent(String.valueOf(k), v));
 		}
-		loggable.put(KEY_EXCEPTION, exception);
+		return exception;
 	}
 }

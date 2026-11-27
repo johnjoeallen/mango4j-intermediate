@@ -5,6 +5,8 @@ import ie.bitstep.mango.logging.annotations.LoggableField;
 import ie.bitstep.mango.logging.annotations.LoggableMethod;
 import ie.bitstep.mango.logging.internal.LoggerMapper;
 import ie.bitstep.mango.spring.aop.MethodInfo;
+import ie.bitstep.mango.spring.logging.test.data.AccountLockedException;
+import ie.bitstep.mango.spring.logging.test.data.PaymentDeclinedException;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -71,6 +73,10 @@ class DiagnosticContextItemExceptionDetailTest {
 
 		@LoggableMethod(logException = {CAUSE})
 		public void causeOnly() {
+		}
+
+		@LoggableMethod(logException = {REASON, CLASS_NAME, CAUSE})
+		public void classNameAndCause() {
 		}
 
 		@LoggableMethod(logException = {STACK_TRACE})
@@ -160,14 +166,37 @@ class DiagnosticContextItemExceptionDetailTest {
 		return (List<String>) loggable.get("stacktrace");
 	}
 
+	@SuppressWarnings("unchecked")
+	private static Map<String, Object> causeOf(Map<String, Object> loggable) {
+		return (Map<String, Object>) loggable.get("cause");
+	}
+
+	/** number of nested cause nodes below the item */
+	private static int causeDepth(Map<String, Object> loggable) {
+		int depth = 0;
+		for (Map<String, Object> node = causeOf(loggable); node != null; node = causeOf(node)) {
+			depth++;
+		}
+		return depth;
+	}
+
+	private static Throwable chain(int length) {
+		Throwable t = null;
+		for (int i = length - 1; i >= 0; i--) {
+			t = new RuntimeException("level-" + i, t);
+		}
+		return t;
+	}
+
 	@Test
-	void stackTrace_withMessageSelected_includesMessagesOnExceptionAndCause() throws Exception {
+	void stackTrace_withMessageSelected_includesTheMessageOnEachExceptionsOwnLine() throws Exception {
 		RuntimeException ex = new RuntimeException("outer-msg", new IllegalStateException("inner-msg"));
 
-		List<String> trace = stackTraceOf(loggable("messageCauseStackTrace", ex));
+		Map<String, Object> loggable = loggable("messageCauseStackTrace", ex);
 
-		assertThat(trace.get(0)).isEqualTo("java.lang.RuntimeException: outer-msg");
-		assertThat(trace).contains("Caused by: java.lang.IllegalStateException: inner-msg");
+		assertThat(stackTraceOf(loggable).get(0)).isEqualTo("java.lang.RuntimeException: outer-msg");
+		assertThat(stackTraceOf(loggable)).noneMatch(l -> l.startsWith("Caused by"));
+		assertThat(stackTraceOf(causeOf(loggable)).get(0)).isEqualTo("java.lang.IllegalStateException: inner-msg");
 	}
 
 	@Test
@@ -191,34 +220,39 @@ class DiagnosticContextItemExceptionDetailTest {
 	}
 
 	@Test
-	void stackTrace_causesOnlyWhenCauseSelected() throws Exception {
+	void causeNode_onlyWhenCauseSelected_andTheTraceNeverHasCausedByLines() throws Exception {
 		RuntimeException ex = new RuntimeException("outer-msg", new IllegalStateException("inner-msg"));
 		ex.addSuppressed(new IllegalArgumentException("suppressed-msg"));
 
 		for (String method : new String[]{"messageWithoutReason", "classNameWithStackTrace", "stackTraceOnly"}) {
-			assertThat(stackTraceOf(loggable(method, ex)))
-				.noneMatch(l -> l.startsWith("Caused by") || l.startsWith("Suppressed"));
+			Map<String, Object> loggable = loggable(method, ex);
+
+			assertThat(loggable).doesNotContainKey("cause");
+			assertThat(stackTraceOf(loggable)).noneMatch(l -> l.startsWith("Caused by") || l.startsWith("Suppressed"));
 		}
-		assertThat(stackTraceOf(loggable("messageWithoutReason", ex)).get(0)).isEqualTo("java.lang.RuntimeException: outer-msg");
-		assertThat(stackTraceOf(loggable("messageCauseStackTrace", ex)))
-			.anyMatch(l -> l.startsWith("Caused by: java.lang.IllegalStateException"))
-			.anyMatch(l -> l.startsWith("Suppressed: java.lang.IllegalArgumentException"));
+
+		Map<String, Object> withCause = loggable("messageCauseStackTrace", ex);
+		assertThat(withCause).containsKey("cause");
+		assertThat(stackTraceOf(withCause)).noneMatch(l -> l.startsWith("Caused by") || l.startsWith("Suppressed"));
+		assertThat(stackTraceOf(withCause).get(0)).isEqualTo("java.lang.RuntimeException: outer-msg");
 	}
 
 	@Test
-	void cause_selectedWithReason_causeChainAppendedToReason() throws Exception {
+	void cause_selectedWithReason_eachCauseIsANestedNodeAndReasonIsNotSuffixed() throws Exception {
 		RuntimeException ex = new RuntimeException("outer", new IllegalStateException("middle", new IllegalArgumentException("inner")));
 
 		Map<String, Object> loggable = loggable("reasonAndCause", ex);
 
-		assertThat(loggable).containsEntry("reason", "outer; Cause: middle; Cause: inner").doesNotContainKey("stacktrace");
+		assertThat(loggable).containsEntry("reason", "outer").doesNotContainKey("stacktrace");
+		assertThat(causeOf(loggable)).containsEntry("reason", "middle").doesNotContainKey("stacktrace");
+		assertThat(causeOf(causeOf(loggable))).containsEntry("reason", "inner").doesNotContainKey("cause");
 	}
 
 	@Test
-	void cause_selectedButNoCause_reasonHasNoCauseSuffix() throws Exception {
+	void cause_selectedButNoCause_noCauseNode() throws Exception {
 		Map<String, Object> loggable = loggable("reasonAndCause", new RuntimeException("outer"));
 
-		assertThat(loggable).containsEntry("reason", "outer");
+		assertThat(loggable).containsEntry("reason", "outer").doesNotContainKey("cause");
 	}
 
 	@Test
@@ -229,24 +263,105 @@ class DiagnosticContextItemExceptionDetailTest {
 	}
 
 	@Test
-	void cause_selectedWithStackTraceAndReason_bothShowTheCause() throws Exception {
+	void cause_defaultDetail_causeNodeHasItsOwnReasonAndStackTrace() throws Exception {
 		RuntimeException ex = new RuntimeException("outer", new IllegalStateException("inner"));
 
 		Map<String, Object> loggable = loggable("defaults", ex);
 
-		assertThat(loggable).containsEntry("reason", "outer; Cause: inner");
-		assertThat(stackTraceOf(loggable)).contains("Caused by: java.lang.IllegalStateException: inner");
+		assertThat(loggable).containsEntry("reason", "outer");
+		assertThat(causeOf(loggable)).containsEntry("reason", "inner");
+		assertThat(stackTraceOf(causeOf(loggable)).get(0)).isEqualTo("java.lang.IllegalStateException: inner");
 	}
 
 	@Test
-	void stackTrace_causeWithoutMessage_showsCauseClassNamesOnly() throws Exception {
+	void cause_depthIsLimitedToFiveNestedNodes() throws Exception {
+		Map<String, Object> loggable = loggable("reasonAndCause", chain(9));    // top + 8 causes
+
+		assertThat(causeDepth(loggable)).isEqualTo(DiagnosticContextItem.MAX_CAUSE_DEPTH).isEqualTo(5);
+		Map<String, Object> node = loggable;
+		for (int i = 0; i < 5; i++) {
+			node = causeOf(node);
+		}
+		assertThat(node).containsEntry("reason", "level-5").doesNotContainKey("cause");
+		assertThat(LoggerMapper.loggableToJsonString(loggable)).doesNotContain("level-6");
+	}
+
+	@Test
+	void cause_exactlyFiveCauses_allShown_andFewerAreNotPadded() throws Exception {
+		assertThat(causeDepth(loggable("reasonAndCause", chain(6)))).isEqualTo(5);    // top + 5 causes
+		assertThat(causeDepth(loggable("reasonAndCause", chain(3)))).isEqualTo(2);
+		assertThat(causeDepth(loggable("reasonAndCause", chain(1)))).isZero();
+	}
+
+	@Test
+	void cause_circularReference_stopsAtTheRepeat() throws Exception {
+		RuntimeException a = new RuntimeException("a");
+		RuntimeException b = new RuntimeException("b", a);
+		a.initCause(b);
+
+		Map<String, Object> loggable = loggable("reasonAndCause", a);
+
+		assertThat(loggable).containsEntry("reason", "a");
+		assertThat(causeOf(loggable)).containsEntry("reason", "b").doesNotContainKey("cause");
+	}
+
+	@Test
+	void cause_wrapperWithDerivedMessage_reasonIsClassNameAndCauseTextIsInTheCauseNode() throws Exception {
+		RuntimeException wrapper = new RuntimeException(new IllegalStateException("inner-MSG"));
+
+		Map<String, Object> loggable = loggable("reasonAndCause", wrapper);
+
+		assertThat(loggable).containsEntry("reason", "java.lang.RuntimeException");
+		assertThat(causeOf(loggable)).containsEntry("reason", "inner-MSG");
+	}
+
+	@Test
+	void cause_withClassName_causeReasonIsItsClassName() throws Exception {
 		RuntimeException ex = new RuntimeException("outer-msg", new IllegalStateException("inner-msg"));
 
-		List<String> trace = stackTraceOf(loggable("causeStackTrace", ex));
+		Map<String, Object> loggable = loggable("classNameAndCause", ex);
 
-		assertThat(trace.get(0)).isEqualTo("java.lang.RuntimeException");
-		assertThat(trace).contains("Caused by: java.lang.IllegalStateException");
-		assertThat(String.join("\n", trace)).doesNotContain("outer-msg").doesNotContain("inner-msg");
+		assertThat(loggable).containsEntry("reason", "java.lang.RuntimeException");
+		assertThat(causeOf(loggable)).containsEntry("reason", "java.lang.IllegalStateException");
+		assertThat(LoggerMapper.loggableToJsonString(loggable)).doesNotContain("outer-msg").doesNotContain("inner-msg");
+	}
+
+	@Test
+	void loggableClassExceptionsInAChain_eachNodeHasItsOwnExceptionFieldsWithMasking() throws Exception {
+		AccountLockedException locked = new AccountLockedException("Account locked after 5 failed attempts", "ACC-77889900", 5,
+			new java.io.IOException("Connection reset"));
+		PaymentDeclinedException declined = new PaymentDeclinedException("Payment declined for order 1042", "1042",
+			"4111111111111111", "05", locked);
+
+		Map<String, Object> loggable = loggable("defaults", declined);
+
+		@SuppressWarnings("unchecked")
+		Map<String, Object> topException = (Map<String, Object>) loggable.get("exception");
+		assertThat(topException).containsEntry("class", PaymentDeclinedException.class.getName())
+			.containsEntry("orderId", "1042").containsEntry("cardNumber", "4111********1111").containsEntry("declineCode", "05");
+
+		@SuppressWarnings("unchecked")
+		Map<String, Object> causeException = (Map<String, Object>) causeOf(loggable).get("exception");
+		assertThat(causeException).containsEntry("class", AccountLockedException.class.getName())
+			.containsEntry("failedAttempts", 5).containsKey("accountId");
+
+		// the innermost cause is a plain exception: text and trace, no exception node
+		Map<String, Object> io = causeOf(causeOf(loggable));
+		assertThat(io).containsEntry("reason", "Connection reset").doesNotContainKey("exception");
+
+		assertThat(LoggerMapper.loggableToJsonString(loggable)).doesNotContain("4111111111111111").doesNotContain("ACC-77889900");
+	}
+
+	@Test
+	void causeNode_withoutMessageSelected_classNamesOnly() throws Exception {
+		RuntimeException ex = new RuntimeException("outer-msg", new IllegalStateException("inner-msg"));
+
+		Map<String, Object> loggable = loggable("causeStackTrace", ex);
+
+		assertThat(stackTraceOf(loggable).get(0)).isEqualTo("java.lang.RuntimeException");
+		assertThat(causeOf(loggable)).doesNotContainKey("reason");
+		assertThat(stackTraceOf(causeOf(loggable)).get(0)).isEqualTo("java.lang.IllegalStateException");
+		assertThat(LoggerMapper.loggableToJsonString(loggable)).doesNotContain("outer-msg").doesNotContain("inner-msg");
 	}
 
 	@Test

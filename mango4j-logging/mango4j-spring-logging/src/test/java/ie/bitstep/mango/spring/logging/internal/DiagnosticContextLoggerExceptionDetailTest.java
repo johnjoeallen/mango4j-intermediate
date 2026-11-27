@@ -105,14 +105,14 @@ class DiagnosticContextLoggerExceptionDetailTest {
 	}
 
 	@Test
-	void messageAndCause_messageIncludesCause() throws Exception {
+	void messageAndCause_causeIsNotPartOfTheMessage() throws Exception {
 		RuntimeException ex = new RuntimeException("outer", new IllegalArgumentException("inner"));
 		thrown(ex, "messageAndCause");
 		given(levelStrategy.getLogLevel(eq(ex), any())).willReturn(Level.ERROR);
 
 		diagnosticContextLogger.logExitOrException(rootMethod, dc);
 
-		verify(loggerAdapter).logException(any(), eq(Level.ERROR), any(), eq("outer; Cause: inner"));
+		verify(loggerAdapter).logException(any(), eq(Level.ERROR), any(), eq("outer"));
 	}
 
 	@Test
@@ -142,6 +142,31 @@ class DiagnosticContextLoggerExceptionDetailTest {
 		diagnosticContextLogger.logExitOrException(rootMethod, dc);
 
 		verify(loggerAdapter).logException(any(), eq(Level.WARN), any(), eq("first; java.lang.IllegalArgumentException"));
+	}
+
+	@Test
+	void sameExceptionRecordedTwice_messageHasItOnce() throws Exception {
+		RuntimeException ex = new RuntimeException("kept");
+		thrown(ex, "defaults");
+		thrown(ex, "defaults");    // e.g. a parent that opted in with @OnException
+		given(levelStrategy.getLogLevel(eq(ex), any())).willReturn(Level.WARN);
+
+		diagnosticContextLogger.logExitOrException(rootMethod, dc);
+
+		verify(loggerAdapter).logException(any(), eq(Level.WARN), any(), eq("kept"));
+	}
+
+	@Test
+	void differentExceptionsWithTheSameText_bothJoined() throws Exception {
+		RuntimeException first = new RuntimeException("same");
+		RuntimeException second = new RuntimeException("same");
+		thrown(first, "defaults");
+		thrown(second, "defaults");
+		given(levelStrategy.getLogLevel(any(), any())).willReturn(Level.WARN);
+
+		diagnosticContextLogger.logExitOrException(rootMethod, dc);
+
+		verify(loggerAdapter).logException(any(), eq(Level.WARN), any(), eq("same; same"));
 	}
 
 	@Test

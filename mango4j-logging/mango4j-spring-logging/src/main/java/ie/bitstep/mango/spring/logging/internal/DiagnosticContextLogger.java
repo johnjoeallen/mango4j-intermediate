@@ -16,8 +16,11 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -112,7 +115,11 @@ public class DiagnosticContextLogger {
 				.max(Comparator.reverseOrder())
 				.orElse(Level.INFO);
 
+			// the same exception can be recorded on several items (a parent opting in with @OnException):
+			// it is emitted as an exception node on each, but its text is only joined into the message once
+			Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<>());
 			String exceptionMessage = toLog.stream()
+				.filter(ti -> seen.add(ti.getThrowable()))
 				.map(ti -> LogUtils.toLogSafeValue(ExceptionDetailResolver.describe(
 					ti.getThrowable(), ExceptionDetailResolver.resolve(ti.getMethodInfo(), ti.getThrowable()))))
 				.filter(m -> m != null && !m.isEmpty())

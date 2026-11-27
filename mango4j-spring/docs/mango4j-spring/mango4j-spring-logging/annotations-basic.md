@@ -50,15 +50,29 @@ public void funMethod() {
 
   | Value | Output key | Logs |
   |---|---|---|
-  | `REASON` | `reason` | switches the text reason on. `CLASS_NAME`, `MESSAGE` and `CAUSE` shape its content; with none of them it is the message |
+  | `REASON` | `reason` | switches the text reason on. `CLASS_NAME` and `MESSAGE` shape its content; with neither it is the message |
   | `CLASS_NAME` | `reason` | the exception class name |
   | `MESSAGE` | `reason` | the (sanitised) message |
-  | `CAUSE` | `reason` | the cause chain appended to the message (on its own it behaves as message + causes) |
+  | `CAUSE` | `cause` | logs the cause as a nested `cause` node, built the same way as the exception itself (its own `reason`, `exception`, `stacktrace` per the other selected values, and its own `cause`), up to 5 levels deep |
   | `EXCEPTION` | `exception` | for exception classes annotated `@LoggableClass`: their `@LoggableField`s, as an object with a `class` field: `{"class": "com.acme.PaymentException", "code": "X-42"}`. A `@LoggableField` named `class` cannot override it. Nothing for other exceptions |
-  | `STACK_TRACE` | `stacktrace` | the stack trace as a list of lines. Exception messages are included only with `MESSAGE`; the cause chain (`Caused by:`) and suppressed exceptions only with `CAUSE`. Otherwise just the exception class name and its frames |
+  | `STACK_TRACE` | `stacktrace` | the exception's own stack trace as a list of lines (the exception line, then its frames). The message is on the exception line only with `MESSAGE`. There are no `Caused by:` lines: causes are the `cause` node |
 
-  `CLASS_NAME`, `MESSAGE` and `CAUSE` have no effect without `REASON`. `{}` logs nothing about the exception
+  `CLASS_NAME` and `MESSAGE` have no effect without `REASON`. `CAUSE` has no effect unless something else is selected (an empty `cause` node is not logged). `{}` logs nothing about the exception
   (use it when the caller or a global handler logs it). Class name and message together render as `ClassName: message`.
+
+  Example with the default detail, for `PaymentDeclinedException` (a `@LoggableClass`) caused by an `IOException`:
+
+  ```json
+  {
+    "reason": "Payment declined for order 1042",
+    "exception": { "class": "com.acme.PaymentDeclinedException", "orderId": "1042", "cardNumber": "4111********1111" },
+    "stacktrace": ["com.acme.PaymentDeclinedException: Payment declined for order 1042", "at com.acme.PaymentService.charge(PaymentService.java:42)"],
+    "cause": {
+      "reason": "Connection reset",
+      "stacktrace": ["java.io.IOException: Connection reset", "at com.acme.Gateway.send(Gateway.java:17)"]
+    }
+  }
+  ```
 
 * forceErrorOnException default false
 
@@ -117,7 +131,7 @@ re-record a child's exception; only a matching `@OnException` does that.
 Behaviour changes: (1) exceptions are now recorded on the method that threw them rather than on the root
 method, so the root's top-level reason/stacktrace is no longer present for propagated exceptions;
 (2) the structured fields of a `@LoggableClass` exception are logged under `exception` (with a `class` field) instead of inside `reason`,
-and `reason` is now always text.
+and `reason` is now always text; (3) causes are a nested `cause` node (at most 5 deep), not a `; Cause: ...` suffix on `reason` or `Caused by:` lines in `stacktrace`.
 -->
 
 <!--name=admonition;type=info;title=NOTE;body=
