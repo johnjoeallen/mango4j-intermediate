@@ -4,11 +4,11 @@ What happens now?
 
 mango4j-spring-logging allows for custom configuration.
 
-The base configuration allows for the following beans to be overriden or provided:
+The base configuration allows for the following beans to be overridden or provided:
 
 ## LoggerAdapter
 
-In order to customize the looger adapter used, you can create a `@Configuration` class and provide a custom logger adapter to be used.
+In order to customize the logger adapter used, you can create a `@Configuration` class and provide a custom logger adapter to be used.
 
 ```java
 @Configuration
