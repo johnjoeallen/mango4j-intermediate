@@ -21,7 +21,7 @@ Code repository [*is available here*](https://github.com/bitstep-ie/mango4j-spri
 | Maven | 3.9 or later |
 | Spring Boot | 4.1 |
 
-Compatibility with earlier releases is in [version compatibility](mango4j-spring/version-compatibility.md).
+The supported versions are also listed in [version compatibility](mango4j-spring/version-compatibility.md).
 
 ## Component detection
 
