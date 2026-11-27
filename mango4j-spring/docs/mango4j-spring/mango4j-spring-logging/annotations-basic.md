@@ -52,6 +52,34 @@ public void funMethod() {
 
   If set to true will force log level to ERROR
 
+#### OnException
+
+When a `@LoggableMethod` throws, the exception is recorded against the method that threw it. A parent
+`@LoggableMethod` that simply lets the same exception instance propagate does **not** record it again,
+so it is logged once, at its source.
+
+A parent opts in to recording it as well with `@OnException`:
+
+```java language=java
+@LoggableMethod
+@OnException(type = PaymentException.class, detail = { ExceptionDetail.MESSAGE })
+public Order placeOrder(OrderRequest r) {
+    paymentService.charge(r.card());   // throws PaymentException
+    ...
+}
+```
+
+* `type` is an array of exception classes (subclasses match). Default is `Throwable`, i.e. any exception.
+* `@OnException` is repeatable; rules are checked in declaration order and the first match wins.
+* A wrapper exception (a new instance with the child's exception as its cause) is a different exception
+  and is always recorded by the parent.
+* `detail` is accepted but not yet used to shape the output.
+
+<!--name=admonition;type=info;title=NOTE;body=
+Behaviour change: exceptions are now recorded on the method that threw them rather than on the root
+method, so the root's top-level reason/stacktrace is no longer present for propagated exceptions.
+-->
+
 <!--name=admonition;type=info;title=NOTE;body=
 Example, logs the response from the method.
 -->

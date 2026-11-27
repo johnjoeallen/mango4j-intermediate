@@ -39,6 +39,9 @@ public class DiagnosticContextItem implements ToLoggable {
 	private final Map<String, Object> values = new LinkedHashMap<>();
 	private final Map<String, Object> resultValues = new LinkedHashMap<>();
 	private Throwable throwable;
+
+	/** An exception that passed through this item but was deliberately not recorded (already recorded by a child). Never serialised. */
+	private Throwable propagatedThrowable;
 	private boolean isFinalMethodInfo = true;
 	private boolean isWithExternalExceptionHandler;
 
@@ -127,6 +130,15 @@ public class DiagnosticContextItem implements ToLoggable {
 		return throwable;
 	}
 
+	public Throwable getPropagatedThrowable() {
+		return propagatedThrowable;
+	}
+
+	public DiagnosticContextItem putPropagatedThrowable(Throwable propagatedThrowable) {
+		this.propagatedThrowable = propagatedThrowable;
+		return this;
+	}
+
 	public DiagnosticContextItem putThrowable(Throwable throwable) {
 		this.throwable = throwable;
 		return this;
@@ -192,6 +204,7 @@ public class DiagnosticContextItem implements ToLoggable {
 
 		// Clear throwable reference
 		throwable = null;
+		propagatedThrowable = null;
 
 		// Note: parent is a WeakReference and will be automatically garbage collected
 		// Clearing children breaks the strong reference chain from parent → child

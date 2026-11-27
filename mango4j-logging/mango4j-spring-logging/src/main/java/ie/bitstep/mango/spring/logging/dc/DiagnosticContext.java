@@ -1,5 +1,6 @@
 package ie.bitstep.mango.spring.logging.dc;
 
+import ie.bitstep.mango.logging.annotations.OnException;
 import ie.bitstep.mango.spring.aop.MethodInfo;
 import ie.bitstep.mango.spring.aop.ThrowableInfo;
 import ie.bitstep.mango.logging.adapter.AbstractLoggerAdapter;
@@ -11,7 +12,9 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.core.annotation.AnnotationUtils;
 
+import java.lang.reflect.Method;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -310,9 +313,37 @@ public class DiagnosticContext implements ToLoggable {
 	public void putThrowable(Throwable t) {
 		DiagnosticContextItem dci = getCurrentItem();
 		if (dci != null && dci.getThrowable() != t) {    // ignore if the very same exception is put again (might happen in exception handler)
+			if (isRethrownFromLastChild(dci, t) && !hasMatchingOnException(dci.getMethodInfo(), t)) {
+				dci.putPropagatedThrowable(t);    // remember it passed through, so grandparents can recognise it too
+				return;    // already recorded by the child; parent only records it if it opts in with @OnException
+			}
 			dci.putThrowable(t);
 			thrown.add(new ThrowableInfo(t, dci.getMethodInfo()));
 		}
+	}
+
+	private static boolean isRethrownFromLastChild(DiagnosticContextItem dci, Throwable t) {
+		List<DiagnosticContextItem> children = dci.getChildren();
+		if (CollectionUtils.isEmpty(children)) {
+			return false;
+		}
+		DiagnosticContextItem last = children.get(children.size() - 1);
+		return last.getThrowable() == t || last.getPropagatedThrowable() == t;
+	}
+
+	private static boolean hasMatchingOnException(MethodInfo mi, Throwable t) {
+		Method method = mi != null ? mi.getMethod() : null;
+		if (method == null) {
+			return false;
+		}
+		for (OnException rule : AnnotationUtils.getRepeatableAnnotations(method, OnException.class)) {
+			for (Class<? extends Throwable> type : rule.type()) {
+				if (type.isInstance(t)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public Throwable getThrowable() {
