@@ -40,7 +40,7 @@ public class DiagnosticContextItem implements ToLoggable {
 	public static final String KEY_EXCEPTION_CLASS = "class";
 	public static final String KEY_CAUSE = "cause";
 
-	/** Maximum number of nested {@code cause} levels logged below the exception itself. */
+	/** Maximum number of nested {@code cause} levels logged below the exception itself (inside {@code stacktrace}). */
 	public static final int MAX_CAUSE_DEPTH = 5;
 	public static final String KEY_STACK_TRACE = "stacktrace";
 	public static final String KEY_RESPONSE_TIME = "responsetime";
@@ -247,9 +247,11 @@ public class DiagnosticContextItem implements ToLoggable {
 	}
 
 	/**
-	 * What to log about one exception: {@code reason}, {@code exception}, {@code stacktrace} and, with CAUSE,
-	 * a nested {@code cause} node built the same way for the cause (at most {@link #MAX_CAUSE_DEPTH} levels deep).
-	 * The stack trace holds only this exception's own header and frames; its message only with MESSAGE.
+	 * What to log about one exception: {@code reason}, {@code exception} (the thrown exception only) and
+	 * {@code stacktrace}. With CAUSE (which only has an effect together with STACK_TRACE) the cause is the last
+	 * element of the stack trace array, as an object {@code {"cause": {reason?, stacktrace: [..., {"cause": ...}]}}},
+	 * at most {@link #MAX_CAUSE_DEPTH} levels deep. The stack trace holds only this exception's own header and
+	 * frames (and then its cause); its message is on the header only with MESSAGE.
 	 */
 	private static Map<String, Object> throwableNode(Throwable t, Set<ExceptionDetail> details, int depth, Set<Throwable> seen) {
 		Map<String, Object> node = new LinkedHashMap<>();
@@ -259,20 +261,24 @@ public class DiagnosticContextItem implements ToLoggable {
 			node.put(KEY_REASON, reason);
 		}
 
-		if (details.contains(ExceptionDetail.EXCEPTION) && t.getClass().getAnnotation(LoggableClass.class) != null) {
+		if (depth == 0 && details.contains(ExceptionDetail.EXCEPTION) && t.getClass().getAnnotation(LoggableClass.class) != null) {
 			node.put(KEY_EXCEPTION, exceptionFields(t));
 		}
 
 		if (details.contains(ExceptionDetail.STACK_TRACE)) {
-			node.put(KEY_STACK_TRACE, LogUtils.getStackTrace(t, details.contains(ExceptionDetail.MESSAGE), false));
-		}
+			List<Object> trace = new ArrayList<>(LogUtils.getStackTrace(t, details.contains(ExceptionDetail.MESSAGE), false));
 
-		Throwable cause = t.getCause();
-		if (details.contains(ExceptionDetail.CAUSE) && cause != null && depth < MAX_CAUSE_DEPTH && seen.add(cause)) {
-			Map<String, Object> causeNode = throwableNode(cause, details, depth + 1, seen);
-			if (!causeNode.isEmpty()) {
-				node.put(KEY_CAUSE, causeNode);
+			Throwable cause = t.getCause();
+			if (details.contains(ExceptionDetail.CAUSE) && cause != null && depth < MAX_CAUSE_DEPTH && seen.add(cause)) {
+				Map<String, Object> causeNode = throwableNode(cause, details, depth + 1, seen);
+				if (!causeNode.isEmpty()) {
+					Map<String, Object> wrapper = new LinkedHashMap<>();
+					wrapper.put(KEY_CAUSE, causeNode);
+					trace.add(wrapper);
+				}
 			}
+
+			node.put(KEY_STACK_TRACE, trace);
 		}
 
 		return node;

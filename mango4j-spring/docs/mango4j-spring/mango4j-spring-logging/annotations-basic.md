@@ -53,11 +53,11 @@ public void funMethod() {
   | `REASON` | `reason` | switches the text reason on. `CLASS_NAME` and `MESSAGE` shape its content; with neither it is the message |
   | `CLASS_NAME` | `reason` | the exception class name |
   | `MESSAGE` | `reason` | the (sanitised) message |
-  | `CAUSE` | `cause` | logs the cause as a nested `cause` node, built the same way as the exception itself (its own `reason`, `exception`, `stacktrace` per the other selected values, and its own `cause`), up to 5 levels deep |
-  | `EXCEPTION` | `exception` | for exception classes annotated `@LoggableClass`: their `@LoggableField`s, as an object with a `class` field: `{"class": "com.acme.PaymentException", "code": "X-42"}`. A `@LoggableField` named `class` cannot override it. Nothing for other exceptions |
-  | `STACK_TRACE` | `stacktrace` | the exception's own stack trace as a list of lines (the exception line, then its frames). The message is on the exception line only with `MESSAGE`. There are no `Caused by:` lines: causes are the `cause` node |
+  | `CAUSE` | `stacktrace` | adds the cause to the stack trace: the cause is an object at the end of its parent's `stacktrace` array, `{"cause": {"reason": ..., "stacktrace": [..., {"cause": ...}]}}`, up to 5 levels deep. Its `reason` follows `REASON`. It only adds to `STACK_TRACE`: on its own, or without `STACK_TRACE`, it does nothing |
+  | `EXCEPTION` | `exception` | for the exception that was thrown, if its class is annotated `@LoggableClass`: `{"class": "com.acme.PaymentException", "code": "X-42"}`, its `@LoggableField`s with `@Mask` applied. A `@LoggableField` named `class` cannot override `class`. Nothing for other exceptions, and nothing for causes |
+  | `STACK_TRACE` | `stacktrace` | the exception's own stack trace as a list of lines (the exception line, then its frames). The message is on the exception line only with `MESSAGE`. There are no `Caused by:` lines: with `CAUSE` the cause is nested at the end of the array as an object |
 
-  `CLASS_NAME` and `MESSAGE` have no effect without `REASON`. `CAUSE` has no effect unless something else is selected (an empty `cause` node is not logged). `{}` logs nothing about the exception
+  `CLASS_NAME` and `MESSAGE` have no effect without `REASON`, and `CAUSE` has no effect without `STACK_TRACE`. `{}` logs nothing about the exception
   (use it when the caller or a global handler logs it). Class name and message together render as `ClassName: message`.
 
   Example with the default detail, for `PaymentDeclinedException` (a `@LoggableClass`) caused by an `IOException`:
@@ -66,13 +66,20 @@ public void funMethod() {
   {
     "reason": "Payment declined for order 1042",
     "exception": { "class": "com.acme.PaymentDeclinedException", "orderId": "1042", "cardNumber": "4111********1111" },
-    "stacktrace": ["com.acme.PaymentDeclinedException: Payment declined for order 1042", "at com.acme.PaymentService.charge(PaymentService.java:42)"],
-    "cause": {
-      "reason": "Connection reset",
-      "stacktrace": ["java.io.IOException: Connection reset", "at com.acme.Gateway.send(Gateway.java:17)"]
-    }
+    "stacktrace": [
+      "com.acme.PaymentDeclinedException: Payment declined for order 1042",
+      "at com.acme.PaymentService.charge(PaymentService.java:42)",
+      { "cause": {
+          "reason": "Connection reset",
+          "stacktrace": ["java.io.IOException: Connection reset", "at com.acme.Gateway.send(Gateway.java:17)"]
+      } }
+    ]
   }
   ```
+
+  `stacktrace` is a list of lines followed, with `CAUSE`, by at most one object per level, so a consumer
+  that reads it as lines should keep to the string elements. In Splunk the lines are `stacktrace{}` and the
+  cause fields are `stacktrace{}.cause.reason`, `stacktrace{}.cause.stacktrace{}`, and so on.
 
 * forceErrorOnException default false
 
@@ -131,7 +138,7 @@ re-record a child's exception; only a matching `@OnException` does that.
 Behaviour changes: (1) exceptions are now recorded on the method that threw them rather than on the root
 method, so the root's top-level reason/stacktrace is no longer present for propagated exceptions;
 (2) the structured fields of a `@LoggableClass` exception are logged under `exception` (with a `class` field) instead of inside `reason`,
-and `reason` is now always text; (3) causes are a nested `cause` node (at most 5 deep), not a `; Cause: ...` suffix on `reason` or `Caused by:` lines in `stacktrace`.
+and `reason` is now always text; (3) causes are objects nested at the end of the `stacktrace` array (at most 5 deep), not a `; Cause: ...` suffix on `reason` or `Caused by:` lines.
 -->
 
 <!--name=admonition;type=info;title=NOTE;body=

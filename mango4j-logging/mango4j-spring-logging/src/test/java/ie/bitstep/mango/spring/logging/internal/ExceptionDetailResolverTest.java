@@ -137,7 +137,7 @@ class ExceptionDetailResolverTest {
 	void item_toLoggable_honoursDetail() throws Exception {
 		assertThat(loggableFor("none", ex)).doesNotContainKeys("reason", "stacktrace", "exception");
 		assertThat(loggableFor("classOnly", ex)).containsEntry("reason", "java.lang.RuntimeException").doesNotContainKey("stacktrace");
-		assertThat(loggableFor("defaults", ex)).containsEntry("reason", "outer").containsKey("stacktrace").containsKey("cause");
+		assertThat(loggableFor("defaults", ex)).containsEntry("reason", "outer").containsKey("stacktrace");
 	}
 
 	private Map<String, Object> loggableFor(String method, Throwable t) throws Exception {
