@@ -1,6 +1,6 @@
 # Exception logging — end-to-end scenarios
 
-Generated from `ExceptionLoggingScenariosTest` (`mango4j-spring-logging`), which writes each scenario's captured output to `target/scenario-output/`. Each scenario runs the real aspect delegate, the real `DiagnosticContextLogger` and the real level strategy; a capturing adapter records what would be logged. Timestamps and response times are fixed. Stack traces are shortened to two frames.
+Generated from `ExceptionLoggingScenariosTest` (`mango4j-spring-logging`), which writes each scenario's captured output to `target/scenario-output/`. Each scenario runs the real aspect delegate, the real `DiagnosticContextLogger` and the real level strategy; a capturing adapter records what would be logged. Timestamps and response times are fixed. Stack traces are shortened to the first frame of each exception; every exception line (`Caused by:`, `Suppressed:`) is kept.
 
 **36 scenarios — 36 passed, 0 failed.**
 
@@ -29,7 +29,7 @@ log:
   "stacktrace": [
     "java.lang.IllegalStateException: boom",
     "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)",
-    "… (1 more frames)"
+    "Caused by: java.lang.IllegalArgumentException: inner"
   ],
   "responsetime": 0
 }
@@ -174,7 +174,7 @@ log:
   "stacktrace": [
     "java.lang.IllegalStateException: boom-MSG",
     "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)",
-    "… (1 more frames)"
+    "Caused by: java.lang.IllegalArgumentException: inner-MSG"
   ],
   "responsetime": 0
 }
@@ -198,7 +198,7 @@ log:
   "stacktrace": [
     "java.lang.IllegalStateException",
     "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)",
-    "… (1 more frames)"
+    "Caused by: java.lang.IllegalArgumentException"
   ],
   "responsetime": 0
 }
@@ -331,7 +331,7 @@ log:
   "stacktrace": [
     "java.lang.IllegalStateException: boom",
     "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)",
-    "… (1 more frames)"
+    "Caused by: java.lang.IllegalArgumentException: inner"
   ],
   "responsetime": 0
 }
@@ -355,7 +355,8 @@ log:
   "stacktrace": [
     "java.lang.IllegalStateException",
     "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)",
-    "… (2 more frames)"
+    "Caused by: java.lang.IllegalArgumentException",
+    "Caused by: java.io.IOException"
   ],
   "responsetime": 0
 }
