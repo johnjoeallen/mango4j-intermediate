@@ -86,6 +86,31 @@ public Order placeOrder(OrderRequest r) {
 * `detail` takes the same values as `logException` and overrides it for the exceptions the rule matches.
   Exceptions not matched by any `@OnException` use the method's `logException`.
 
+#### Global exception rules
+
+Register an `ExceptionDetailStrategy` bean to set exception detail once for the whole application:
+
+```java language=java
+@Bean
+ExceptionDetailStrategy exceptionDetailStrategy() {
+    return ExceptionDetailRules.builder()
+        .on(NotFoundException.class)                          // log nothing
+        .on(ValidationException.class, CLASS_NAME)
+        .on(DataAccessException.class, MESSAGE, CAUSE)
+        .build();
+}
+```
+
+Rules are checked in order and the first matching type (subclasses included) wins. What gets used for an exception:
+
+1. a matching `@OnException` on the method that threw it
+2. the global rules
+3. that method's `logException`
+4. the default (`MESSAGE`, `CAUSE`, `STACK_TRACE`)
+
+An exception matching no global rule falls through to `logException`. Global rules do not make a parent
+re-record a child's exception; only a matching `@OnException` does that.
+
 <!--name=admonition;type=info;title=NOTE;body=
 Behaviour change: exceptions are now recorded on the method that threw them rather than on the root
 method, so the root's top-level reason/stacktrace is no longer present for propagated exceptions.
