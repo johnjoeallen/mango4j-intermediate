@@ -16,7 +16,9 @@ import java.util.Set;
 
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.CAUSE;
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.CLASS_NAME;
+import static ie.bitstep.mango.logging.annotations.ExceptionDetail.EXCEPTION;
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.MESSAGE;
+import static ie.bitstep.mango.logging.annotations.ExceptionDetail.REASON;
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.STACK_TRACE;
 
 /**
@@ -25,12 +27,12 @@ import static ie.bitstep.mango.logging.annotations.ExceptionDetail.STACK_TRACE;
  *   <li>the first matching {@link OnException} on the method</li>
  *   <li>the global {@link ExceptionDetailStrategy}, if one is registered and has a rule for it</li>
  *   <li>{@link LoggableMethod#logException()}</li>
- *   <li>the default (message, causes and stack trace)</li>
+ *   <li>the default (reason with message and causes, exception fields, stack trace)</li>
  * </ol>
  */
 public final class ExceptionDetailResolver {
 
-	private static final Set<ExceptionDetail> DEFAULT = EnumSet.of(MESSAGE, CAUSE, STACK_TRACE);
+	private static final Set<ExceptionDetail> DEFAULT = EnumSet.of(REASON, MESSAGE, CAUSE, EXCEPTION, STACK_TRACE);
 
 	private static volatile ExceptionDetailStrategy strategy;
 
@@ -69,18 +71,19 @@ public final class ExceptionDetailResolver {
 	}
 
 	/**
-	 * Text for the given details: class name and/or message (with causes when CAUSE is selected).
-	 * Stack trace is not included. Empty when there is nothing textual to show.
+	 * The text for the {@code reason}: empty unless REASON is selected. CLASS_NAME, MESSAGE and CAUSE shape the
+	 * content (CAUSE appends the cause chain; with none of the three, the message is used).
 	 */
 	public static String describe(Throwable t, Set<ExceptionDetail> details) {
+		if (!details.contains(REASON)) {
+			return "";
+		}
+
 		boolean withClass = details.contains(CLASS_NAME);
 		boolean withMessage = details.contains(MESSAGE);
 		boolean withCause = details.contains(CAUSE);
 
-		if (!withClass && !withMessage && !withCause) {
-			return "";
-		}
-		if (!withMessage && !withCause) {
+		if (withClass && !withMessage && !withCause) {
 			return t.getClass().getName();
 		}
 

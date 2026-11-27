@@ -34,6 +34,7 @@ public class DiagnosticContextItem implements ToLoggable {
 	public static final String KEY_RESPONSE = "response";
 	public static final String KEY_RESPONSE_STATUS = "responsestatus";
 	public static final String KEY_REASON = "reason";
+	public static final String KEY_EXCEPTION = "exception";
 	public static final String KEY_STACK_TRACE = "stacktrace";
 	public static final String KEY_RESPONSE_TIME = "responsetime";
 
@@ -241,20 +242,19 @@ public class DiagnosticContextItem implements ToLoggable {
 	}
 
 	private void putReason(Map<String, Object> loggable, Set<ExceptionDetail> details) {
-		if (details.contains(ExceptionDetail.MESSAGE) && throwable.getClass().getAnnotation(LoggableClass.class) != null) {
-			setThrowableAsReason(loggable);
-			return;
-		}
-
 		String reason = ExceptionDetailResolver.describe(throwable, details);
 		if (!StringUtils.isEmpty(reason)) {
 			loggable.put(KEY_REASON, reason);
 		}
+
+		if (details.contains(ExceptionDetail.EXCEPTION) && throwable.getClass().getAnnotation(LoggableClass.class) != null) {
+			setThrowableAsException(loggable);
+		}
 	}
 
-	private void setThrowableAsReason(Map<String, Object> loggable) {
+	private void setThrowableAsException(Map<String, Object> loggable) {
 		Map<String, Object> throwableAsLoggable = new LinkedHashMap<>();
 		throwableAsLoggable.put(throwable.getClass().getName(), LoggerMapper.toLoggable(throwable));
-		loggable.put(KEY_REASON, throwableAsLoggable);
+		loggable.put(KEY_EXCEPTION, throwableAsLoggable);
 	}
 }

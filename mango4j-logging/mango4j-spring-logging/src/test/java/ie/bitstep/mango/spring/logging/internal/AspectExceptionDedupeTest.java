@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.CLASS_NAME;
+import static ie.bitstep.mango.logging.annotations.ExceptionDetail.REASON;
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.MESSAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,7 +38,7 @@ class AspectExceptionDedupeTest {
 	}
 
 	static class ClassNameOnlyChild {
-		@LoggableMethod(logException = {CLASS_NAME})
+		@LoggableMethod(logException = {REASON, CLASS_NAME})
 		public void fail() {
 		}
 	}
@@ -57,7 +58,7 @@ class AspectExceptionDedupeTest {
 
 	static class OptInParent {
 		@LoggableMethod
-		@OnException(type = IllegalStateException.class, detail = {MESSAGE})
+		@OnException(type = IllegalStateException.class, detail = {REASON, MESSAGE})
 		public void call() {
 		}
 	}

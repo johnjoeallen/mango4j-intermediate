@@ -17,8 +17,8 @@ import java.util.Set;
  * <pre>
  * ExceptionDetailRules.builder()
  *     .on(NotFoundException.class)                         // nothing
- *     .on(ValidationException.class, CLASS_NAME)
- *     .on(DataAccessException.class, MESSAGE, CAUSE)
+ *     .on(ValidationException.class, REASON, CLASS_NAME)
+ *     .on(DataAccessException.class, REASON, MESSAGE, CAUSE)
  *     .build();
  * </pre>
  */

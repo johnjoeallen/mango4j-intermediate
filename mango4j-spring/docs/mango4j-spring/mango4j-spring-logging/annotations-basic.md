@@ -44,19 +44,21 @@ public void funMethod() {
 
   If set to true will log the response from the method
 
-* logException, default `{ MESSAGE, CAUSE, STACK_TRACE }`
+* logException, default `{ REASON, MESSAGE, CAUSE, EXCEPTION, STACK_TRACE }`
 
-  What to log when this method throws. An array of `ExceptionDetail`:
+  What to log when this method throws. An array of `ExceptionDetail`. Each concern has its own output key:
 
-  | Value | Logs |
-  |---|---|
-  | `CLASS_NAME` | the exception class name |
-  | `MESSAGE` | the (sanitised) message |
-  | `CAUSE` | the cause chain, appended to the message (on its own it behaves as message + causes) |
-  | `STACK_TRACE` | the stack trace |
+  | Value | Output key | Logs |
+  |---|---|---|
+  | `REASON` | `reason` | switches the text reason on. `CLASS_NAME`, `MESSAGE` and `CAUSE` shape its content; with none of them it is the message |
+  | `CLASS_NAME` | `reason` | the exception class name |
+  | `MESSAGE` | `reason` | the (sanitised) message |
+  | `CAUSE` | `reason` | the cause chain appended to the message (on its own it behaves as message + causes) |
+  | `EXCEPTION` | `exception` | for exception classes annotated `@LoggableClass`: their `@LoggableField`s, e.g. `{"com.acme.PaymentException": {"code": "X-42"}}`. Nothing for other exceptions |
+  | `STACK_TRACE` | `stacktrace` | the stack trace |
 
-  `{}` logs nothing about the exception (use it when the caller or a global handler logs it).
-  Combinations of class name and message render as `ClassName: message`.
+  `CLASS_NAME`, `MESSAGE` and `CAUSE` have no effect without `REASON`. `{}` logs nothing about the exception
+  (use it when the caller or a global handler logs it). Class name and message together render as `ClassName: message`.
 
 * forceErrorOnException default false
 
@@ -72,7 +74,7 @@ A parent opts in to recording it as well with `@OnException`:
 
 ```java language=java
 @LoggableMethod
-@OnException(type = PaymentException.class, detail = { ExceptionDetail.MESSAGE })
+@OnException(type = PaymentException.class, detail = { ExceptionDetail.REASON, ExceptionDetail.MESSAGE })
 public Order placeOrder(OrderRequest r) {
     paymentService.charge(r.card());   // throws PaymentException
     ...
@@ -95,8 +97,8 @@ Register an `ExceptionDetailStrategy` bean to set exception detail once for the 
 ExceptionDetailStrategy exceptionDetailStrategy() {
     return ExceptionDetailRules.builder()
         .on(NotFoundException.class)                          // log nothing
-        .on(ValidationException.class, CLASS_NAME)
-        .on(DataAccessException.class, MESSAGE, CAUSE)
+        .on(ValidationException.class, REASON, CLASS_NAME)
+        .on(DataAccessException.class, REASON, MESSAGE, CAUSE)
         .build();
 }
 ```
@@ -106,14 +108,16 @@ Rules are checked in order and the first matching type (subclasses included) win
 1. a matching `@OnException` on the method that threw it
 2. the global rules
 3. that method's `logException`
-4. the default (`MESSAGE`, `CAUSE`, `STACK_TRACE`)
+4. the default (`REASON`, `MESSAGE`, `CAUSE`, `EXCEPTION`, `STACK_TRACE`)
 
 An exception matching no global rule falls through to `logException`. Global rules do not make a parent
 re-record a child's exception; only a matching `@OnException` does that.
 
 <!--name=admonition;type=info;title=NOTE;body=
-Behaviour change: exceptions are now recorded on the method that threw them rather than on the root
-method, so the root's top-level reason/stacktrace is no longer present for propagated exceptions.
+Behaviour changes: (1) exceptions are now recorded on the method that threw them rather than on the root
+method, so the root's top-level reason/stacktrace is no longer present for propagated exceptions;
+(2) the structured fields of a `@LoggableClass` exception are logged under `exception` instead of inside `reason`,
+and `reason` is now always text.
 -->
 
 <!--name=admonition;type=info;title=NOTE;body=

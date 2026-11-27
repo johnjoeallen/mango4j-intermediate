@@ -19,6 +19,7 @@ import org.slf4j.event.Level;
 
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.CAUSE;
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.CLASS_NAME;
+import static ie.bitstep.mango.logging.annotations.ExceptionDetail.REASON;
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.MESSAGE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -42,11 +43,11 @@ class DiagnosticContextLoggerExceptionDetailTest {
 		public void none() {
 		}
 
-		@LoggableMethod(logException = {CLASS_NAME})
+		@LoggableMethod(logException = {REASON, CLASS_NAME})
 		public void classOnly() {
 		}
 
-		@LoggableMethod(logException = {MESSAGE, CAUSE})
+		@LoggableMethod(logException = {REASON, MESSAGE, CAUSE})
 		public void messageAndCause() {
 		}
 

@@ -13,7 +13,9 @@ import java.util.Set;
 
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.CAUSE;
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.CLASS_NAME;
+import static ie.bitstep.mango.logging.annotations.ExceptionDetail.EXCEPTION;
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.MESSAGE;
+import static ie.bitstep.mango.logging.annotations.ExceptionDetail.REASON;
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.STACK_TRACE;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,7 +34,7 @@ class ExceptionDetailResolverTest {
 		public void none() {
 		}
 
-		@LoggableMethod(logException = {CLASS_NAME})
+		@LoggableMethod(logException = {REASON, CLASS_NAME})
 		public void classOnly() {
 		}
 
@@ -51,13 +53,13 @@ class ExceptionDetailResolverTest {
 
 	@Test
 	void resolve_notAnnotatedOrNullMethodInfo_usesDefault() throws Exception {
-		assertThat(ExceptionDetailResolver.resolve(mi("notAnnotated"), ex)).containsExactlyInAnyOrder(MESSAGE, CAUSE, STACK_TRACE);
-		assertThat(ExceptionDetailResolver.resolve(null, ex)).containsExactlyInAnyOrder(MESSAGE, CAUSE, STACK_TRACE);
+		assertThat(ExceptionDetailResolver.resolve(mi("notAnnotated"), ex)).containsExactlyInAnyOrder(REASON, MESSAGE, CAUSE, EXCEPTION, STACK_TRACE);
+		assertThat(ExceptionDetailResolver.resolve(null, ex)).containsExactlyInAnyOrder(REASON, MESSAGE, CAUSE, EXCEPTION, STACK_TRACE);
 	}
 
 	@Test
 	void resolve_loggableMethodDefault() throws Exception {
-		assertThat(ExceptionDetailResolver.resolve(mi("defaults"), ex)).containsExactlyInAnyOrder(MESSAGE, CAUSE, STACK_TRACE);
+		assertThat(ExceptionDetailResolver.resolve(mi("defaults"), ex)).containsExactlyInAnyOrder(REASON, MESSAGE, CAUSE, EXCEPTION, STACK_TRACE);
 	}
 
 	@Test
@@ -67,7 +69,7 @@ class ExceptionDetailResolverTest {
 
 	@Test
 	void resolve_logExceptionArray() throws Exception {
-		assertThat(ExceptionDetailResolver.resolve(mi("classOnly"), ex)).containsExactly(CLASS_NAME);
+		assertThat(ExceptionDetailResolver.resolve(mi("classOnly"), ex)).containsExactlyInAnyOrder(REASON, CLASS_NAME);
 	}
 
 	@Test
@@ -84,17 +86,28 @@ class ExceptionDetailResolverTest {
 	@Test
 	void describe_variants() {
 		assertThat(ExceptionDetailResolver.describe(ex, Set.of())).isEmpty();
-		assertThat(ExceptionDetailResolver.describe(ex, Set.of(STACK_TRACE))).isEmpty();
-		assertThat(ExceptionDetailResolver.describe(ex, Set.of(CLASS_NAME))).isEqualTo("java.lang.RuntimeException");
-		assertThat(ExceptionDetailResolver.describe(ex, Set.of(MESSAGE))).isEqualTo("outer");
-		assertThat(ExceptionDetailResolver.describe(ex, Set.of(MESSAGE, CAUSE))).isEqualTo("outer; Cause: inner");
-		assertThat(ExceptionDetailResolver.describe(ex, Set.of(CAUSE))).isEqualTo("outer; Cause: inner");
-		assertThat(ExceptionDetailResolver.describe(ex, Set.of(CLASS_NAME, MESSAGE))).isEqualTo("java.lang.RuntimeException: outer");
+		assertThat(ExceptionDetailResolver.describe(ex, Set.of(STACK_TRACE, EXCEPTION))).isEmpty();
+		assertThat(ExceptionDetailResolver.describe(ex, Set.of(REASON, CLASS_NAME))).isEqualTo("java.lang.RuntimeException");
+		assertThat(ExceptionDetailResolver.describe(ex, Set.of(REASON, MESSAGE))).isEqualTo("outer");
+		assertThat(ExceptionDetailResolver.describe(ex, Set.of(REASON, MESSAGE, CAUSE))).isEqualTo("outer; Cause: inner");
+		assertThat(ExceptionDetailResolver.describe(ex, Set.of(REASON, CAUSE))).isEqualTo("outer; Cause: inner");
+		assertThat(ExceptionDetailResolver.describe(ex, Set.of(REASON, CLASS_NAME, MESSAGE))).isEqualTo("java.lang.RuntimeException: outer");
+	}
+
+	@Test
+	void describe_withoutReason_isEmptyWhateverElseIsSelected() {
+		assertThat(ExceptionDetailResolver.describe(ex, Set.of(CLASS_NAME, MESSAGE, CAUSE))).isEmpty();
+		assertThat(ExceptionDetailResolver.describe(ex, Set.of(MESSAGE))).isEmpty();
+	}
+
+	@Test
+	void describe_reasonAlone_usesTheMessage() {
+		assertThat(ExceptionDetailResolver.describe(ex, Set.of(REASON))).isEqualTo("outer");
 	}
 
 	@Test
 	void item_toLoggable_honoursDetail() throws Exception {
-		assertThat(loggableFor("none", ex)).doesNotContainKeys("reason", "stacktrace");
+		assertThat(loggableFor("none", ex)).doesNotContainKeys("reason", "stacktrace", "exception");
 		assertThat(loggableFor("classOnly", ex)).containsEntry("reason", "java.lang.RuntimeException").doesNotContainKey("stacktrace");
 		assertThat(loggableFor("defaults", ex)).containsEntry("reason", "outer; Cause: inner").containsKey("stacktrace");
 	}

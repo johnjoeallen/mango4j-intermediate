@@ -35,6 +35,8 @@ import java.util.function.UnaryOperator;
 
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.CAUSE;
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.CLASS_NAME;
+import static ie.bitstep.mango.logging.annotations.ExceptionDetail.REASON;
+import static ie.bitstep.mango.logging.annotations.ExceptionDetail.EXCEPTION;
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.MESSAGE;
 import static ie.bitstep.mango.logging.annotations.ExceptionDetail.STACK_TRACE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -78,13 +80,13 @@ class ExceptionLoggingScenariosTest {
 	}
 
 	public static class ClassNameOnly {
-		@LoggableMethod(logException = {CLASS_NAME})
+		@LoggableMethod(logException = {REASON, CLASS_NAME})
 		public void call() {
 		}
 	}
 
 	public static class MessageAndCause {
-		@LoggableMethod(logException = {MESSAGE, CAUSE})
+		@LoggableMethod(logException = {REASON, MESSAGE, CAUSE})
 		public void call() {
 		}
 	}
@@ -96,21 +98,27 @@ class ExceptionLoggingScenariosTest {
 	}
 
 	public static class MessageOnly {
-		@LoggableMethod(logException = {MESSAGE})
+		@LoggableMethod(logException = {REASON, MESSAGE})
+		public void call() {
+		}
+	}
+
+	public static class ExceptionFieldsOnly {
+		@LoggableMethod(logException = {EXCEPTION})
 		public void call() {
 		}
 	}
 
 	public static class OnExceptionClassNameForIo {
-		@LoggableMethod(logException = {MESSAGE})
-		@OnException(type = IOException.class, detail = {CLASS_NAME})
+		@LoggableMethod(logException = {REASON, MESSAGE})
+		@OnException(type = IOException.class, detail = {REASON, CLASS_NAME})
 		public void call() {
 		}
 	}
 
 	public static class OnExceptionMessageForPayment {
 		@LoggableMethod
-		@OnException(type = PaymentException.class, detail = {MESSAGE})
+		@OnException(type = PaymentException.class, detail = {REASON, MESSAGE})
 		public void call() {
 		}
 	}
@@ -297,7 +305,7 @@ class ExceptionLoggingScenariosTest {
 
 	@Test
 	void precedence_globalRuleOverridesLogException() throws Throwable {
-		ExceptionDetailResolver.setStrategy(ExceptionDetailRules.builder().on(IllegalStateException.class, CLASS_NAME).build());
+		ExceptionDetailResolver.setStrategy(ExceptionDetailRules.builder().on(IllegalStateException.class, REASON, CLASS_NAME).build());
 
 		run(new IllegalStateException("boom-secret"), Hop.of(new DefaultDetail()));
 
@@ -316,7 +324,7 @@ class ExceptionLoggingScenariosTest {
 
 	@Test
 	void precedence_globalRuleNotMatching_fallsBackToLogException() throws Throwable {
-		ExceptionDetailResolver.setStrategy(ExceptionDetailRules.builder().on(IOException.class, CLASS_NAME).build());
+		ExceptionDetailResolver.setStrategy(ExceptionDetailRules.builder().on(IOException.class, REASON, CLASS_NAME).build());
 
 		run(new IllegalStateException("boom"), Hop.of(new MessageOnly()));
 
@@ -411,7 +419,7 @@ class ExceptionLoggingScenariosTest {
 
 	@Test
 	void globalRuleDoesNotMakeParentRerecordChildException() throws Throwable {
-		ExceptionDetailResolver.setStrategy(ExceptionDetailRules.builder().on(IllegalStateException.class, MESSAGE).build());
+		ExceptionDetailResolver.setStrategy(ExceptionDetailRules.builder().on(IllegalStateException.class, REASON, MESSAGE).build());
 
 		run(new IllegalStateException("boom"), Hop.of(new DefaultDetail()), Hop.of(new DefaultDetail()));
 
@@ -421,17 +429,35 @@ class ExceptionLoggingScenariosTest {
 	// ---- @LoggableClass exceptions -------------------------------------------------------------
 
 	@Test
-	void loggableClassException_withMessage_logsStructuredFields() throws Throwable {
+	void loggableClassException_default_reasonTextAndExceptionFieldsLoggedSeparately() throws Throwable {
+		run(new SecretException("X-42"), Hop.of(new DefaultDetail()));
+
+		assertThat(only())
+			.contains("\"reason\":\"secret failure\"")
+			.contains("\"exception\":{\"" + SecretException.class.getName() + "\":{\"code\":\"X-42\"}}");
+	}
+
+	@Test
+	void loggableClassException_exceptionOnly_fieldsWithoutReasonText() throws Throwable {
+		run(new SecretException("X-42"), Hop.of(new ExceptionFieldsOnly()));
+
+		assertThat(only()).contains("\"exception\":{").contains("X-42")
+			.doesNotContain("\"reason\"").doesNotContain("secret failure");
+	}
+
+	@Test
+	void loggableClassException_reasonOnly_textWithoutFields() throws Throwable {
 		run(new SecretException("X-42"), Hop.of(new MessageOnly()));
 
-		assertThat(only()).contains(SecretException.class.getName()).contains("X-42");
+		assertThat(only()).contains("\"reason\":\"secret failure\"").doesNotContain("\"exception\"").doesNotContain("X-42");
 	}
 
 	@Test
 	void loggableClassException_classNameOnly_fieldsAreNotLogged() throws Throwable {
 		run(new SecretException("X-42"), Hop.of(new ClassNameOnly()));
 
-		assertThat(only()).contains("\"reason\":\"" + SecretException.class.getName() + "\"").doesNotContain("X-42");
+		assertThat(only()).contains("\"reason\":\"" + SecretException.class.getName() + "\"")
+			.doesNotContain("\"exception\"").doesNotContain("X-42");
 	}
 
 	private static int countOccurrences(String s, String sub) {
