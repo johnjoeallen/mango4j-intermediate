@@ -12,7 +12,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * also opts the method in to recording an exception that was simply propagated from the last
  * method it called (which is otherwise skipped to avoid duplicate logging).
  * <p>
- * Rules are evaluated in declaration order; the first rule with a matching type wins.
+ * The rule with the most specific matching type wins (the exact class, else the nearest superclass), so the order the
+ * rules are declared in does not matter.
  */
 @Retention(RUNTIME)
 @Target({METHOD})

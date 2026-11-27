@@ -6,6 +6,7 @@ import ie.bitstep.mango.logging.annotations.LoggableMethod;
 import ie.bitstep.mango.logging.annotations.OnException;
 import ie.bitstep.mango.spring.aop.MethodInfo;
 import ie.bitstep.mango.spring.logging.detail.ExceptionDetailStrategy;
+import ie.bitstep.mango.spring.logging.detail.ExceptionTypes;
 import org.springframework.core.annotation.AnnotationUtils;
 
 import java.lang.reflect.Method;
@@ -24,7 +25,7 @@ import static ie.bitstep.mango.logging.annotations.ExceptionDetail.STACK_TRACE;
 /**
  * Works out what to log about an exception thrown by a method, in this order:
  * <ol>
- *   <li>the first matching {@link OnException} on the method</li>
+ *   <li>the {@link OnException} on the method with the most specific matching type</li>
  *   <li>the global {@link ExceptionDetailStrategy}, if one is registered and has a rule for it</li>
  *   <li>{@link LoggableMethod#logException()}</li>
  *   <li>the default (reason with message and causes, exception fields, stack trace)</li>
@@ -105,15 +106,21 @@ public final class ExceptionDetailResolver {
 		return LogUtils.exception2Message(t, false);
 	}
 
+	/** the rule with the most specific matching type, whatever order the rules are declared in */
 	private static OnException findOnException(Method method, Throwable t) {
+		OnException best = null;
+		int bestDistance = Integer.MAX_VALUE;
+
 		for (OnException rule : AnnotationUtils.getRepeatableAnnotations(method, OnException.class)) {
 			for (Class<? extends Throwable> type : rule.type()) {
-				if (type.isInstance(t)) {
-					return rule;
+				int distance = ExceptionTypes.distance(t.getClass(), type);
+				if (distance >= 0 && distance < bestDistance) {    // strictly closer: for equal rules the first declared is kept
+					best = rule;
+					bestDistance = distance;
 				}
 			}
 		}
-		return null;
+		return best;
 	}
 
 	private static Set<ExceptionDetail> toSet(ExceptionDetail[] details) {

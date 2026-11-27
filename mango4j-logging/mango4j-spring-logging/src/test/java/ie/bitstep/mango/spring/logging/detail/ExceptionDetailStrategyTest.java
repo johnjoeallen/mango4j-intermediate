@@ -56,6 +56,46 @@ class ExceptionDetailStrategyTest {
 	}
 
 	@Test
+	void rules_mostSpecificTypeWins_whateverOrderTheyAreDeclaredIn() {
+		ExceptionDetailRules broadFirst = ExceptionDetailRules.builder()
+			.on(RuntimeException.class, MESSAGE)
+			.on(IllegalStateException.class, CLASS_NAME)
+			.build();
+		ExceptionDetailRules specificFirst = ExceptionDetailRules.builder()
+			.on(IllegalStateException.class, CLASS_NAME)
+			.on(RuntimeException.class, MESSAGE)
+			.build();
+
+		for (ExceptionDetailRules rules : new ExceptionDetailRules[]{broadFirst, specificFirst}) {
+			assertThat(rules.getDetail(new IllegalStateException(), null).orElseThrow()).containsExactly(CLASS_NAME);   // exact class
+			assertThat(rules.getDetail(new IllegalArgumentException(), null).orElseThrow()).containsExactly(MESSAGE);   // nearest superclass
+		}
+	}
+
+	@Test
+	void rules_nearestSuperclassWins() {
+		ExceptionDetailRules rules = ExceptionDetailRules.builder()
+			.on(Throwable.class, STACK_TRACE)
+			.on(Exception.class, CAUSE)
+			.on(RuntimeException.class, MESSAGE)
+			.build();
+
+		assertThat(rules.getDetail(new IllegalStateException(), null).orElseThrow()).containsExactly(MESSAGE);
+		assertThat(rules.getDetail(new IOException(), null).orElseThrow()).containsExactly(CAUSE);
+		assertThat(rules.getDetail(new Error(), null).orElseThrow()).containsExactly(STACK_TRACE);
+	}
+
+	@Test
+	void rules_sameTypeDeclaredTwice_firstDeclaredIsKept() {
+		ExceptionDetailRules rules = ExceptionDetailRules.builder()
+			.on(IOException.class, MESSAGE)
+			.on(IOException.class, CLASS_NAME)
+			.build();
+
+		assertThat(rules.getDetail(new IOException(), null).orElseThrow()).containsExactly(MESSAGE);
+	}
+
+	@Test
 	void rules_noMatch_isEmpty() {
 		assertThat(rules.getDetail(new Exception(), null)).isEqualTo(Optional.empty());
 	}

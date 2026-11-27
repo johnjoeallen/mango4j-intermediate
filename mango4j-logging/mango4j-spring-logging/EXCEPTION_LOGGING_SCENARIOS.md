@@ -4,7 +4,7 @@
 
 Generated from `ExceptionLoggingScenariosTest` (`mango4j-spring-logging`), which writes each scenario's captured output to `target/scenario-output/`. Each scenario runs the real aspect delegate, the real `DiagnosticContextLogger` and the real level strategy; a capturing adapter records what would be logged. Each **Setup** is the annotated method(s) the scenario runs, taken from the test fixtures (a parent `void parent()` calls `child()`; a global-rules scenario shows the `ExceptionDetailRules` bean). Timestamps and response times are fixed. `stacktrace` is an object (`exception`, `message`, `frames`, and with CAUSE a nested `cause` of the same shape); frames are shortened to the first one per exception here.
 
-**56 scenarios — 56 passed, 0 failed.**
+**60 scenarios — 60 passed, 0 failed.**
 
 Two behaviours worth knowing, both visible below:
 
@@ -44,9 +44,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -57,10 +54,7 @@ log:
           "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
           "method": "singleMethod_default_logsMessageCauseAndStackTrace",
           "file": "ExceptionLoggingScenariosTest.java",
-          "line": 425
-        },
-        {
-          "…": "10 more frames"
+          "line": 442
         }
       ]
     }
@@ -172,9 +166,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ]
   },
@@ -212,9 +203,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ]
   },
@@ -253,9 +241,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ]
   },
@@ -294,9 +279,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -307,10 +289,7 @@ log:
           "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
           "method": "singleMethod_messageCauseAndStackTrace_causeNodeHasMessageAndOwnTrace",
           "file": "ExceptionLoggingScenariosTest.java",
-          "line": 489
-        },
-        {
-          "…": "10 more frames"
+          "line": 506
         }
       ]
     }
@@ -349,9 +328,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -361,10 +337,7 @@ log:
           "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
           "method": "singleMethod_causeAndStackTrace_causeNodeHasClassNamesOnly",
           "file": "ExceptionLoggingScenariosTest.java",
-          "line": 501
-        },
-        {
-          "…": "10 more frames"
+          "line": 518
         }
       ]
     }
@@ -404,9 +377,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ]
   },
@@ -446,9 +416,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -459,10 +426,7 @@ log:
           "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
           "method": "cause_reasonAndCause_causeIsNestedInTheStackTraceWithItsOwnReason",
           "file": "ExceptionLoggingScenariosTest.java",
-          "line": 520
-        },
-        {
-          "…": "10 more frames"
+          "line": 537
         }
       ]
     }
@@ -530,9 +494,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -543,10 +504,7 @@ log:
           "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
           "method": "cause_chainOfThreeExceptions_nestedOneInsideTheOther",
           "file": "ExceptionLoggingScenariosTest.java",
-          "line": 539
-        },
-        {
-          "…": "10 more frames"
+          "line": 556
         }
       ],
       "cause": {
@@ -557,10 +515,7 @@ log:
             "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
             "method": "cause_chainOfThreeExceptions_nestedOneInsideTheOther",
             "file": "ExceptionLoggingScenariosTest.java",
-            "line": 539
-          },
-          {
-            "…": "10 more frames"
+            "line": 556
           }
         ]
       }
@@ -602,9 +557,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -614,10 +566,7 @@ log:
           "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
           "method": "cause_causeWithoutMessage_reasonIsClassName",
           "file": "ExceptionLoggingScenariosTest.java",
-          "line": 551
-        },
-        {
-          "…": "10 more frames"
+          "line": 568
         }
       ]
     }
@@ -658,9 +607,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ]
   },
@@ -700,9 +646,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -713,10 +656,7 @@ log:
           "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
           "method": "cause_defaultDetail_causeNodeHasItsOwnStackTrace",
           "file": "ExceptionLoggingScenariosTest.java",
-          "line": 566
-        },
-        {
-          "…": "10 more frames"
+          "line": 583
         }
       ]
     }
@@ -755,9 +695,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -767,10 +704,7 @@ log:
           "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
           "method": "cause_deepChainWithStackTraceOnly_eachCauseIsNestedInItsParentsTrace",
           "file": "ExceptionLoggingScenariosTest.java",
-          "line": 575
-        },
-        {
-          "…": "10 more frames"
+          "line": 592
         }
       ],
       "cause": {
@@ -780,10 +714,7 @@ log:
             "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
             "method": "cause_deepChainWithStackTraceOnly_eachCauseIsNestedInItsParentsTrace",
             "file": "ExceptionLoggingScenariosTest.java",
-            "line": 575
-          },
-          {
-            "…": "10 more frames"
+            "line": 592
           }
         ]
       }
@@ -825,9 +756,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -838,10 +766,7 @@ log:
           "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
           "method": "cause_depthLimit_onlyFiveNestedLevels",
           "file": "ExceptionLoggingScenariosTest.java",
-          "line": 589
-        },
-        {
-          "…": "10 more frames"
+          "line": 606
         }
       ],
       "cause": {
@@ -852,10 +777,7 @@ log:
             "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
             "method": "cause_depthLimit_onlyFiveNestedLevels",
             "file": "ExceptionLoggingScenariosTest.java",
-            "line": 589
-          },
-          {
-            "…": "10 more frames"
+            "line": 606
           }
         ],
         "cause": {
@@ -866,10 +788,7 @@ log:
               "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
               "method": "cause_depthLimit_onlyFiveNestedLevels",
               "file": "ExceptionLoggingScenariosTest.java",
-              "line": 589
-            },
-            {
-              "…": "10 more frames"
+              "line": 606
             }
           ],
           "cause": {
@@ -880,10 +799,7 @@ log:
                 "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
                 "method": "cause_depthLimit_onlyFiveNestedLevels",
                 "file": "ExceptionLoggingScenariosTest.java",
-                "line": 589
-              },
-              {
-                "…": "10 more frames"
+                "line": 606
               }
             ],
             "cause": {
@@ -894,10 +810,7 @@ log:
                   "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
                   "method": "cause_depthLimit_onlyFiveNestedLevels",
                   "file": "ExceptionLoggingScenariosTest.java",
-                  "line": 589
-                },
-                {
-                  "…": "10 more frames"
+                  "line": 606
                 }
               ]
             }
@@ -950,9 +863,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -963,10 +873,7 @@ log:
           "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
           "method": "declinedBecauseLocked",
           "file": "ExceptionLoggingScenariosTest.java",
-          "line": 608
-        },
-        {
-          "…": "10 more frames"
+          "line": 625
         }
       ],
       "cause": {
@@ -977,10 +884,7 @@ log:
             "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
             "method": "declinedBecauseLocked",
             "file": "ExceptionLoggingScenariosTest.java",
-            "line": 608
-          },
-          {
-            "…": "10 more frames"
+            "line": 625
           }
         ]
       }
@@ -1057,9 +961,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -1070,10 +971,7 @@ log:
           "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
           "method": "singleMethod_messageAndCause_causeIsNestedInTheStackTrace",
           "file": "ExceptionLoggingScenariosTest.java",
-          "line": 638
-        },
-        {
-          "…": "10 more frames"
+          "line": 655
         }
       ]
     }
@@ -1335,7 +1233,7 @@ log:
 }
 ```
 
-## 31. `onException_repeated_firstMatchingRuleWins_broadRuleFirst` — ✅
+## 31. `onException_repeated_mostSpecificRuleWins_broadRuleDeclaredFirst` — ✅
 
 **Setup:**
 
@@ -1348,23 +1246,23 @@ void call() {
 }
 ```
 
-**Expected:** Rules are checked in declaration order: the broad `RuntimeException` rule comes first, so only the class name is logged.
+**Expected:** The most specific rule wins, not the first one declared: the broad `RuntimeException` rule is written first, but the `IllegalStateException` rule is the closer match, so the message `boom-MSG` is logged.
 
 **Log output:**
 
 ```
 level:   ERROR
-message: 'java.lang.IllegalStateException'
+message: 'boom-MSG'
 log:
 {
   "ts": "2018-06-14T18:13:20Z",
   "method": "OnExceptionBroadRuleFirst.call",
-  "reason": "java.lang.IllegalStateException",
+  "reason": "boom-MSG",
   "responsetime": 0
 }
 ```
 
-## 32. `onException_repeated_firstMatchingRuleWins_specificRuleFirst` — ✅
+## 32. `onException_repeated_mostSpecificRuleWins_specificRuleDeclaredFirst` — ✅
 
 **Setup:**
 
@@ -1377,7 +1275,7 @@ void call() {
 }
 ```
 
-**Expected:** The specific `IllegalStateException` rule comes first, so the message `boom-MSG` is logged.
+**Expected:** The same rules written the other way round give the same result: the `IllegalStateException` rule wins, message `boom-MSG`.
 
 **Log output:**
 
@@ -1393,7 +1291,128 @@ log:
 }
 ```
 
-## 33. `onException_ruleForASuperclass_matchesSubclasses` — ✅
+## 33. `onException_repeated_theBroaderRuleStillAppliesToOtherSubclasses` — ✅
+
+**Setup:**
+
+```java
+@LoggableMethod
+@OnException(type = RuntimeException.class, detail = {REASON, CLASS_NAME})
+@OnException(type = IllegalStateException.class, detail = {REASON, MESSAGE})
+void call() {
+    throw new IllegalArgumentException("boom-MSG");
+}
+```
+
+**Expected:** For an `IllegalArgumentException` only the `RuntimeException` rule matches, so the broader rule still applies to the other subclasses: class name only.
+
+**Log output:**
+
+```
+level:   ERROR
+message: 'java.lang.IllegalArgumentException'
+log:
+{
+  "ts": "2018-06-14T18:13:20Z",
+  "method": "OnExceptionBroadRuleFirst.call",
+  "reason": "java.lang.IllegalArgumentException",
+  "responsetime": 0
+}
+```
+
+## 34. `onException_nearestSuperclassRuleWins_amongSeveralRegardlessOfOrder` — ✅
+
+**Setup:**
+
+```java
+@LoggableMethod(logException = {})
+@OnException(type = Exception.class, detail = {REASON, MESSAGE, STACK_TRACE})
+@OnException(type = Throwable.class, detail = {REASON, CLASS_NAME})
+@OnException(type = RuntimeException.class, detail = {REASON, MESSAGE})
+void call() {
+    throw new PaymentException("card declined");
+}
+```
+
+**Expected:** Rules for `Exception`, `Throwable` and `RuntimeException`, written in that order: `PaymentException` extends `RuntimeException`, so the nearest superclass rule applies (`reason` is the message, no stack trace), not the `Exception` rule that is written first.
+
+**Log output:**
+
+```
+level:   ERROR
+message: 'card declined'
+log:
+{
+  "ts": "2018-06-14T18:13:20Z",
+  "method": "OnExceptionNearestSuperclass.call",
+  "reason": "card declined",
+  "responsetime": 0
+}
+```
+
+## 35. `onException_exactClassRuleBeatsAnyRuleForASuperclass` — ✅
+
+**Setup:**
+
+```java
+@LoggableMethod(logException = {})
+@OnException(type = RuntimeException.class, detail = {REASON, CLASS_NAME})
+@OnException(type = PaymentException.class, detail = {REASON, MESSAGE})
+void call() {
+    throw new PaymentException("card declined");
+}
+```
+
+**Expected:** A rule for the exact class `PaymentException` beats the rule for `RuntimeException`: the message `card declined` is logged, not the class name.
+
+**Log output:**
+
+```
+level:   ERROR
+message: 'card declined'
+log:
+{
+  "ts": "2018-06-14T18:13:20Z",
+  "method": "OnExceptionExactClass.call",
+  "reason": "card declined",
+  "responsetime": 0
+}
+```
+
+## 36. `precedence_globalRules_mostSpecificTypeWins_whateverOrder` — ✅
+
+**Setup:**
+
+```java
+// ExceptionDetailStrategy bean (global rules)
+ExceptionDetailRules.builder()
+    .on(RuntimeException.class, REASON, CLASS_NAME)
+    .on(IllegalStateException.class, REASON, MESSAGE)
+    .build();
+
+@LoggableMethod
+void call() {
+    throw new IllegalStateException("boom-MSG");
+}
+```
+
+**Expected:** Global rules also use the most specific match: `IllegalStateException` is declared after `RuntimeException`, but it wins, so the message `boom-MSG` is logged.
+
+**Log output:**
+
+```
+level:   ERROR
+message: 'boom-MSG'
+log:
+{
+  "ts": "2018-06-14T18:13:20Z",
+  "method": "DefaultDetail.call",
+  "reason": "boom-MSG",
+  "responsetime": 0
+}
+```
+
+## 37. `onException_ruleForASuperclass_matchesSubclasses` — ✅
 
 **Setup:**
 
@@ -1421,7 +1440,7 @@ log:
 }
 ```
 
-## 34. `onException_fullDetail_reasonCauseNodeAndStackTraces` — ✅
+## 38. `onException_fullDetail_reasonCauseNodeAndStackTraces` — ✅
 
 **Setup:**
 
@@ -1454,9 +1473,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ],
     "cause": {
@@ -1467,10 +1483,7 @@ log:
           "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
           "method": "onException_fullDetail_reasonCauseNodeAndStackTraces",
           "file": "ExceptionLoggingScenariosTest.java",
-          "line": 750
-        },
-        {
-          "…": "10 more frames"
+          "line": 801
         }
       ]
     }
@@ -1479,7 +1492,7 @@ log:
 }
 ```
 
-## 35. `onException_exceptionDetail_logsMaskedLoggableClassFields` — ✅
+## 39. `onException_exceptionDetail_logsMaskedLoggableClassFields` — ✅
 
 **Setup:**
 
@@ -1513,7 +1526,7 @@ log:
 }
 ```
 
-## 36. `onException_differentRulesPerType_ioExceptionGetsClassNameOnly` — ✅
+## 40. `onException_differentRulesPerType_ioExceptionGetsClassNameOnly` — ✅
 
 **Setup:**
 
@@ -1542,7 +1555,7 @@ log:
 }
 ```
 
-## 37. `onException_differentRulesPerType_paymentExceptionGetsMessageAndStackTrace` — ✅
+## 41. `onException_differentRulesPerType_paymentExceptionGetsMessageAndStackTrace` — ✅
 
 **Setup:**
 
@@ -1576,9 +1589,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ]
   },
@@ -1586,7 +1596,7 @@ log:
 }
 ```
 
-## 38. `onException_overridesAnEmptyLogException_forTheMatchingType` — ✅
+## 42. `onException_overridesAnEmptyLogException_forTheMatchingType` — ✅
 
 **Setup:**
 
@@ -1614,7 +1624,7 @@ log:
 }
 ```
 
-## 39. `onException_nonMatchingTypeFallsBackToAnEmptyLogException_nothingLogged` — ✅
+## 43. `onException_nonMatchingTypeFallsBackToAnEmptyLogException_nothingLogged` — ✅
 
 **Setup:**
 
@@ -1634,7 +1644,7 @@ void call() {
 (nothing logged)
 ```
 
-## 40. `onException_classNameAndMessage_classNameThenMessage` — ✅
+## 44. `onException_classNameAndMessage_classNameThenMessage` — ✅
 
 **Setup:**
 
@@ -1662,7 +1672,7 @@ log:
 }
 ```
 
-## 41. `onException_parentOptsInWithEmptyDetail_onlyTheChildShowsTheException` — ✅
+## 45. `onException_parentOptsInWithEmptyDetail_onlyTheChildShowsTheException` — ✅
 
 **Setup:**
 
@@ -1701,7 +1711,7 @@ log:
 }
 ```
 
-## 42. `onException_parentOptsInWithDifferentDetail_eachItemUsesItsOwnDetail` — ✅
+## 46. `onException_parentOptsInWithDifferentDetail_eachItemUsesItsOwnDetail` — ✅
 
 **Setup:**
 
@@ -1741,7 +1751,7 @@ log:
 }
 ```
 
-## 43. `onException_parentRuleForAnotherType_doesNotOptIn_childExceptionStaysOnTheChild` — ✅
+## 47. `onException_parentRuleForAnotherType_doesNotOptIn_childExceptionStaysOnTheChild` — ✅
 
 **Setup:**
 
@@ -1780,7 +1790,7 @@ log:
 }
 ```
 
-## 44. `parentPropagatesChildException_loggedOnceAtChild` — ✅
+## 48. `parentPropagatesChildException_loggedOnceAtChild` — ✅
 
 **Setup:**
 
@@ -1818,7 +1828,7 @@ log:
 }
 ```
 
-## 45. `parentWithMatchingOnException_exceptionNodeOnBothItemsButMessageOnlyOnce` — ✅
+## 49. `parentWithMatchingOnException_exceptionNodeOnBothItemsButMessageOnlyOnce` — ✅
 
 **Setup:**
 
@@ -1858,7 +1868,7 @@ log:
 }
 ```
 
-## 46. `parentWrapsChildException_wrapperLoggedByParentAndChildKeepsOriginal` — ✅
+## 50. `parentWrapsChildException_wrapperLoggedByParentAndChildKeepsOriginal` — ✅
 
 **Setup:**
 
@@ -1901,7 +1911,7 @@ log:
 }
 ```
 
-## 47. `parentThrowsUnrelatedExceptionWithoutCause_childDetailsStillLogged` — ✅
+## 51. `parentThrowsUnrelatedExceptionWithoutCause_childDetailsStillLogged` — ✅
 
 **Setup:**
 
@@ -1945,9 +1955,6 @@ log:
             "method": "doLoggableMethod",
             "file": "AspectLoggerDelegate.java",
             "line": 228
-          },
-          {
-            "…": "10 more frames"
           }
         ]
       },
@@ -1959,7 +1966,7 @@ log:
 }
 ```
 
-## 48. `childWithEmptyDetailParentThrowsUnrelatedException_onlyParentExceptionLogged` — ✅
+## 52. `childWithEmptyDetailParentThrowsUnrelatedException_onlyParentExceptionLogged` — ✅
 
 **Setup:**
 
@@ -2001,7 +2008,7 @@ log:
 }
 ```
 
-## 49. `exceptionPropagatesThroughTwoParents_loggedOnce` — ✅
+## 53. `exceptionPropagatesThroughTwoParents_loggedOnce` — ✅
 
 **Setup:**
 
@@ -2050,7 +2057,7 @@ log:
 }
 ```
 
-## 50. `childWithEmptyDetailPropagatesThroughPlainParent_nothingLoggedAtAll` — ✅
+## 54. `childWithEmptyDetailPropagatesThroughPlainParent_nothingLoggedAtAll` — ✅
 
 **Setup:**
 
@@ -2074,7 +2081,7 @@ void child() {
 (nothing logged)
 ```
 
-## 51. `childWithEmptyDetailWrappedByParent_wrapperIsLogged` — ✅
+## 55. `childWithEmptyDetailWrappedByParent_wrapperIsLogged` — ✅
 
 **Setup:**
 
@@ -2116,7 +2123,7 @@ log:
 }
 ```
 
-## 52. `globalRuleDoesNotMakeParentRerecordChildException` — ✅
+## 56. `globalRuleDoesNotMakeParentRerecordChildException` — ✅
 
 **Setup:**
 
@@ -2159,7 +2166,7 @@ log:
 }
 ```
 
-## 53. `loggableClassException_default_reasonTextAndExceptionFieldsLoggedSeparately` — ✅
+## 57. `loggableClassException_default_reasonTextAndExceptionFieldsLoggedSeparately` — ✅
 
 **Setup:**
 
@@ -2195,9 +2202,6 @@ log:
         "method": "doLoggableMethod",
         "file": "AspectLoggerDelegate.java",
         "line": 228
-      },
-      {
-        "…": "10 more frames"
       }
     ]
   },
@@ -2205,7 +2209,7 @@ log:
 }
 ```
 
-## 54. `loggableClassException_exceptionOnly_fieldsWithoutReasonText` — ✅
+## 58. `loggableClassException_exceptionOnly_fieldsWithoutReasonText` — ✅
 
 **Setup:**
 
@@ -2235,7 +2239,7 @@ log:
 }
 ```
 
-## 55. `loggableClassException_reasonOnly_textWithoutFields` — ✅
+## 59. `loggableClassException_reasonOnly_textWithoutFields` — ✅
 
 **Setup:**
 
@@ -2262,7 +2266,7 @@ log:
 }
 ```
 
-## 56. `loggableClassException_classNameOnly_fieldsAreNotLogged` — ✅
+## 60. `loggableClassException_classNameOnly_fieldsAreNotLogged` — ✅
 
 **Setup:**
 
@@ -2291,4 +2295,4 @@ log:
 
 ---
 
-Other unit tests for the same functionality (assert on mocks or contexts, no log output): `DiagnosticContextExceptionDedupeTest` (20 tests, all pass), `AspectExceptionDedupeTest` (5 tests, all pass), `ExceptionDetailResolverTest` (14 tests, all pass), `ExceptionDetailStrategyTest` (8 tests, all pass), `DiagnosticContextLoggerExceptionDetailTest` (8 tests, all pass), `DiagnosticContextItemExceptionDetailTest` (26 tests, all pass).
+Other unit tests for the same functionality (assert on mocks or contexts, no log output): `DiagnosticContextExceptionDedupeTest` (20 tests, all pass), `AspectExceptionDedupeTest` (5 tests, all pass), `ExceptionDetailResolverTest` (16 tests, all pass), `ExceptionDetailStrategyTest` (11 tests, all pass), `DiagnosticContextLoggerExceptionDetailTest` (8 tests, all pass), `DiagnosticContextItemExceptionDetailTest` (26 tests, all pass).

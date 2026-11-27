@@ -11,8 +11,9 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Ordered exception-type rules; the first rule whose type matches (isInstance) wins.
- * Exceptions matching no rule defer to the method's {@code logException}.
+ * Exception-type rules; the rule with the most specific matching type wins (the exact class, else the nearest
+ * superclass), whatever order the rules were declared in. Exceptions matching no rule defer to the method's
+ * {@code logException}.
  *
  * <pre>
  * ExceptionDetailRules.builder()
@@ -39,12 +40,17 @@ public final class ExceptionDetailRules implements ExceptionDetailStrategy {
 
 	@Override
 	public Optional<Set<ExceptionDetail>> getDetail(Throwable t, MethodInfo methodInfo) {
+		Rule best = null;
+		int bestDistance = Integer.MAX_VALUE;
+
 		for (Rule rule : rules) {
-			if (rule.type().isInstance(t)) {
-				return Optional.of(rule.detail());
+			int distance = ExceptionTypes.distance(t.getClass(), rule.type());
+			if (distance >= 0 && distance < bestDistance) {    // strictly closer: for equal rules the first declared is kept
+				best = rule;
+				bestDistance = distance;
 			}
 		}
-		return Optional.empty();
+		return best == null ? Optional.empty() : Optional.of(best.detail());
 	}
 
 	public static final class Builder {

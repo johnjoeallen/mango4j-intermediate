@@ -183,6 +183,23 @@ class ExceptionLoggingScenariosTest {
 		}
 	}
 
+	public static class OnExceptionNearestSuperclass {
+		@LoggableMethod(logException = {})
+		@OnException(type = Exception.class, detail = {REASON, MESSAGE, STACK_TRACE})
+		@OnException(type = Throwable.class, detail = {REASON, CLASS_NAME})
+		@OnException(type = RuntimeException.class, detail = {REASON, MESSAGE})
+		public void call() {
+		}
+	}
+
+	public static class OnExceptionExactClass {
+		@LoggableMethod(logException = {})
+		@OnException(type = RuntimeException.class, detail = {REASON, CLASS_NAME})
+		@OnException(type = PaymentException.class, detail = {REASON, MESSAGE})
+		public void call() {
+		}
+	}
+
 	public static class OnExceptionSpecificRuleFirst {
 		@LoggableMethod
 		@OnException(type = IllegalStateException.class, detail = {REASON, MESSAGE})
@@ -724,16 +741,50 @@ class ExceptionLoggingScenariosTest {
 	}
 
 	@Test
-	void onException_repeated_firstMatchingRuleWins_broadRuleFirst() throws Throwable {
+	void onException_repeated_mostSpecificRuleWins_broadRuleDeclaredFirst() throws Throwable {
 		run(new IllegalStateException("boom-MSG"), Hop.of(new OnExceptionBroadRuleFirst()));
 
-		assertThat(logged.get(0).message()).isEqualTo("java.lang.IllegalStateException");
+		assertThat(logged.get(0).message()).isEqualTo("boom-MSG");    // the IllegalStateException rule, although it is declared second
+	}
+
+	@Test
+	void onException_repeated_mostSpecificRuleWins_specificRuleDeclaredFirst() throws Throwable {
+		run(new IllegalStateException("boom-MSG"), Hop.of(new OnExceptionSpecificRuleFirst()));
+
+		assertThat(logged.get(0).message()).isEqualTo("boom-MSG");    // the same result as when the rules are declared the other way round
+	}
+
+	@Test
+	void onException_repeated_theBroaderRuleStillAppliesToOtherSubclasses() throws Throwable {
+		run(new IllegalArgumentException("boom-MSG"), Hop.of(new OnExceptionBroadRuleFirst()));
+
+		assertThat(logged.get(0).message()).isEqualTo("java.lang.IllegalArgumentException");    // only the RuntimeException rule matches
 		assertThat(only()).doesNotContain("boom-MSG");
 	}
 
 	@Test
-	void onException_repeated_firstMatchingRuleWins_specificRuleFirst() throws Throwable {
-		run(new IllegalStateException("boom-MSG"), Hop.of(new OnExceptionSpecificRuleFirst()));
+	void onException_nearestSuperclassRuleWins_amongSeveralRegardlessOfOrder() throws Throwable {
+		run(new PaymentException("card declined"), Hop.of(new OnExceptionNearestSuperclass()));
+
+		assertThat(logged.get(0).message()).isEqualTo("card declined");
+		assertThat(logMap()).containsEntry("reason", "card declined").doesNotContainKey("stacktrace");   // RuntimeException's rule, not Exception's
+	}
+
+	@Test
+	void onException_exactClassRuleBeatsAnyRuleForASuperclass() throws Throwable {
+		run(new PaymentException("card declined"), Hop.of(new OnExceptionExactClass()));
+
+		assertThat(logged.get(0).message()).isEqualTo("card declined");    // not the RuntimeException rule's class name
+	}
+
+	@Test
+	void precedence_globalRules_mostSpecificTypeWins_whateverOrder() throws Throwable {
+		ExceptionDetailResolver.setStrategy(ExceptionDetailRules.builder()
+			.on(RuntimeException.class, REASON, CLASS_NAME)
+			.on(IllegalStateException.class, REASON, MESSAGE)
+			.build());
+
+		run(new IllegalStateException("boom-MSG"), Hop.of(new DefaultDetail()));
 
 		assertThat(logged.get(0).message()).isEqualTo("boom-MSG");
 	}

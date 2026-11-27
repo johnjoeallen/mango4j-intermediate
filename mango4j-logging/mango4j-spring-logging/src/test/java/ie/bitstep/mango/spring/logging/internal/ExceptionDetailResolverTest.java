@@ -41,6 +41,24 @@ class ExceptionDetailResolverTest {
 		@OnException(type = IllegalStateException.class, detail = {})
 		public void rules() {
 		}
+
+		@LoggableMethod
+		@OnException(type = RuntimeException.class, detail = {CLASS_NAME})
+		@OnException(type = IllegalStateException.class, detail = {MESSAGE})
+		public void broadRuleDeclaredFirst() {
+		}
+
+		@LoggableMethod
+		@OnException(type = IllegalStateException.class, detail = {MESSAGE})
+		@OnException(type = RuntimeException.class, detail = {CLASS_NAME})
+		public void specificRuleDeclaredFirst() {
+		}
+
+		@LoggableMethod
+		@OnException(type = {Exception.class, IllegalStateException.class}, detail = {CAUSE})
+		@OnException(type = RuntimeException.class, detail = {STACK_TRACE})
+		public void typeArrayMixedWithSingleRule() {
+		}
 	}
 
 	private static MethodInfo mi(String name) throws NoSuchMethodException {
@@ -74,6 +92,23 @@ class ExceptionDetailResolverTest {
 	void resolve_onExceptionRuleWinsOverLogException() throws Exception {
 		assertThat(ExceptionDetailResolver.resolve(mi("rules"), new IOException("x"))).containsExactly(CLASS_NAME);
 		assertThat(ExceptionDetailResolver.resolve(mi("rules"), new IllegalStateException("x"))).isEmpty();
+	}
+
+	@Test
+	void resolve_onException_mostSpecificTypeWins_whateverOrderTheyAreDeclaredIn() throws Exception {
+		assertThat(ExceptionDetailResolver.resolve(mi("broadRuleDeclaredFirst"), new IllegalStateException())).containsExactly(MESSAGE);
+		assertThat(ExceptionDetailResolver.resolve(mi("specificRuleDeclaredFirst"), new IllegalStateException())).containsExactly(MESSAGE);
+		// a type the specific rule does not cover falls to the broad one, again in either order
+		assertThat(ExceptionDetailResolver.resolve(mi("broadRuleDeclaredFirst"), new IllegalArgumentException())).containsExactly(CLASS_NAME);
+		assertThat(ExceptionDetailResolver.resolve(mi("specificRuleDeclaredFirst"), new IllegalArgumentException())).containsExactly(CLASS_NAME);
+	}
+
+	@Test
+	void resolve_onException_typeArrayEntriesAreRankedIndividually() throws Exception {
+		// IllegalStateException is listed (exact) in the first rule, RuntimeException (nearest superclass) in the second
+		assertThat(ExceptionDetailResolver.resolve(mi("typeArrayMixedWithSingleRule"), new IllegalStateException())).containsExactly(CAUSE);
+		assertThat(ExceptionDetailResolver.resolve(mi("typeArrayMixedWithSingleRule"), new IllegalArgumentException())).containsExactly(STACK_TRACE);
+		assertThat(ExceptionDetailResolver.resolve(mi("typeArrayMixedWithSingleRule"), new IOException())).containsExactly(CAUSE);
 	}
 
 	@Test
