@@ -7,6 +7,7 @@ import ie.bitstep.mango.logging.internal.ToLoggable;
 
 import ie.bitstep.mango.spring.aop.MethodInfo;
 import ie.bitstep.mango.logging.LogUtils;
+import ie.bitstep.mango.logging.annotations.ExceptionDetail;
 import ie.bitstep.mango.logging.annotations.LoggableClass;
 import ie.bitstep.mango.spring.logging.config.DiagnosticLifecycleLogger;
 import org.apache.commons.lang3.StringUtils;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Diagnostic context item related to a single method.
@@ -222,15 +224,15 @@ public class DiagnosticContextItem implements ToLoggable {
 			loggable.put(KEY_CALLED, LoggerMapper.toLoggable(getChildren()));
 		}
 		if (throwable != null) {
-			LoggableClass loggableClass = throwable.getClass().getAnnotation(LoggableClass.class);
+			Set<ExceptionDetail> details = ExceptionDetailResolver.resolve(methodInfo, throwable);
 
-			if (loggableClass != null) {
-				setThrowableAsReason(loggable);
-			} else {
-				setMessageAsReason(loggable);
+			if (!details.isEmpty()) {
+				putReason(loggable, details);
+
+				if (details.contains(ExceptionDetail.STACK_TRACE)) {
+					loggable.put(KEY_STACK_TRACE, LogUtils.getStackTrace(throwable));
+				}
 			}
-
-			loggable.put(KEY_STACK_TRACE, LogUtils.getStackTrace(throwable));
 		}
 
 		loggable.putAll(getResultValues());        // already converted to loggables
@@ -238,16 +240,21 @@ public class DiagnosticContextItem implements ToLoggable {
 		return loggable;
 	}
 
+	private void putReason(Map<String, Object> loggable, Set<ExceptionDetail> details) {
+		if (details.contains(ExceptionDetail.MESSAGE) && throwable.getClass().getAnnotation(LoggableClass.class) != null) {
+			setThrowableAsReason(loggable);
+			return;
+		}
+
+		String reason = ExceptionDetailResolver.describe(throwable, details);
+		if (!StringUtils.isEmpty(reason)) {
+			loggable.put(KEY_REASON, reason);
+		}
+	}
+
 	private void setThrowableAsReason(Map<String, Object> loggable) {
 		Map<String, Object> throwableAsLoggable = new LinkedHashMap<>();
 		throwableAsLoggable.put(throwable.getClass().getName(), LoggerMapper.toLoggable(throwable));
 		loggable.put(KEY_REASON, throwableAsLoggable);
-	}
-
-	private void setMessageAsReason(Map<String, Object> loggable) {
-		String message = LogUtils.exception2Message(throwable);
-		if (!StringUtils.isEmpty(message)) {
-			loggable.put(KEY_REASON, message);
-		}
 	}
 }

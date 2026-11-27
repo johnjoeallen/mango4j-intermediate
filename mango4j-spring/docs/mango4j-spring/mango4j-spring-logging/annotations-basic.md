@@ -44,9 +44,19 @@ public void funMethod() {
 
   If set to true will log the response from the method
 
-* logException default true
+* logException, default `{ MESSAGE, CAUSE, STACK_TRACE }`
 
-  If set to false will supress the logging of exceptions
+  What to log when this method throws. An array of `ExceptionDetail`:
+
+  | Value | Logs |
+  |---|---|
+  | `CLASS_NAME` | the exception class name |
+  | `MESSAGE` | the (sanitised) message |
+  | `CAUSE` | the cause chain, appended to the message (on its own it behaves as message + causes) |
+  | `STACK_TRACE` | the stack trace |
+
+  `{}` logs nothing about the exception (use it when the caller or a global handler logs it).
+  Combinations of class name and message render as `ClassName: message`.
 
 * forceErrorOnException default false
 
@@ -73,7 +83,8 @@ public Order placeOrder(OrderRequest r) {
 * `@OnException` is repeatable; rules are checked in declaration order and the first match wins.
 * A wrapper exception (a new instance with the child's exception as its cause) is a different exception
   and is always recorded by the parent.
-* `detail` is accepted but not yet used to shape the output.
+* `detail` takes the same values as `logException` and overrides it for the exceptions the rule matches.
+  Exceptions not matched by any `@OnException` use the method's `logException`.
 
 <!--name=admonition;type=info;title=NOTE;body=
 Behaviour change: exceptions are now recorded on the method that threw them rather than on the root

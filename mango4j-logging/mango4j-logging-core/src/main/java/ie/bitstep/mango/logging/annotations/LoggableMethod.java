@@ -18,7 +18,11 @@ public @interface LoggableMethod {
 
 	boolean logReturn() default false;
 
-	boolean logException() default true;
+	/**
+	 * What to log about an exception thrown by this method, unless a matching {@link OnException} says otherwise.
+	 * An empty array logs nothing about the exception.
+	 */
+	ExceptionDetail[] logException() default {ExceptionDetail.MESSAGE, ExceptionDetail.CAUSE, ExceptionDetail.STACK_TRACE};
 
 	boolean forceErrorOnException() default false;
 
