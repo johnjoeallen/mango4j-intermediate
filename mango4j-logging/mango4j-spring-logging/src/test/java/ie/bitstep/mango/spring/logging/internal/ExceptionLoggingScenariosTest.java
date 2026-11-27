@@ -107,7 +107,7 @@ class ExceptionLoggingScenariosTest {
 	}
 
 	public static class ReasonCauseStackTrace {
-		@LoggableMethod(logException = {REASON, CAUSE, STACK_TRACE})
+		@LoggableMethod(logException = {REASON, MESSAGE, CAUSE, STACK_TRACE})
 		public void call() {
 		}
 	}
@@ -386,24 +386,31 @@ class ExceptionLoggingScenariosTest {
 		return (Map<String, Object>) map.get(key);
 	}
 
-	/** the string lines of the stack trace (the exception line and its frames), without the nested cause object */
-	private static List<String> trace(Map<String, Object> map) {
-		return rawTrace(map).stream().filter(String.class::isInstance).map(String.class::cast).toList();
+	/** the stack trace object of an item, or a cause object (which is itself a stack trace object) */
+	@SuppressWarnings("unchecked")
+	private static Map<String, Object> traceObject(Map<String, Object> node) {
+		Object trace = node.get("stacktrace");
+		return (Map<String, Object>) (trace != null ? trace : node);
 	}
 
+	/** the stack trace as classic lines: the exception line (class, then ": message" if any), then "at ..." frames */
 	@SuppressWarnings("unchecked")
-	private static List<Object> rawTrace(Map<String, Object> map) {
-		return (List<Object>) map.get("stacktrace");
-	}
-
-	/** the cause nested as the last element of the stack trace array, or null */
-	@SuppressWarnings("unchecked")
-	private static Map<String, Object> causeOf(Map<String, Object> map) {
-		List<Object> trace = map == null ? null : rawTrace(map);
-		if (trace == null || trace.isEmpty() || !(trace.get(trace.size() - 1) instanceof Map<?, ?> last)) {
-			return null;
+	private static List<String> trace(Map<String, Object> node) {
+		Map<String, Object> trace = traceObject(node);
+		List<String> lines = new java.util.ArrayList<>();
+		Object message = trace.get("message");
+		lines.add(message == null ? (String) trace.get("exception") : trace.get("exception") + ": " + message);
+		for (Map<String, Object> frame : (List<Map<String, Object>>) trace.get("frames")) {
+			lines.add("at " + frame.get("class") + "." + frame.get("method") + "(" + frame.get("file")
+				+ (frame.get("line") != null ? ":" + frame.get("line") : "") + ")");
 		}
-		return (Map<String, Object>) last.get("cause");
+		return lines;
+	}
+
+	/** the cause nested in the stack trace object, or null */
+	@SuppressWarnings("unchecked")
+	private static Map<String, Object> causeOf(Map<String, Object> node) {
+		return (Map<String, Object>) traceObject(node).get("cause");
 	}
 
 	private String only() {
@@ -421,7 +428,7 @@ class ExceptionLoggingScenariosTest {
 		assertThat(logged.get(0).message()).isEqualTo("boom");
 		Map<String, Object> log = logMap();
 		assertThat(log).containsEntry("reason", "boom").containsKey("stacktrace");
-		assertThat(causeOf(log)).containsEntry("reason", "inner").containsKey("stacktrace");
+		assertThat(causeOf(log)).containsEntry("message", "inner").containsKey("frames");
 	}
 
 	@Test
@@ -453,7 +460,7 @@ class ExceptionLoggingScenariosTest {
 		run(new IllegalStateException("boom"), Hop.of(new StackTraceOnly()));
 
 		assertThat(logged.get(0).message()).isEmpty();
-		assertThat(only()).contains("\"stacktrace\"").doesNotContain("\"reason\"");
+		assertThat(logMap()).containsKey("stacktrace").doesNotContainKey("reason");    // no top-level reason text
 	}
 
 	@Test
@@ -470,9 +477,11 @@ class ExceptionLoggingScenariosTest {
 	void singleMethod_messageAndStackTrace_messageShownInTraceNotAsReason() throws Throwable {
 		run(new IllegalStateException("boom-MSG", new IllegalArgumentException("inner-MSG")), Hop.of(new MessageAndStackTrace()));
 
-		assertThat(only()).doesNotContain("\"reason\"")
-			.contains("java.lang.IllegalStateException: boom-MSG")
-			.doesNotContain("Caused by").doesNotContain("inner-MSG");
+		Map<String, Object> log = logMap();
+		assertThat(log).doesNotContainKey("reason");
+		assertThat(traceObject(log)).containsEntry("exception", "java.lang.IllegalStateException")
+			.containsEntry("message", "boom-MSG").doesNotContainKey("cause");
+		assertThat(only()).doesNotContain("inner-MSG");
 	}
 
 	@Test
@@ -482,7 +491,7 @@ class ExceptionLoggingScenariosTest {
 		Map<String, Object> log = logMap();
 		assertThat(log).doesNotContainKey("reason");
 		assertThat(trace(log).get(0)).isEqualTo("java.lang.IllegalStateException: boom-MSG");
-		assertThat(causeOf(log)).doesNotContainKey("reason");
+		assertThat(causeOf(log)).containsEntry("exception", "java.lang.IllegalArgumentException").containsEntry("message", "inner-MSG");
 		assertThat(trace(causeOf(log)).get(0)).isEqualTo("java.lang.IllegalArgumentException: inner-MSG");
 		assertThat(only()).doesNotContain("Caused by");
 	}
@@ -513,7 +522,7 @@ class ExceptionLoggingScenariosTest {
 		assertThat(logged.get(0).message()).isEqualTo("boom");
 		Map<String, Object> log = logMap();
 		assertThat(log).containsEntry("reason", "boom").doesNotContainKey("cause");
-		assertThat(causeOf(log)).containsEntry("reason", "inner").containsKey("stacktrace");
+		assertThat(causeOf(log)).containsEntry("message", "inner").containsKey("frames");
 	}
 
 	@Test
@@ -532,8 +541,8 @@ class ExceptionLoggingScenariosTest {
 
 		Map<String, Object> log = logMap();
 		assertThat(log).containsEntry("reason", "outer");
-		assertThat(causeOf(log)).containsEntry("reason", "middle");
-		assertThat(causeOf(causeOf(log))).containsEntry("reason", "inner");
+		assertThat(causeOf(log)).containsEntry("message", "middle");
+		assertThat(causeOf(causeOf(log))).containsEntry("message", "inner");
 		assertThat(causeOf(causeOf(causeOf(log)))).isNull();
 	}
 
@@ -541,7 +550,7 @@ class ExceptionLoggingScenariosTest {
 	void cause_causeWithoutMessage_reasonIsClassName() throws Throwable {
 		run(new IllegalStateException("boom", new IllegalArgumentException()), Hop.of(new MessageAndCause()));
 
-		assertThat(causeOf(logMap())).containsEntry("reason", "java.lang.IllegalArgumentException");
+		assertThat(causeOf(logMap())).containsEntry("exception", "java.lang.IllegalArgumentException").doesNotContainKey("message");
 	}
 
 	@Test
@@ -589,7 +598,7 @@ class ExceptionLoggingScenariosTest {
 			depth++;
 		}
 		assertThat(depth).isEqualTo(5);
-		assertThat(node).containsEntry("reason", "level-5");
+		assertThat(node).containsEntry("message", "level-5");
 		assertThat(only()).doesNotContain("level-6").doesNotContain("level-7");
 	}
 
@@ -610,8 +619,9 @@ class ExceptionLoggingScenariosTest {
 		assertThat(node(log, "exception")).containsEntry("class", PaymentDeclinedException.class.getName())
 			.containsEntry("cardNumber", "4111********1111").containsEntry("orderId", "1042").containsEntry("declineCode", "05");
 		Map<String, Object> cause = causeOf(log);
-		assertThat(cause).containsEntry("reason", "Account locked after 5 failed attempts").doesNotContainKey("exception");
-		assertThat(causeOf(cause)).containsEntry("reason", "Connection reset").doesNotContainKey("exception");
+		assertThat(cause).containsEntry("message", "Account locked after 5 failed attempts")
+			.containsEntry("exception", AccountLockedException.class.getName());    // just the class name: no @LoggableField values
+		assertThat(causeOf(cause)).containsEntry("message", "Connection reset").containsEntry("exception", "java.io.IOException");
 		assertThat(only()).doesNotContain("4111111111111111").doesNotContain("ACC-77889900").doesNotContain("failedAttempts");
 	}
 
@@ -630,7 +640,7 @@ class ExceptionLoggingScenariosTest {
 		assertThat(logged.get(0).message()).isEqualTo("boom");
 		Map<String, Object> log = logMap();
 		assertThat(log).containsEntry("reason", "boom").doesNotContainKey("cause");
-		assertThat(causeOf(log)).containsEntry("reason", "inner");
+		assertThat(causeOf(log)).containsEntry("message", "inner");
 		assertThat(trace(causeOf(log)).get(0)).isEqualTo("java.lang.IllegalArgumentException: inner");
 	}
 
@@ -742,7 +752,7 @@ class ExceptionLoggingScenariosTest {
 		Map<String, Object> log = logMap();
 		assertThat(log).containsEntry("reason", "disk full");
 		assertThat(trace(log).get(0)).isEqualTo("java.io.IOException: disk full");
-		assertThat(causeOf(log)).containsEntry("reason", "device lost");
+		assertThat(causeOf(log)).containsEntry("message", "device lost");
 		assertThat(trace(causeOf(log)).get(0)).isEqualTo("java.lang.IllegalStateException: device lost");
 	}
 
@@ -863,10 +873,11 @@ class ExceptionLoggingScenariosTest {
 
 		assertThat(logged).hasSize(1);
 		assertThat(logged.get(0).message()).isEqualTo("card declined; order failed");
-		assertThat(only())
-			.contains("\"called\":[{\"method\":\"MessageAndCause.call\",\"reason\":\"card declined\"")    // child's detail kept
-			.contains("\"reason\":\"order failed\"");                                                          // parent's own
-		assertThat(countOccurrences(only(), "\"reason\"")).isEqualTo(2);
+		Map<String, Object> log = logMap();
+		assertThat(log).containsEntry("reason", "order failed");                  // the parent's own exception
+		@SuppressWarnings("unchecked")
+		List<Map<String, Object>> called = (List<Map<String, Object>>) log.get("called");
+		assertThat(called.get(0)).containsEntry("reason", "card declined");        // the child's exception is still logged under the child
 	}
 
 	@Test

@@ -10,7 +10,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -154,6 +156,92 @@ public class LogUtils {
 		}
 
 		return className + ": " + message;
+	}
+
+	/**
+	 * The stack trace as a structure, for structured log backends (e.g. Splunk, Elasticsearch): every key has one
+	 * type at every depth, so it can be indexed and read with typed readers.
+	 * <pre>
+	 * { "exception": "java.lang.IllegalStateException",   // the exception class
+	 *   "message": "boom",                                // only with withMessage, and only if it has one
+	 *   "frames": [ { "class": "com.acme.Svc", "method": "call", "file": "Svc.java", "line": 42 }, ... ],
+	 *   "cause": { same shape, recursively } }            // up to maxCauses levels deep
+	 * </pre>
+	 * Built from {@link #getStackTrace(Throwable, boolean, boolean)} (so the stack trace sanitisers still apply) for
+	 * each exception on its own; a cause lists all of its frames. The message never comes from a derived
+	 * {@code new RuntimeException(cause)} message, and a sanitiser cannot add one when withMessage is false.
+	 *
+	 * @param withMessage include each exception's message
+	 * @param maxCauses   how many nested {@code cause} levels to include (0 for none)
+	 */
+	public static Map<String, Object> getStackTraceNode(Throwable throwable, boolean withMessage, int maxCauses) {
+		return stackTraceNode(throwable, withMessage, maxCauses, Collections.newSetFromMap(new IdentityHashMap<>()));
+	}
+
+	private static Map<String, Object> stackTraceNode(Throwable t, boolean withMessage, int causesLeft, Set<Throwable> seen) {
+		seen.add(t);
+		List<String> lines = getStackTrace(t, withMessage, false);
+
+		Map<String, Object> node = new LinkedHashMap<>();
+		String header = lines.isEmpty() ? t.getClass().getName() : lines.get(0);
+		int separator = header.indexOf(": ");
+		String reason = separator < 0 ? header : header.substring(0, separator);
+		node.put("exception", reason.endsWith(":") ? reason.substring(0, reason.length() - 1) : reason);
+
+		if (withMessage && separator >= 0 && separator + 2 < header.length()) {
+			node.put("message", header.substring(separator + 2));
+		}
+
+		List<Map<String, Object>> frames = new ArrayList<>();
+		for (String line : lines.subList(Math.min(1, lines.size()), lines.size())) {
+			Map<String, Object> frame = line.startsWith("at ") ? parseFrame(line.substring(3)) : null;
+			if (frame != null) {
+				frames.add(frame);
+			}
+		}
+		node.put("frames", frames);
+
+		Throwable cause = t.getCause();
+		if (causesLeft > 0 && cause != null && !seen.contains(cause)) {
+			node.put("cause", stackTraceNode(cause, withMessage, causesLeft - 1, seen));
+		}
+
+		return node;
+	}
+
+	/**
+	 * Parses {@code [module/]pkg.Class.method(File.java:42)} into class, method, file and line.
+	 * File and line are left out when unknown ({@code Native Method}, {@code Unknown Source}).
+	 */
+	private static Map<String, Object> parseFrame(String frame) {
+		int open = frame.indexOf('(');
+		int close = frame.lastIndexOf(')');
+		if (open <= 0 || close < open) {
+			return null;
+		}
+
+		String qualified = frame.substring(0, open);
+		qualified = qualified.substring(qualified.lastIndexOf('/') + 1);    // drop a module / class loader prefix
+		int dot = qualified.lastIndexOf('.');
+
+		Map<String, Object> result = new LinkedHashMap<>();
+		result.put("class", dot < 0 ? "" : qualified.substring(0, dot));
+		result.put("method", qualified.substring(dot + 1));
+
+		String location = frame.substring(open + 1, close);
+		int colon = location.lastIndexOf(':');
+		String file = colon < 0 ? location : location.substring(0, colon);
+		if (file.endsWith(".java") || file.contains(".")) {
+			result.put("file", file);
+			if (colon >= 0) {
+				try {
+					result.put("line", Integer.parseInt(location.substring(colon + 1)));
+				} catch (NumberFormatException e) {
+					// no usable line number
+				}
+			}
+		}
+		return result;
 	}
 
 	/**

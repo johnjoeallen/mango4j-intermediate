@@ -72,7 +72,7 @@ class DiagnosticContextItemTest {
 		String actual = objectMapper.writeValueAsString(item.toLoggable());
 
 		// then
-		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTrace(ex));
+		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTraceNode(ex, true, 5));
 		assertThat(actual).isEqualTo(
 			"{\"method\":\"DiagnosticContextItemTest.testContextItemExceptionHasNoMessage\"," +
 				"\"stacktrace\":" + jsonStackTrace + "}"
@@ -92,7 +92,7 @@ class DiagnosticContextItemTest {
 		String actual = objectMapper.writeValueAsString(item.toLoggable());
 
 		// then
-		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTrace(ex));
+		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTraceNode(ex, true, 5));
 		assertThat(actual).isEqualTo(
 			"{\"method\":\"DiagnosticContextItemTest.testContextItemExceptionIsLoggableClass\",\"reason\":\"ie.bitstep.mango.spring.logging.internal.DiagnosticContextItemTest$TestLoggableException\",\"exception\":{\"class\":\"ie.bitstep.mango.spring.logging.internal.DiagnosticContextItemTest$TestLoggableException\",\"name\":\"BadThingHappened\"}," +
 				"\"stacktrace\":" + jsonStackTrace + "}"
@@ -139,7 +139,7 @@ class DiagnosticContextItemTest {
 		Map<String, Object> actual = item.toLoggable();
 
 		// then
-		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTrace(ex));
+		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTraceNode(ex, true, 5));
 		assertThat(objectMapper.writeValueAsString(actual)).isEqualTo(
 			"{\"method\":\"DiagnosticContextItemTest.toLoggable_whenFull\"," +
 				"\"params\":{\"p1\":\"v1\",\"p2\":\"v2\"}," +

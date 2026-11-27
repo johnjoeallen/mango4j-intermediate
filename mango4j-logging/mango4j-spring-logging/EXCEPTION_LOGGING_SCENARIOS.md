@@ -1,6 +1,6 @@
 # Exception logging — end-to-end scenarios
 
-Generated from `ExceptionLoggingScenariosTest` (`mango4j-spring-logging`), which writes each scenario's captured output to `target/scenario-output/`. Each scenario runs the real aspect delegate, the real `DiagnosticContextLogger` and the real level strategy; a capturing adapter records what would be logged. Each **Setup** is the annotated method(s) the scenario runs, taken from the test fixtures (a parent `void parent()` calls `child()`; a global-rules scenario shows the `ExceptionDetailRules` bean). Timestamps and response times are fixed. Stack traces are shortened to the first frame of each exception; a cause is nested as the last element of the parent `stacktrace` array.
+Generated from `ExceptionLoggingScenariosTest` (`mango4j-spring-logging`), which writes each scenario's captured output to `target/scenario-output/`. Each scenario runs the real aspect delegate, the real `DiagnosticContextLogger` and the real level strategy; a capturing adapter records what would be logged. Each **Setup** is the annotated method(s) the scenario runs, taken from the test fixtures (a parent `void parent()` calls `child()`; a global-rules scenario shows the `ExceptionDetailRules` bean). Timestamps and response times are fixed. `stacktrace` is an object (`exception`, `message`, `frames`, and with CAUSE a nested `cause` of the same shape); frames are shortened to the first one per exception here.
 
 **56 scenarios — 56 passed, 0 failed.**
 
@@ -21,7 +21,7 @@ void call() {
 }
 ```
 
-**Expected:** One ERROR entry, message `boom`. `reason` is `boom` (no cause suffix). The cause is the last element of the `stacktrace` array, as `{"cause": {"reason": "inner", "stacktrace": [...]}}`. There is no top-level `cause`.
+**Expected:** One ERROR entry, message `boom`. `reason` is `boom`; `stacktrace` is an object (`exception`, `message`, `frames`) with the cause nested inside it as `stacktrace.cause`, which has the same shape. There is no top-level `cause`.
 
 **Log output:**
 
@@ -33,19 +33,30 @@ log:
   "ts": "2018-06-14T18:13:20Z",
   "method": "DefaultDetail.call",
   "reason": "boom",
-  "stacktrace": [
-    "java.lang.IllegalStateException: boom",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)",
-    {
-      "cause": {
-        "reason": "inner",
-        "stacktrace": [
-          "java.lang.IllegalArgumentException: inner",
-          "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.singleMethod_default_logsMessageCauseAndStackTrace(ExceptionLoggingScenariosTest.java:418)"
-        ]
+  "stacktrace": {
+    "exception": "java.lang.IllegalStateException",
+    "message": "boom",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
       }
+    ],
+    "cause": {
+      "exception": "java.lang.IllegalArgumentException",
+      "message": "inner",
+      "frames": [
+        {
+          "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+          "method": "singleMethod_default_logsMessageCauseAndStackTrace",
+          "file": "ExceptionLoggingScenariosTest.java",
+          "line": 425
+        }
+      ]
     }
-  ],
+  },
   "responsetime": 0
 }
 ```
@@ -134,7 +145,7 @@ void call() {
 }
 ```
 
-**Expected:** Stack trace present with class names only (no MESSAGE selected); no `reason`; empty log message.
+**Expected:** `stacktrace` has the exception class and its `frames` but no `message` (MESSAGE is not selected); no top-level `reason`; empty log message.
 
 **Log output:**
 
@@ -145,10 +156,17 @@ log:
 {
   "ts": "2018-06-14T18:13:20Z",
   "method": "StackTraceOnly.call",
-  "stacktrace": [
-    "java.lang.IllegalStateException",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)"
-  ],
+  "stacktrace": {
+    "exception": "java.lang.IllegalStateException",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
+      }
+    ]
+  },
   "responsetime": 0
 }
 ```
@@ -164,7 +182,7 @@ void call() {
 }
 ```
 
-**Expected:** Stack trace shows the exception class and frames only: no messages and no nested cause (CAUSE is not selected).
+**Expected:** `stacktrace` has the exception class and frames only: no `message` and no nested `cause` (CAUSE is not selected). Neither message appears anywhere.
 
 **Log output:**
 
@@ -175,10 +193,17 @@ log:
 {
   "ts": "2018-06-14T18:13:20Z",
   "method": "StackTraceOnly.call",
-  "stacktrace": [
-    "java.lang.IllegalStateException",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)"
-  ],
+  "stacktrace": {
+    "exception": "java.lang.IllegalStateException",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
+      }
+    ]
+  },
   "responsetime": 0
 }
 ```
@@ -194,7 +219,7 @@ void call() {
 }
 ```
 
-**Expected:** No `reason` text. The trace shows the exception message (`IllegalStateException: boom-MSG`) and no nested cause: CAUSE is not selected.
+**Expected:** No top-level `reason`. `stacktrace.message` is `boom-MSG`, and there is no nested cause: CAUSE is not selected.
 
 **Log output:**
 
@@ -205,10 +230,18 @@ log:
 {
   "ts": "2018-06-14T18:13:20Z",
   "method": "MessageAndStackTrace.call",
-  "stacktrace": [
-    "java.lang.IllegalStateException: boom-MSG",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)"
-  ],
+  "stacktrace": {
+    "exception": "java.lang.IllegalStateException",
+    "message": "boom-MSG",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
+      }
+    ]
+  },
   "responsetime": 0
 }
 ```
@@ -224,7 +257,7 @@ void call() {
 }
 ```
 
-**Expected:** No `reason` anywhere (REASON not selected). The top `stacktrace` has the message on its first line, and ends with the nested cause object whose own `stacktrace` also has the message. No `Caused by:` lines.
+**Expected:** No top-level `reason` (REASON is not selected). `stacktrace` has `exception`, `message` and `frames`, with the cause nested as `stacktrace.cause` (its own `exception`, `message` and `frames`).
 
 **Log output:**
 
@@ -235,18 +268,30 @@ log:
 {
   "ts": "2018-06-14T18:13:20Z",
   "method": "MessageCauseAndStackTrace.call",
-  "stacktrace": [
-    "java.lang.IllegalStateException: boom-MSG",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)",
-    {
-      "cause": {
-        "stacktrace": [
-          "java.lang.IllegalArgumentException: inner-MSG",
-          "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.singleMethod_messageCauseAndStackTrace_causeNodeHasMessageAndOwnTrace(ExceptionLoggingScenariosTest.java:480)"
-        ]
+  "stacktrace": {
+    "exception": "java.lang.IllegalStateException",
+    "message": "boom-MSG",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
       }
+    ],
+    "cause": {
+      "exception": "java.lang.IllegalArgumentException",
+      "message": "inner-MSG",
+      "frames": [
+        {
+          "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+          "method": "singleMethod_messageCauseAndStackTrace_causeNodeHasMessageAndOwnTrace",
+          "file": "ExceptionLoggingScenariosTest.java",
+          "line": 489
+        }
+      ]
     }
-  ],
+  },
   "responsetime": 0
 }
 ```
@@ -262,7 +307,7 @@ void call() {
 }
 ```
 
-**Expected:** Both stack traces (the top one and the one inside the nested cause) show class names only; no message appears anywhere.
+**Expected:** The top `stacktrace` and the nested `cause` both have `exception` and `frames` but no `message`; no message appears anywhere.
 
 **Log output:**
 
@@ -273,18 +318,28 @@ log:
 {
   "ts": "2018-06-14T18:13:20Z",
   "method": "CauseAndStackTrace.call",
-  "stacktrace": [
-    "java.lang.IllegalStateException",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)",
-    {
-      "cause": {
-        "stacktrace": [
-          "java.lang.IllegalArgumentException",
-          "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.singleMethod_causeAndStackTrace_causeNodeHasClassNamesOnly(ExceptionLoggingScenariosTest.java:492)"
-        ]
+  "stacktrace": {
+    "exception": "java.lang.IllegalStateException",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
       }
+    ],
+    "cause": {
+      "exception": "java.lang.IllegalArgumentException",
+      "frames": [
+        {
+          "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+          "method": "singleMethod_causeAndStackTrace_causeNodeHasClassNamesOnly",
+          "file": "ExceptionLoggingScenariosTest.java",
+          "line": 501
+        }
+      ]
     }
-  ],
+  },
   "responsetime": 0
 }
 ```
@@ -300,7 +355,7 @@ void call() {
 }
 ```
 
-**Expected:** `reason` is the class name and the stack trace is the exception class and frames only: no messages and no nested cause (CAUSE is not selected).
+**Expected:** `reason` is the class name; `stacktrace` has the class and frames, with no `message` and no nested cause (CAUSE is not selected).
 
 **Log output:**
 
@@ -312,10 +367,17 @@ log:
   "ts": "2018-06-14T18:13:20Z",
   "method": "ClassNameAndStackTrace.call",
   "reason": "java.lang.IllegalStateException",
-  "stacktrace": [
-    "java.lang.IllegalStateException",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)"
-  ],
+  "stacktrace": {
+    "exception": "java.lang.IllegalStateException",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
+      }
+    ]
+  },
   "responsetime": 0
 }
 ```
@@ -325,13 +387,13 @@ log:
 **Setup:**
 
 ```java
-@LoggableMethod(logException = {REASON, CAUSE, STACK_TRACE})
+@LoggableMethod(logException = {REASON, MESSAGE, CAUSE, STACK_TRACE})
 void call() {
     throw new IllegalStateException("boom", new IllegalArgumentException("inner"));
 }
 ```
 
-**Expected:** `reason` is `boom`. The cause is nested at the end of `stacktrace` with its own `reason` (`inner`) and `stacktrace`; there is no top-level `cause`.
+**Expected:** `reason` is `boom`. The cause is nested inside the stack trace (`stacktrace.cause`) with its `exception`, `message` (`inner`) and `frames`; there is no top-level `cause`.
 
 **Log output:**
 
@@ -343,19 +405,30 @@ log:
   "ts": "2018-06-14T18:13:20Z",
   "method": "ReasonCauseStackTrace.call",
   "reason": "boom",
-  "stacktrace": [
-    "java.lang.IllegalStateException",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)",
-    {
-      "cause": {
-        "reason": "inner",
-        "stacktrace": [
-          "java.lang.IllegalArgumentException",
-          "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.cause_reasonAndCause_causeIsNestedInTheStackTraceWithItsOwnReason(ExceptionLoggingScenariosTest.java:511)"
-        ]
+  "stacktrace": {
+    "exception": "java.lang.IllegalStateException",
+    "message": "boom",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
       }
+    ],
+    "cause": {
+      "exception": "java.lang.IllegalArgumentException",
+      "message": "inner",
+      "frames": [
+        {
+          "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+          "method": "cause_reasonAndCause_causeIsNestedInTheStackTraceWithItsOwnReason",
+          "file": "ExceptionLoggingScenariosTest.java",
+          "line": 520
+        }
+      ]
     }
-  ],
+  },
   "responsetime": 0
 }
 ```
@@ -398,7 +471,7 @@ void call() {
 }
 ```
 
-**Expected:** Each cause is nested at the end of its parent's `stacktrace`: `reason` outer, then (in the trace) middle, then (in that trace) inner.
+**Expected:** `reason` is outer; `stacktrace.cause.message` is middle; `stacktrace.cause.cause.message` is inner. Each cause is nested inside its parent's trace.
 
 **Log output:**
 
@@ -410,28 +483,42 @@ log:
   "ts": "2018-06-14T18:13:20Z",
   "method": "MessageAndCause.call",
   "reason": "outer",
-  "stacktrace": [
-    "java.lang.IllegalStateException: outer",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)",
-    {
+  "stacktrace": {
+    "exception": "java.lang.IllegalStateException",
+    "message": "outer",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
+      }
+    ],
+    "cause": {
+      "exception": "java.lang.IllegalArgumentException",
+      "message": "middle",
+      "frames": [
+        {
+          "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+          "method": "cause_chainOfThreeExceptions_nestedOneInsideTheOther",
+          "file": "ExceptionLoggingScenariosTest.java",
+          "line": 539
+        }
+      ],
       "cause": {
-        "reason": "middle",
-        "stacktrace": [
-          "java.lang.IllegalArgumentException: middle",
-          "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.cause_chainOfThreeExceptions_nestedOneInsideTheOther(ExceptionLoggingScenariosTest.java:530)",
+        "exception": "java.io.IOException",
+        "message": "inner",
+        "frames": [
           {
-            "cause": {
-              "reason": "inner",
-              "stacktrace": [
-                "java.io.IOException: inner",
-                "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.cause_chainOfThreeExceptions_nestedOneInsideTheOther(ExceptionLoggingScenariosTest.java:530)"
-              ]
-            }
+            "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+            "method": "cause_chainOfThreeExceptions_nestedOneInsideTheOther",
+            "file": "ExceptionLoggingScenariosTest.java",
+            "line": 539
           }
         ]
       }
     }
-  ],
+  },
   "responsetime": 0
 }
 ```
@@ -447,7 +534,7 @@ void call() {
 }
 ```
 
-**Expected:** The nested cause's `reason` is its class name, `java.lang.IllegalArgumentException`.
+**Expected:** The nested cause has `exception` `java.lang.IllegalArgumentException` and no `message`.
 
 **Log output:**
 
@@ -459,19 +546,29 @@ log:
   "ts": "2018-06-14T18:13:20Z",
   "method": "MessageAndCause.call",
   "reason": "boom",
-  "stacktrace": [
-    "java.lang.IllegalStateException: boom",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)",
-    {
-      "cause": {
-        "reason": "java.lang.IllegalArgumentException",
-        "stacktrace": [
-          "java.lang.IllegalArgumentException",
-          "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.cause_causeWithoutMessage_reasonIsClassName(ExceptionLoggingScenariosTest.java:542)"
-        ]
+  "stacktrace": {
+    "exception": "java.lang.IllegalStateException",
+    "message": "boom",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
       }
+    ],
+    "cause": {
+      "exception": "java.lang.IllegalArgumentException",
+      "frames": [
+        {
+          "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+          "method": "cause_causeWithoutMessage_reasonIsClassName",
+          "file": "ExceptionLoggingScenariosTest.java",
+          "line": 551
+        }
+      ]
     }
-  ],
+  },
   "responsetime": 0
 }
 ```
@@ -487,7 +584,7 @@ void call() {
 }
 ```
 
-**Expected:** `reason` is just `boom`; the `stacktrace` has only strings (no nested cause object).
+**Expected:** `reason` is just `boom`; `stacktrace` has no `cause`.
 
 **Log output:**
 
@@ -499,10 +596,18 @@ log:
   "ts": "2018-06-14T18:13:20Z",
   "method": "DefaultDetail.call",
   "reason": "boom",
-  "stacktrace": [
-    "java.lang.IllegalStateException: boom",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)"
-  ],
+  "stacktrace": {
+    "exception": "java.lang.IllegalStateException",
+    "message": "boom",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
+      }
+    ]
+  },
   "responsetime": 0
 }
 ```
@@ -518,7 +623,7 @@ void call() {
 }
 ```
 
-**Expected:** The top `stacktrace` has no `Caused by:` line; it ends with the cause object, whose own `stacktrace` starts `java.lang.IllegalArgumentException: inner`.
+**Expected:** The top `stacktrace` has no `Caused by` entries; `stacktrace.cause` has its own `exception`, `message` (`inner`) and `frames`.
 
 **Log output:**
 
@@ -530,19 +635,30 @@ log:
   "ts": "2018-06-14T18:13:20Z",
   "method": "DefaultDetail.call",
   "reason": "boom",
-  "stacktrace": [
-    "java.lang.IllegalStateException: boom",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)",
-    {
-      "cause": {
-        "reason": "inner",
-        "stacktrace": [
-          "java.lang.IllegalArgumentException: inner",
-          "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.cause_defaultDetail_causeNodeHasItsOwnStackTrace(ExceptionLoggingScenariosTest.java:557)"
-        ]
+  "stacktrace": {
+    "exception": "java.lang.IllegalStateException",
+    "message": "boom",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
       }
+    ],
+    "cause": {
+      "exception": "java.lang.IllegalArgumentException",
+      "message": "inner",
+      "frames": [
+        {
+          "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+          "method": "cause_defaultDetail_causeNodeHasItsOwnStackTrace",
+          "file": "ExceptionLoggingScenariosTest.java",
+          "line": 566
+        }
+      ]
     }
-  ],
+  },
   "responsetime": 0
 }
 ```
@@ -558,7 +674,7 @@ void call() {
 }
 ```
 
-**Expected:** Each level is a cause object at the end of its parent's `stacktrace`, with class-name-only traces; none of the messages appear.
+**Expected:** Each level is a `cause` object inside its parent, with `exception` and `frames` but no `message`; none of the messages appear.
 
 **Log output:**
 
@@ -569,26 +685,39 @@ log:
 {
   "ts": "2018-06-14T18:13:20Z",
   "method": "CauseAndStackTrace.call",
-  "stacktrace": [
-    "java.lang.IllegalStateException",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)",
-    {
+  "stacktrace": {
+    "exception": "java.lang.IllegalStateException",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
+      }
+    ],
+    "cause": {
+      "exception": "java.lang.IllegalArgumentException",
+      "frames": [
+        {
+          "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+          "method": "cause_deepChainWithStackTraceOnly_eachCauseIsNestedInItsParentsTrace",
+          "file": "ExceptionLoggingScenariosTest.java",
+          "line": 575
+        }
+      ],
       "cause": {
-        "stacktrace": [
-          "java.lang.IllegalArgumentException",
-          "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.cause_deepChainWithStackTraceOnly_eachCauseIsNestedInItsParentsTrace(ExceptionLoggingScenariosTest.java:566)",
+        "exception": "java.io.IOException",
+        "frames": [
           {
-            "cause": {
-              "stacktrace": [
-                "java.io.IOException",
-                "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.cause_deepChainWithStackTraceOnly_eachCauseIsNestedInItsParentsTrace(ExceptionLoggingScenariosTest.java:566)"
-              ]
-            }
+            "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+            "method": "cause_deepChainWithStackTraceOnly_eachCauseIsNestedInItsParentsTrace",
+            "file": "ExceptionLoggingScenariosTest.java",
+            "line": 575
           }
         ]
       }
     }
-  ],
+  },
   "responsetime": 0
 }
 ```
@@ -598,7 +727,7 @@ log:
 **Setup:**
 
 ```java
-@LoggableMethod(logException = {REASON, CAUSE, STACK_TRACE})
+@LoggableMethod(logException = {REASON, MESSAGE, CAUSE, STACK_TRACE})
 void call() {
     throw new RuntimeException("level-0", new RuntimeException("level-1", /* levels 2-6 */ new RuntimeException("level-7")));
 }
@@ -616,55 +745,78 @@ log:
   "ts": "2018-06-14T18:13:20Z",
   "method": "ReasonCauseStackTrace.call",
   "reason": "level-0",
-  "stacktrace": [
-    "java.lang.RuntimeException",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)",
-    {
+  "stacktrace": {
+    "exception": "java.lang.RuntimeException",
+    "message": "level-0",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
+      }
+    ],
+    "cause": {
+      "exception": "java.lang.RuntimeException",
+      "message": "level-1",
+      "frames": [
+        {
+          "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+          "method": "cause_depthLimit_onlyFiveNestedLevels",
+          "file": "ExceptionLoggingScenariosTest.java",
+          "line": 589
+        }
+      ],
       "cause": {
-        "reason": "level-1",
-        "stacktrace": [
-          "java.lang.RuntimeException",
-          "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.cause_depthLimit_onlyFiveNestedLevels(ExceptionLoggingScenariosTest.java:580)",
+        "exception": "java.lang.RuntimeException",
+        "message": "level-2",
+        "frames": [
           {
+            "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+            "method": "cause_depthLimit_onlyFiveNestedLevels",
+            "file": "ExceptionLoggingScenariosTest.java",
+            "line": 589
+          }
+        ],
+        "cause": {
+          "exception": "java.lang.RuntimeException",
+          "message": "level-3",
+          "frames": [
+            {
+              "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+              "method": "cause_depthLimit_onlyFiveNestedLevels",
+              "file": "ExceptionLoggingScenariosTest.java",
+              "line": 589
+            }
+          ],
+          "cause": {
+            "exception": "java.lang.RuntimeException",
+            "message": "level-4",
+            "frames": [
+              {
+                "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+                "method": "cause_depthLimit_onlyFiveNestedLevels",
+                "file": "ExceptionLoggingScenariosTest.java",
+                "line": 589
+              }
+            ],
             "cause": {
-              "reason": "level-2",
-              "stacktrace": [
-                "java.lang.RuntimeException",
-                "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.cause_depthLimit_onlyFiveNestedLevels(ExceptionLoggingScenariosTest.java:580)",
+              "exception": "java.lang.RuntimeException",
+              "message": "level-5",
+              "frames": [
                 {
-                  "cause": {
-                    "reason": "level-3",
-                    "stacktrace": [
-                      "java.lang.RuntimeException",
-                      "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.cause_depthLimit_onlyFiveNestedLevels(ExceptionLoggingScenariosTest.java:580)",
-                      {
-                        "cause": {
-                          "reason": "level-4",
-                          "stacktrace": [
-                            "java.lang.RuntimeException",
-                            "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.cause_depthLimit_onlyFiveNestedLevels(ExceptionLoggingScenariosTest.java:580)",
-                            {
-                              "cause": {
-                                "reason": "level-5",
-                                "stacktrace": [
-                                  "java.lang.RuntimeException",
-                                  "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.cause_depthLimit_onlyFiveNestedLevels(ExceptionLoggingScenariosTest.java:580)"
-                                ]
-                              }
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
+                  "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+                  "method": "cause_depthLimit_onlyFiveNestedLevels",
+                  "file": "ExceptionLoggingScenariosTest.java",
+                  "line": 589
                 }
               ]
             }
           }
-        ]
+        }
       }
     }
-  ],
+  },
   "responsetime": 0
 }
 ```
@@ -682,7 +834,7 @@ void call() {
 }
 ```
 
-**Expected:** `exception` is only for the thrown `PaymentDeclinedException` (`class` + fields, card masked as `4111********1111`). The causes (nested in `stacktrace`) have `reason` and their own `stacktrace` but no `exception` node. The raw card number, the account number and `failedAttempts` appear nowhere.
+**Expected:** `exception` (the fields object) is only for the thrown `PaymentDeclinedException` (`class` + fields, card masked as `4111********1111`). The causes, nested in `stacktrace.cause`, have `exception` (just the class name), `message` and `frames` but no `@LoggableField` values. The raw card number, the account number and `failedAttempts` appear nowhere.
 
 **Log output:**
 
@@ -700,28 +852,42 @@ log:
     "cardNumber": "4111********1111",
     "declineCode": "05"
   },
-  "stacktrace": [
-    "ie.bitstep.mango.spring.logging.test.data.PaymentDeclinedException: Payment declined for order 1042",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)",
-    {
+  "stacktrace": {
+    "exception": "ie.bitstep.mango.spring.logging.test.data.PaymentDeclinedException",
+    "message": "Payment declined for order 1042",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
+      }
+    ],
+    "cause": {
+      "exception": "ie.bitstep.mango.spring.logging.test.data.AccountLockedException",
+      "message": "Account locked after 5 failed attempts",
+      "frames": [
+        {
+          "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+          "method": "declinedBecauseLocked",
+          "file": "ExceptionLoggingScenariosTest.java",
+          "line": 608
+        }
+      ],
       "cause": {
-        "reason": "Account locked after 5 failed attempts",
-        "stacktrace": [
-          "ie.bitstep.mango.spring.logging.test.data.AccountLockedException: Account locked after 5 failed attempts",
-          "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.declinedBecauseLocked(ExceptionLoggingScenariosTest.java:599)",
+        "exception": "java.io.IOException",
+        "message": "Connection reset",
+        "frames": [
           {
-            "cause": {
-              "reason": "Connection reset",
-              "stacktrace": [
-                "java.io.IOException: Connection reset",
-                "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.declinedBecauseLocked(ExceptionLoggingScenariosTest.java:599)"
-              ]
-            }
+            "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+            "method": "declinedBecauseLocked",
+            "file": "ExceptionLoggingScenariosTest.java",
+            "line": 608
           }
         ]
       }
     }
-  ],
+  },
   "responsetime": 0
 }
 ```
@@ -772,7 +938,7 @@ void call() {
 }
 ```
 
-**Expected:** `reason` is `boom` (no `; Cause:` suffix); the cause is nested at the end of `stacktrace` with `reason` `inner` and its own trace.
+**Expected:** `reason` is `boom` (no `; Cause:` suffix); the cause is `stacktrace.cause` with `message` `inner` and its own frames.
 
 **Log output:**
 
@@ -784,19 +950,30 @@ log:
   "ts": "2018-06-14T18:13:20Z",
   "method": "MessageAndCause.call",
   "reason": "boom",
-  "stacktrace": [
-    "java.lang.IllegalStateException: boom",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)",
-    {
-      "cause": {
-        "reason": "inner",
-        "stacktrace": [
-          "java.lang.IllegalArgumentException: inner",
-          "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.singleMethod_messageAndCause_causeIsNestedInTheStackTrace(ExceptionLoggingScenariosTest.java:628)"
-        ]
+  "stacktrace": {
+    "exception": "java.lang.IllegalStateException",
+    "message": "boom",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
       }
+    ],
+    "cause": {
+      "exception": "java.lang.IllegalArgumentException",
+      "message": "inner",
+      "frames": [
+        {
+          "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+          "method": "singleMethod_messageAndCause_causeIsNestedInTheStackTrace",
+          "file": "ExceptionLoggingScenariosTest.java",
+          "line": 638
+        }
+      ]
     }
-  ],
+  },
   "responsetime": 0
 }
 ```
@@ -1152,7 +1329,7 @@ void call() {
 }
 ```
 
-**Expected:** `reason`, a stack trace starting with the message, and the cause nested at its end with its own `reason` and stack trace.
+**Expected:** `reason`, a `stacktrace` with the `message` and `frames`, and the cause nested inside it with its own `message` and `frames`.
 
 **Log output:**
 
@@ -1164,19 +1341,30 @@ log:
   "ts": "2018-06-14T18:13:20Z",
   "method": "OnExceptionFullDetail.call",
   "reason": "disk full",
-  "stacktrace": [
-    "java.io.IOException: disk full",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)",
-    {
-      "cause": {
-        "reason": "device lost",
-        "stacktrace": [
-          "java.lang.IllegalStateException: device lost",
-          "at ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest.onException_fullDetail_reasonCauseNodeAndStackTraces(ExceptionLoggingScenariosTest.java:740)"
-        ]
+  "stacktrace": {
+    "exception": "java.io.IOException",
+    "message": "disk full",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
       }
+    ],
+    "cause": {
+      "exception": "java.lang.IllegalStateException",
+      "message": "device lost",
+      "frames": [
+        {
+          "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest",
+          "method": "onException_fullDetail_reasonCauseNodeAndStackTraces",
+          "file": "ExceptionLoggingScenariosTest.java",
+          "line": 750
+        }
+      ]
     }
-  ],
+  },
   "responsetime": 0
 }
 ```
@@ -1257,7 +1445,7 @@ void call() {
 }
 ```
 
-**Expected:** The `PaymentException` rule applies: `reason` and a stack trace with the message.
+**Expected:** The `PaymentException` rule applies: `reason` and a `stacktrace` with the message.
 
 **Log output:**
 
@@ -1269,10 +1457,18 @@ log:
   "ts": "2018-06-14T18:13:20Z",
   "method": "OnExceptionPerType.call",
   "reason": "card declined",
-  "stacktrace": [
-    "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest$PaymentException: card declined",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)"
-  ],
+  "stacktrace": {
+    "exception": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest$PaymentException",
+    "message": "card declined",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
+      }
+    ]
+  },
   "responsetime": 0
 }
 ```
@@ -1627,10 +1823,18 @@ log:
     {
       "method": "MessageAndCause.call",
       "reason": "card declined",
-      "stacktrace": [
-        "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest$PaymentException: card declined",
-        "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)"
-      ],
+      "stacktrace": {
+        "exception": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest$PaymentException",
+        "message": "card declined",
+        "frames": [
+          {
+            "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+            "method": "doLoggableMethod",
+            "file": "AspectLoggerDelegate.java",
+            "line": 228
+          }
+        ]
+      },
       "responsetime": 0
     }
   ],
@@ -1866,10 +2070,18 @@ log:
     "class": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest$SecretException",
     "code": "X-42"
   },
-  "stacktrace": [
-    "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest$SecretException: secret failure",
-    "at ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate.doLoggableMethod(AspectLoggerDelegate.java:228)"
-  ],
+  "stacktrace": {
+    "exception": "ie.bitstep.mango.spring.logging.internal.ExceptionLoggingScenariosTest$SecretException",
+    "message": "secret failure",
+    "frames": [
+      {
+        "class": "ie.bitstep.mango.spring.logging.internal.AspectLoggerDelegate",
+        "method": "doLoggableMethod",
+        "file": "AspectLoggerDelegate.java",
+        "line": 228
+      }
+    ]
+  },
   "responsetime": 0
 }
 ```

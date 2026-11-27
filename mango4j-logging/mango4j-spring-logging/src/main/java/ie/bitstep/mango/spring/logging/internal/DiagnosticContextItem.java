@@ -16,8 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,9 +36,8 @@ public class DiagnosticContextItem implements ToLoggable {
 	public static final String KEY_REASON = "reason";
 	public static final String KEY_EXCEPTION = "exception";
 	public static final String KEY_EXCEPTION_CLASS = "class";
-	public static final String KEY_CAUSE = "cause";
 
-	/** Maximum number of nested {@code cause} levels logged below the exception itself (inside {@code stacktrace}). */
+	/** Maximum number of nested {@code cause} levels logged inside {@code stacktrace}. */
 	public static final int MAX_CAUSE_DEPTH = 5;
 	public static final String KEY_STACK_TRACE = "stacktrace";
 	public static final String KEY_RESPONSE_TIME = "responsetime";
@@ -235,9 +232,7 @@ public class DiagnosticContextItem implements ToLoggable {
 			Set<ExceptionDetail> details = ExceptionDetailResolver.resolve(methodInfo, throwable);
 
 			if (!details.isEmpty()) {
-				Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<>());
-				seen.add(throwable);
-				loggable.putAll(throwableNode(throwable, details, 0, seen));
+				loggable.putAll(throwableNode(throwable, details));
 			}
 		}
 
@@ -247,13 +242,12 @@ public class DiagnosticContextItem implements ToLoggable {
 	}
 
 	/**
-	 * What to log about one exception: {@code reason}, {@code exception} (the thrown exception only) and
-	 * {@code stacktrace}. With CAUSE (which only has an effect together with STACK_TRACE) the cause is the last
-	 * element of the stack trace array, as an object {@code {"cause": {reason?, stacktrace: [..., {"cause": ...}]}}},
-	 * at most {@link #MAX_CAUSE_DEPTH} levels deep. The stack trace holds only this exception's own header and
-	 * frames (and then its cause); its message is on the header only with MESSAGE.
+	 * What to log about the thrown exception: {@code reason}, {@code exception} and {@code stacktrace}.
+	 * The stack trace is an object ({@code reason} = class, {@code message} with MESSAGE, {@code frames}) and, with
+	 * CAUSE, a nested {@code cause} of the same shape, at most {@link #MAX_CAUSE_DEPTH} levels deep. CAUSE has no
+	 * effect without STACK_TRACE.
 	 */
-	private static Map<String, Object> throwableNode(Throwable t, Set<ExceptionDetail> details, int depth, Set<Throwable> seen) {
+	private static Map<String, Object> throwableNode(Throwable t, Set<ExceptionDetail> details) {
 		Map<String, Object> node = new LinkedHashMap<>();
 
 		String reason = ExceptionDetailResolver.describe(t, details);
@@ -261,24 +255,13 @@ public class DiagnosticContextItem implements ToLoggable {
 			node.put(KEY_REASON, reason);
 		}
 
-		if (depth == 0 && details.contains(ExceptionDetail.EXCEPTION) && t.getClass().getAnnotation(LoggableClass.class) != null) {
+		if (details.contains(ExceptionDetail.EXCEPTION) && t.getClass().getAnnotation(LoggableClass.class) != null) {
 			node.put(KEY_EXCEPTION, exceptionFields(t));
 		}
 
 		if (details.contains(ExceptionDetail.STACK_TRACE)) {
-			List<Object> trace = new ArrayList<>(LogUtils.getStackTrace(t, details.contains(ExceptionDetail.MESSAGE), false));
-
-			Throwable cause = t.getCause();
-			if (details.contains(ExceptionDetail.CAUSE) && cause != null && depth < MAX_CAUSE_DEPTH && seen.add(cause)) {
-				Map<String, Object> causeNode = throwableNode(cause, details, depth + 1, seen);
-				if (!causeNode.isEmpty()) {
-					Map<String, Object> wrapper = new LinkedHashMap<>();
-					wrapper.put(KEY_CAUSE, causeNode);
-					trace.add(wrapper);
-				}
-			}
-
-			node.put(KEY_STACK_TRACE, trace);
+			node.put(KEY_STACK_TRACE, LogUtils.getStackTraceNode(t, details.contains(ExceptionDetail.MESSAGE),
+				details.contains(ExceptionDetail.CAUSE) ? MAX_CAUSE_DEPTH : 0));
 		}
 
 		return node;

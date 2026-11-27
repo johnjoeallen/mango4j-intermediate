@@ -626,14 +626,7 @@ class DummyAspectDelegateTest {
 		}
 
 		// then
-		java.util.Map<String, Object> causeNode = new java.util.LinkedHashMap<>();
-		causeNode.put("reason", "cause6");
-		causeNode.put("stacktrace", LogUtils.getStackTrace(ex.getCause(), true, false));
-		java.util.Map<String, Object> causeElement = new java.util.LinkedHashMap<>();
-		causeElement.put("cause", causeNode);
-		List<Object> trace = new java.util.ArrayList<>(LogUtils.getStackTrace(ex, true, false));
-		trace.add(causeElement);    // the cause is the last element of the stack trace array
-		String jsonStackTrace = objectMapper.writeValueAsString(trace);
+		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTraceNode(ex, true, 5));
 		assertThat(logExitOrExceptionCaptured).startsWith(
 			"{\"ts\":\"2018-06-14T18:13:20Z\"," +
 				"\"correlationid\":\"TID55\"," +
@@ -673,14 +666,7 @@ class DummyAspectDelegateTest {
 		}
 
 		// then
-		java.util.Map<String, Object> causeNode = new java.util.LinkedHashMap<>();
-		causeNode.put("reason", "cause6");
-		causeNode.put("stacktrace", LogUtils.getStackTrace(ex.getCause(), true, false));
-		java.util.Map<String, Object> causeElement = new java.util.LinkedHashMap<>();
-		causeElement.put("cause", causeNode);
-		List<Object> trace = new java.util.ArrayList<>(LogUtils.getStackTrace(ex, true, false));
-		trace.add(causeElement);    // the cause is the last element of the stack trace array
-		String jsonStackTrace = objectMapper.writeValueAsString(trace);
+		String jsonStackTrace = objectMapper.writeValueAsString(LogUtils.getStackTraceNode(ex, true, 5));
 		assertThat(logExitOrExceptionCaptured).startsWith(
 			"{\"ts\":\"2018-06-14T18:13:20Z\"," +
 				"\"correlationid\":\"TID55\"," +
