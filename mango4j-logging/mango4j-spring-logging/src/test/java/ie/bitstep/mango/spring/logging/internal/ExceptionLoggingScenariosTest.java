@@ -148,6 +148,107 @@ class ExceptionLoggingScenariosTest {
 		}
 	}
 
+	public static class OnExceptionNone {
+		@LoggableMethod
+		@OnException(type = IllegalStateException.class, detail = {})
+		public void call() {
+		}
+	}
+
+	public static class OnExceptionTypeArray {
+		@LoggableMethod
+		@OnException(type = {IOException.class, IllegalStateException.class}, detail = {REASON, CLASS_NAME})
+		public void call() {
+		}
+	}
+
+	public static class OnExceptionCatchAll {
+		@LoggableMethod(logException = {})
+		@OnException(detail = {REASON, MESSAGE})
+		public void call() {
+		}
+	}
+
+	public static class OnExceptionBroadRuleFirst {
+		@LoggableMethod
+		@OnException(type = RuntimeException.class, detail = {REASON, CLASS_NAME})
+		@OnException(type = IllegalStateException.class, detail = {REASON, MESSAGE})
+		public void call() {
+		}
+	}
+
+	public static class OnExceptionSpecificRuleFirst {
+		@LoggableMethod
+		@OnException(type = IllegalStateException.class, detail = {REASON, MESSAGE})
+		@OnException(type = RuntimeException.class, detail = {REASON, CLASS_NAME})
+		public void call() {
+		}
+	}
+
+	public static class OnExceptionSuperclassRule {
+		@LoggableMethod(logException = {})
+		@OnException(type = RuntimeException.class, detail = {REASON, MESSAGE})
+		public void call() {
+		}
+	}
+
+	public static class OnExceptionFullDetail {
+		@LoggableMethod(logException = {})
+		@OnException(type = IOException.class, detail = {REASON, MESSAGE, CAUSE, STACK_TRACE})
+		public void call() {
+		}
+	}
+
+	public static class OnExceptionLoggableClass {
+		@LoggableMethod(logException = {})
+		@OnException(type = PaymentDeclinedException.class, detail = {REASON, EXCEPTION})
+		public void call() {
+		}
+	}
+
+	public static class OnExceptionPerType {
+		@LoggableMethod(logException = {})
+		@OnException(type = IOException.class, detail = {REASON, CLASS_NAME})
+		@OnException(type = PaymentException.class, detail = {REASON, MESSAGE, STACK_TRACE})
+		public void call() {
+		}
+	}
+
+	public static class OnExceptionOverEmptyLogException {
+		@LoggableMethod(logException = {})
+		@OnException(type = IllegalStateException.class, detail = {REASON, MESSAGE})
+		public void call() {
+		}
+	}
+
+	public static class OnExceptionClassNameAndMessage {
+		@LoggableMethod
+		@OnException(type = IllegalStateException.class, detail = {REASON, CLASS_NAME, MESSAGE})
+		public void call() {
+		}
+	}
+
+	public static class OnExceptionParentEmptyDetail {
+		@LoggableMethod
+		@OnException(type = PaymentException.class, detail = {})
+		public void call() {
+		}
+	}
+
+	public static class OnExceptionParentClassName {
+		@LoggableMethod
+		@OnException(type = PaymentException.class, detail = {REASON, CLASS_NAME})
+		public void call() {
+		}
+	}
+
+	public static class OnExceptionParentOtherType {
+		@LoggableMethod
+		@OnException(type = IOException.class, detail = {REASON, MESSAGE})
+		public void call() {
+		}
+	}
+
 	public static class OnExceptionClassNameForIo {
 		@LoggableMethod(logException = {REASON, MESSAGE})
 		@OnException(type = IOException.class, detail = {REASON, CLASS_NAME})
@@ -555,6 +656,143 @@ class ExceptionLoggingScenariosTest {
 		run(new IOException("disk"), Hop.of(new OnExceptionClassNameForIo()));
 
 		assertThat(logged.get(0).message()).isEqualTo("java.io.IOException");
+	}
+
+	// ---- @OnException settings ---------------------------------------------------------------------
+
+	@Test
+	void onException_emptyDetail_logsNothingForTheMatchingType() throws Throwable {
+		run(new IllegalStateException("boom"), Hop.of(new OnExceptionNone()));
+
+		assertThat(logged).isEmpty();
+	}
+
+	@Test
+	void onException_typeArray_ruleAppliesToEveryListedType() throws Throwable {
+		run(new IllegalStateException("boom-MSG"), Hop.of(new OnExceptionTypeArray()));
+
+		assertThat(logged.get(0).message()).isEqualTo("java.lang.IllegalStateException");
+		assertThat(only()).doesNotContain("boom-MSG").doesNotContain("stacktrace");
+	}
+
+	@Test
+	void onException_defaultType_matchesAnyException() throws Throwable {
+		run(new IOException("disk full"), Hop.of(new OnExceptionCatchAll()));
+
+		assertThat(logged.get(0).message()).isEqualTo("disk full");
+		assertThat(logMap()).containsEntry("reason", "disk full").doesNotContainKey("stacktrace");
+	}
+
+	@Test
+	void onException_repeated_firstMatchingRuleWins_broadRuleFirst() throws Throwable {
+		run(new IllegalStateException("boom-MSG"), Hop.of(new OnExceptionBroadRuleFirst()));
+
+		assertThat(logged.get(0).message()).isEqualTo("java.lang.IllegalStateException");
+		assertThat(only()).doesNotContain("boom-MSG");
+	}
+
+	@Test
+	void onException_repeated_firstMatchingRuleWins_specificRuleFirst() throws Throwable {
+		run(new IllegalStateException("boom-MSG"), Hop.of(new OnExceptionSpecificRuleFirst()));
+
+		assertThat(logged.get(0).message()).isEqualTo("boom-MSG");
+	}
+
+	@Test
+	void onException_ruleForASuperclass_matchesSubclasses() throws Throwable {
+		run(new PaymentException("card declined"), Hop.of(new OnExceptionSuperclassRule()));
+
+		assertThat(logged.get(0).message()).isEqualTo("card declined");
+	}
+
+	@Test
+	void onException_fullDetail_reasonCauseNodeAndStackTraces() throws Throwable {
+		run(new IOException("disk full", new IllegalStateException("device lost")), Hop.of(new OnExceptionFullDetail()));
+
+		Map<String, Object> log = logMap();
+		assertThat(log).containsEntry("reason", "disk full");
+		assertThat(trace(log).get(0)).isEqualTo("java.io.IOException: disk full");
+		assertThat(node(log, "cause")).containsEntry("reason", "device lost");
+		assertThat(trace(node(log, "cause")).get(0)).isEqualTo("java.lang.IllegalStateException: device lost");
+	}
+
+	@Test
+	void onException_exceptionDetail_logsMaskedLoggableClassFields() throws Throwable {
+		run(new PaymentDeclinedException("Payment declined for order 1042", "1042", "4111111111111111", "05", null),
+			Hop.of(new OnExceptionLoggableClass()));
+
+		Map<String, Object> log = logMap();
+		assertThat(log).containsEntry("reason", "Payment declined for order 1042").doesNotContainKey("stacktrace");
+		assertThat(node(log, "exception")).containsEntry("cardNumber", "4111********1111").containsEntry("orderId", "1042");
+		assertThat(only()).doesNotContain("4111111111111111");
+	}
+
+	@Test
+	void onException_differentRulesPerType_ioExceptionGetsClassNameOnly() throws Throwable {
+		run(new IOException("disk-MSG"), Hop.of(new OnExceptionPerType()));
+
+		assertThat(logged.get(0).message()).isEqualTo("java.io.IOException");
+		assertThat(only()).doesNotContain("disk-MSG").doesNotContain("stacktrace");
+	}
+
+	@Test
+	void onException_differentRulesPerType_paymentExceptionGetsMessageAndStackTrace() throws Throwable {
+		run(new PaymentException("card declined"), Hop.of(new OnExceptionPerType()));
+
+		Map<String, Object> log = logMap();
+		assertThat(log).containsEntry("reason", "card declined");
+		assertThat(trace(log).get(0)).endsWith("PaymentException: card declined");
+	}
+
+	@Test
+	void onException_overridesAnEmptyLogException_forTheMatchingType() throws Throwable {
+		run(new IllegalStateException("boom"), Hop.of(new OnExceptionOverEmptyLogException()));
+
+		assertThat(logged.get(0).message()).isEqualTo("boom");
+	}
+
+	@Test
+	void onException_nonMatchingTypeFallsBackToAnEmptyLogException_nothingLogged() throws Throwable {
+		run(new IOException("disk"), Hop.of(new OnExceptionOverEmptyLogException()));
+
+		assertThat(logged).isEmpty();
+	}
+
+	@Test
+	void onException_classNameAndMessage_classNameThenMessage() throws Throwable {
+		run(new IllegalStateException("boom"), Hop.of(new OnExceptionClassNameAndMessage()));
+
+		assertThat(logged.get(0).message()).isEqualTo("java.lang.IllegalStateException: boom");
+		assertThat(logMap()).containsEntry("reason", "java.lang.IllegalStateException: boom");
+	}
+
+	@Test
+	void onException_parentOptsInWithEmptyDetail_onlyTheChildShowsTheException() throws Throwable {
+		run(new PaymentException("card declined"), Hop.of(new OnExceptionParentEmptyDetail()), Hop.of(new MessageOnly()));
+
+		assertThat(logged).hasSize(1);
+		assertThat(logged.get(0).message()).isEqualTo("card declined");
+		assertThat(countOccurrences(only(), "\"reason\"")).isEqualTo(1);    // the child's; the parent logs nothing for it
+	}
+
+	@Test
+	void onException_parentOptsInWithDifferentDetail_eachItemUsesItsOwnDetail() throws Throwable {
+		run(new PaymentException("card declined"), Hop.of(new OnExceptionParentClassName()), Hop.of(new MessageOnly()));
+
+		Map<String, Object> log = logMap();
+		assertThat(log).containsEntry("reason", PaymentException.class.getName());    // parent: class name
+		@SuppressWarnings("unchecked")
+		List<Map<String, Object>> called = (List<Map<String, Object>>) log.get("called");
+		assertThat(called.get(0)).containsEntry("reason", "card declined");           // child: message
+		assertThat(logged.get(0).message()).isEqualTo("card declined");
+	}
+
+	@Test
+	void onException_parentRuleForAnotherType_doesNotOptIn_childExceptionStaysOnTheChild() throws Throwable {
+		run(new PaymentException("card declined"), Hop.of(new OnExceptionParentOtherType()), Hop.of(new MessageOnly()));
+
+		assertThat(countOccurrences(only(), "\"reason\"")).isEqualTo(1);
+		assertThat(logMap()).doesNotContainKey("reason");
 	}
 
 	// ---- parent / child dedupe -----------------------------------------------------------------
