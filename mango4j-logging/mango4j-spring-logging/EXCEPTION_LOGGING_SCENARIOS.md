@@ -6,13 +6,13 @@ Generated from `ExceptionLoggingScenariosTest` (`mango4j-spring-logging`), which
 
 Two behaviours worth knowing, both visible below:
 
-- A child with `logException = {}` that propagates through a plain parent leaves **no log entry at all** (the child logs nothing by choice; the parent skips the same instance).
+- A child with `@LoggableMethod(logException = {})` that propagates through a plain parent leaves **no log entry at all** (the child logs nothing by choice; the parent skips the same instance).
 - When a parent opts in with `@OnException`, the exception is recorded on both items (two `reason`s) but the joined log *message* lists it once.
 
 
 ## 1. `singleMethod_default_logsMessageCauseAndStackTrace` — ✅
 
-**What it does:** Method with the default `logException`, throws `IllegalStateException("boom", cause "inner")`.
+**What it does:** A plain `@LoggableMethod` (default detail) throws `IllegalStateException("boom", cause "inner")`.
 
 **Expected:** One ERROR entry, message `boom`. The item has `reason`, `stacktrace` and a nested `cause` node with its own `reason` (`inner`) and `stacktrace`. No `Caused by:` lines.
 
@@ -43,7 +43,7 @@ log:
 
 ## 2. `singleMethod_emptyDetail_logsNothing` — ✅
 
-**What it does:** Method with `logException = {}` throws.
+**What it does:** Method with `@LoggableMethod(logException = {})` throws.
 
 **Expected:** Nothing logged. The exception still propagates to the caller.
 
@@ -55,7 +55,7 @@ log:
 
 ## 3. `singleMethod_classNameOnly_noMessageNoStackTrace` — ✅
 
-**What it does:** `logException = {REASON, CLASS_NAME}`, message is `boom-secret`.
+**What it does:** `@LoggableMethod(logException = {REASON, CLASS_NAME})`, message is `boom-secret`.
 
 **Expected:** Reason is the class name only; message text and stack trace are absent.
 
@@ -75,7 +75,7 @@ log:
 
 ## 4. `singleMethod_messageOnly_noCauseNoStackTrace` — ✅
 
-**What it does:** `logException = {REASON, MESSAGE}`, exception has a cause.
+**What it does:** `@LoggableMethod(logException = {REASON, MESSAGE})`, exception has a cause.
 
 **Expected:** Reason is `boom`; cause and stack trace are absent.
 
@@ -95,7 +95,7 @@ log:
 
 ## 5. `singleMethod_stackTraceOnly_stackTraceWithoutReason` — ✅
 
-**What it does:** `logException = {STACK_TRACE}`.
+**What it does:** `@LoggableMethod(logException = {STACK_TRACE})`.
 
 **Expected:** Stack trace present with class names only (no MESSAGE selected); no `reason`; empty log message.
 
@@ -118,7 +118,7 @@ log:
 
 ## 6. `singleMethod_stackTraceOnly_neverLeaksMessagesFromTheExceptionOrItsCauses` — ✅
 
-**What it does:** `logException = {STACK_TRACE}`; the exception and its cause both carry messages (`outer-LEAKA`, `inner-LEAKB`).
+**What it does:** `@LoggableMethod(logException = {STACK_TRACE})`; the exception and its cause both carry messages (`outer-LEAKA`, `inner-LEAKB`).
 
 **Expected:** Stack trace shows the exception class and frames only: no messages and no `cause` node (no CAUSE selected).
 
@@ -141,7 +141,7 @@ log:
 
 ## 7. `singleMethod_messageAndStackTrace_messageShownInTraceNotAsReason` — ✅
 
-**What it does:** `logException = {MESSAGE, STACK_TRACE}` (MESSAGE without REASON or CAUSE); exception and cause carry messages.
+**What it does:** `@LoggableMethod(logException = {MESSAGE, STACK_TRACE})` (MESSAGE without REASON or CAUSE); exception and cause carry messages.
 
 **Expected:** No `reason` text. The trace shows the exception message (`IllegalStateException: boom-MSG`) but there is no `cause` node: causes need CAUSE.
 
@@ -164,7 +164,7 @@ log:
 
 ## 8. `singleMethod_messageCauseAndStackTrace_causeNodeHasMessageAndOwnTrace` — ✅
 
-**What it does:** `logException = {MESSAGE, CAUSE, STACK_TRACE}` (no REASON).
+**What it does:** `@LoggableMethod(logException = {MESSAGE, CAUSE, STACK_TRACE})` (no REASON).
 
 **Expected:** No `reason` anywhere. The top `stacktrace` has the message on its first line, and the nested `cause` node has its own `stacktrace` with the cause message. No `Caused by:` lines.
 
@@ -193,7 +193,7 @@ log:
 
 ## 9. `singleMethod_causeAndStackTrace_causeNodeHasClassNamesOnly` — ✅
 
-**What it does:** `logException = {CAUSE, STACK_TRACE}` (no MESSAGE).
+**What it does:** `@LoggableMethod(logException = {CAUSE, STACK_TRACE})` (no MESSAGE).
 
 **Expected:** Both `stacktrace`s (top and in the `cause` node) show class names only; no message appears anywhere.
 
@@ -222,7 +222,7 @@ log:
 
 ## 10. `singleMethod_classNameAndStackTrace_traceHasNoMessages` — ✅
 
-**What it does:** `logException = {REASON, CLASS_NAME, STACK_TRACE}` (no MESSAGE).
+**What it does:** `@LoggableMethod(logException = {REASON, CLASS_NAME, STACK_TRACE})` (no MESSAGE).
 
 **Expected:** `reason` is the class name and the stack trace is the exception class and frames only: no messages and no `cause` node (no CAUSE selected).
 
@@ -246,7 +246,7 @@ log:
 
 ## 11. `cause_reasonAndCause_causeIsANestedNodeWithItsOwnReason` — ✅
 
-**What it does:** `logException = {REASON, CAUSE}` (no MESSAGE); exception `boom` with cause `inner`.
+**What it does:** `@LoggableMethod(logException = {REASON, CAUSE})` (no MESSAGE); exception `boom` with cause `inner`.
 
 **Expected:** `reason` is `boom`; `cause` is a nested node with `reason` `inner`; no stack traces.
 
@@ -269,7 +269,7 @@ log:
 
 ## 12. `cause_chainOfThreeExceptions_nestedOneInsideTheOther` — ✅
 
-**What it does:** `{REASON, MESSAGE, CAUSE}`; exception `outer` -> cause `middle` -> cause `inner`.
+**What it does:** `@LoggableMethod(logException = {REASON, MESSAGE, CAUSE})`; exception `outer` -> cause `middle` -> cause `inner`.
 
 **Expected:** Nested one inside the other: `reason` outer, `cause.reason` middle, `cause.cause.reason` inner.
 
@@ -295,7 +295,7 @@ log:
 
 ## 13. `cause_causeWithoutMessage_reasonIsClassName` — ✅
 
-**What it does:** `{REASON, MESSAGE, CAUSE}`; the cause has no message.
+**What it does:** `@LoggableMethod(logException = {REASON, MESSAGE, CAUSE})`; the cause has no message.
 
 **Expected:** The `cause` node's `reason` is its class name, `java.lang.IllegalArgumentException`.
 
@@ -373,7 +373,7 @@ log:
 
 ## 16. `cause_deepChainWithStackTraceOnly_eachCauseNodeHasItsOwnTrace` — ✅
 
-**What it does:** `{CAUSE, STACK_TRACE}` (no MESSAGE); three-level chain.
+**What it does:** `@LoggableMethod(logException = {CAUSE, STACK_TRACE})` (no MESSAGE); three-level chain.
 
 **Expected:** Each level is a nested `cause` node with its own class-name-only `stacktrace`; none of the messages appear.
 
@@ -408,7 +408,7 @@ log:
 
 ## 17. `cause_depthLimit_onlyFiveNestedLevels` — ✅
 
-**What it does:** `{REASON, CAUSE}`; a chain of eight exceptions (`level-0` … `level-7`).
+**What it does:** `@LoggableMethod(logException = {REASON, CAUSE})`; a chain of eight exceptions (`level-0` … `level-7`).
 
 **Expected:** The `cause` nodes nest five deep (`level-1` … `level-5`); `level-6` and `level-7` are not logged.
 
@@ -492,7 +492,7 @@ log:
 
 ## 19. `loggableClassChain_reasonExceptionAndCause_noStackTraces` — ✅
 
-**What it does:** Same chain with `logException = {REASON, EXCEPTION, CAUSE}`.
+**What it does:** Same chain with `@LoggableMethod(logException = {REASON, EXCEPTION, CAUSE})`.
 
 **Expected:** The compact form: `reason`, `exception` and `cause` nodes only, no `stacktrace`; masking still applied.
 
@@ -529,7 +529,7 @@ log:
 
 ## 20. `singleMethod_messageAndCause_causeIsANestedNode` — ✅
 
-**What it does:** `logException = {REASON, MESSAGE, CAUSE}`.
+**What it does:** `@LoggableMethod(logException = {REASON, MESSAGE, CAUSE})`.
 
 **Expected:** `reason` is `boom` (no `; Cause:` suffix); the cause is a nested `cause` node with `reason` `inner`; no stack traces.
 
@@ -552,7 +552,7 @@ log:
 
 ## 21. `precedence_onExceptionOverridesLogException` — ✅
 
-**What it does:** `@OnException(IOException -> REASON, CLASS_NAME)` on a method with `logException = {REASON, MESSAGE}`; throws `IOException("disk-secret")`.
+**What it does:** `@OnException(type = IOException.class, detail = {REASON, CLASS_NAME})` on a method with `@LoggableMethod(logException = {REASON, MESSAGE})`; throws `IOException("disk-secret")`.
 
 **Expected:** Class name only; the message text is absent.
 
@@ -574,7 +574,7 @@ log:
 
 **What it does:** Same method, but throws `IllegalStateException` (no rule matches).
 
-**Expected:** Falls back to `logException = {REASON, MESSAGE}`: message `boom`.
+**Expected:** Falls back to `@LoggableMethod(logException = {REASON, MESSAGE})`: message `boom`.
 
 **Log output:**
 
@@ -592,7 +592,7 @@ log:
 
 ## 23. `precedence_globalRuleOverridesLogException` — ✅
 
-**What it does:** Global rule `IllegalStateException -> REASON, CLASS_NAME`; method has default `logException`.
+**What it does:** Global rule `.on(IllegalStateException.class, REASON, CLASS_NAME)`; the method is a plain `@LoggableMethod` (default detail).
 
 **Expected:** Class name only; message and stack trace absent.
 
@@ -612,7 +612,7 @@ log:
 
 ## 24. `precedence_globalRuleWithNoDetail_logsNothing` — ✅
 
-**What it does:** Global rule `IllegalStateException -> (nothing)`.
+**What it does:** Global rule `.on(IllegalStateException.class)` (no detail); the method is a plain `@LoggableMethod`.
 
 **Expected:** Nothing logged.
 
@@ -624,7 +624,7 @@ log:
 
 ## 25. `precedence_globalRuleNotMatching_fallsBackToLogException` — ✅
 
-**What it does:** Global rule only for `IOException`; method throws `IllegalStateException`, `logException = {REASON, MESSAGE}`.
+**What it does:** Global rule `.on(IOException.class, REASON, CLASS_NAME)` only; the method throws `IllegalStateException` and has `@LoggableMethod(logException = {REASON, MESSAGE})`.
 
 **Expected:** Falls back to the method: message `boom`.
 
@@ -644,7 +644,7 @@ log:
 
 ## 26. `precedence_onExceptionOverridesGlobalRule` — ✅
 
-**What it does:** Global rule `IOException -> (nothing)`, but the method has `@OnException(IOException -> REASON, CLASS_NAME)`.
+**What it does:** Global rule `.on(IOException.class)` (no detail), but the method has `@OnException(type = IOException.class, detail = {REASON, CLASS_NAME})`.
 
 **Expected:** `@OnException` wins: class name is logged.
 
@@ -690,7 +690,7 @@ log:
 
 ## 28. `parentWithMatchingOnException_exceptionNodeOnBothItemsButMessageOnlyOnce` — ✅
 
-**What it does:** Same, but the parent has `@OnException(PaymentException -> REASON, MESSAGE)`.
+**What it does:** Same, but the parent has `@OnException(type = PaymentException.class, detail = {REASON, MESSAGE})`.
 
 **Expected:** The exception is recorded on the child and on the parent (two `reason`s), but the log message holds it once: `card declined`.
 
@@ -744,7 +744,7 @@ log:
 
 ## 30. `parentThrowsUnrelatedExceptionWithoutCause_childDetailsStillLogged` — ✅
 
-**What it does:** Parent catches the child exception and throws a NEW `IllegalStateException("order failed")` with **no cause**, so the child exception is not nested in it. Child has `{REASON, MESSAGE, CAUSE}`.
+**What it does:** Parent catches the child exception and throws a NEW `IllegalStateException("order failed")` with **no cause**, so the child exception is not nested in it. Child has `@LoggableMethod(logException = {REASON, MESSAGE, CAUSE})`.
 
 **Expected:** Child exception is still logged under the child (`called`), and the parent logs its own exception. Two `reason`s; message `card declined; order failed` (child first).
 
@@ -771,7 +771,7 @@ log:
 
 ## 31. `childWithEmptyDetailParentThrowsUnrelatedException_onlyParentExceptionLogged` — ✅
 
-**What it does:** Same, but the child has `logException = {}`.
+**What it does:** Same, but the child has `@LoggableMethod(logException = {})`.
 
 **Expected:** Only the parent's new exception is logged; the child exception (`card-secret`) appears nowhere.
 
@@ -829,7 +829,7 @@ log:
 
 ## 33. `childWithEmptyDetailPropagatesThroughPlainParent_nothingLoggedAtAll` — ✅
 
-**What it does:** Child has `logException = {}`; parent (default detail) lets it propagate.
+**What it does:** Child has `@LoggableMethod(logException = {})`; parent (default detail) lets it propagate.
 
 **Expected:** Nothing logged at all. The child logs nothing by choice and the parent skips the same instance.
 
@@ -841,7 +841,7 @@ log:
 
 ## 34. `childWithEmptyDetailWrappedByParent_wrapperIsLogged` — ✅
 
-**What it does:** Child has `logException = {}`; parent wraps it in a new exception.
+**What it does:** Child has `@LoggableMethod(logException = {})`; parent wraps it in a new exception.
 
 **Expected:** The parent logs the wrapper (message `outer failed`).
 
@@ -893,7 +893,7 @@ log:
 
 ## 36. `loggableClassException_default_reasonTextAndExceptionFieldsLoggedSeparately` — ✅
 
-**What it does:** Exception class is `@LoggableClass` with a `@LoggableField`; default `logException`.
+**What it does:** Exception class is `@LoggableClass` with a `@LoggableField`; plain `@LoggableMethod` (default detail).
 
 **Expected:** Two separate keys: `reason` is the text (`secret failure`) and `exception` is an object with a `class` field (the exception class name) plus the structured fields (`code: X-42`).
 
@@ -921,7 +921,7 @@ log:
 
 ## 37. `loggableClassException_exceptionOnly_fieldsWithoutReasonText` — ✅
 
-**What it does:** Same exception, `logException = {EXCEPTION}`.
+**What it does:** Same exception, `@LoggableMethod(logException = {EXCEPTION})`.
 
 **Expected:** Only the `exception` key (with `X-42`); no `reason` text and no stack trace.
 
@@ -944,7 +944,7 @@ log:
 
 ## 38. `loggableClassException_reasonOnly_textWithoutFields` — ✅
 
-**What it does:** Same exception, `logException = {REASON, MESSAGE}`.
+**What it does:** Same exception, `@LoggableMethod(logException = {REASON, MESSAGE})`.
 
 **Expected:** Only the `reason` text; no `exception` key and `X-42` appears nowhere.
 
@@ -964,7 +964,7 @@ log:
 
 ## 39. `loggableClassException_classNameOnly_fieldsAreNotLogged` — ✅
 
-**What it does:** Same exception, `logException = {REASON, CLASS_NAME}`.
+**What it does:** Same exception, `@LoggableMethod(logException = {REASON, CLASS_NAME})`.
 
 **Expected:** `reason` is the class name; no `exception` key; `X-42` appears nowhere.
 
