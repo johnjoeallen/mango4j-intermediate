@@ -102,6 +102,12 @@ class ExceptionLoggingScenariosTest {
 		}
 	}
 
+	public static class ReasonAndCause {
+		@LoggableMethod(logException = {REASON, CAUSE})
+		public void call() {
+		}
+	}
+
 	public static class MessageCauseAndStackTrace {
 		@LoggableMethod(logException = {MESSAGE, CAUSE, STACK_TRACE})
 		public void call() {
@@ -344,6 +350,56 @@ class ExceptionLoggingScenariosTest {
 		assertThat(only()).contains("\"reason\":\"java.lang.IllegalStateException\"")
 			.doesNotContain("Caused by")
 			.doesNotContain("MSG");
+	}
+
+	@Test
+	void cause_reasonAndCause_causeAppendedToReason() throws Throwable {
+		run(new IllegalStateException("boom", new IllegalArgumentException("inner")), Hop.of(new ReasonAndCause()));
+
+		assertThat(logged.get(0).message()).isEqualTo("boom; Cause: inner");
+		assertThat(only()).contains("\"reason\":\"boom; Cause: inner\"").doesNotContain("\"stacktrace\"");
+	}
+
+	@Test
+	void cause_chainOfThreeExceptions_allCausesAppendedInOrder() throws Throwable {
+		run(new IllegalStateException("outer", new IllegalArgumentException("middle", new IOException("inner"))),
+			Hop.of(new MessageAndCause()));
+
+		assertThat(logged.get(0).message()).isEqualTo("outer; Cause: middle; Cause: inner");
+		assertThat(only()).contains("\"reason\":\"outer; Cause: middle; Cause: inner\"");
+	}
+
+	@Test
+	void cause_causeWithoutMessage_shownAsClassName() throws Throwable {
+		run(new IllegalStateException("boom", new IllegalArgumentException()), Hop.of(new MessageAndCause()));
+
+		assertThat(logged.get(0).message()).isEqualTo("boom; Cause: java.lang.IllegalArgumentException");
+	}
+
+	@Test
+	void cause_selectedButExceptionHasNoCause_nothingAppended() throws Throwable {
+		run(new IllegalStateException("boom"), Hop.of(new DefaultDetail()));
+
+		assertThat(logged.get(0).message()).isEqualTo("boom");
+		assertThat(only()).contains("\"reason\":\"boom\"").doesNotContain("Cause:").doesNotContain("Caused by");
+	}
+
+	@Test
+	void cause_defaultDetail_reasonAndStackTraceBothShowTheCause() throws Throwable {
+		run(new IllegalStateException("boom", new IllegalArgumentException("inner")), Hop.of(new DefaultDetail()));
+
+		assertThat(only()).contains("\"reason\":\"boom; Cause: inner\"")
+			.contains("Caused by: java.lang.IllegalArgumentException: inner");
+	}
+
+	@Test
+	void cause_deepChainInStackTrace_everyCauseHasItsOwnCausedByLine() throws Throwable {
+		run(new IllegalStateException("outer", new IllegalArgumentException("middle", new IOException("inner"))),
+			Hop.of(new CauseAndStackTrace()));
+
+		assertThat(only()).contains("Caused by: java.lang.IllegalArgumentException\"")
+			.contains("Caused by: java.io.IOException\"")
+			.doesNotContain("outer").doesNotContain("middle").doesNotContain("inner");
 	}
 
 	@Test

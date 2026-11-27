@@ -93,6 +93,38 @@ class ExceptionDetailResolverTest {
 	}
 
 	@Test
+	void describe_cause_chainOfCausesAppendedInOrder() {
+		RuntimeException chain = new RuntimeException("outer",
+			new IllegalStateException("middle", new IllegalArgumentException("inner")));
+
+		assertThat(ExceptionDetailResolver.describe(chain, Set.of(REASON, MESSAGE, CAUSE)))
+			.isEqualTo("outer; Cause: middle; Cause: inner");
+		assertThat(ExceptionDetailResolver.describe(chain, Set.of(REASON, MESSAGE))).isEqualTo("outer");
+	}
+
+	@Test
+	void describe_cause_causeWithoutMessageShownAsClassName() {
+		RuntimeException ex = new RuntimeException("outer", new IllegalArgumentException());
+
+		assertThat(ExceptionDetailResolver.describe(ex, Set.of(REASON, MESSAGE, CAUSE)))
+			.isEqualTo("outer; Cause: java.lang.IllegalArgumentException");
+	}
+
+	@Test
+	void describe_cause_selectedButThereIsNoCause_noSuffix() {
+		assertThat(ExceptionDetailResolver.describe(new RuntimeException("outer"), Set.of(REASON, MESSAGE, CAUSE)))
+			.isEqualTo("outer");
+	}
+
+	@Test
+	void describe_cause_withClassName_classNameThenMessageAndCauses() {
+		RuntimeException ex = new RuntimeException("outer", new IllegalArgumentException("inner"));
+
+		assertThat(ExceptionDetailResolver.describe(ex, Set.of(REASON, CLASS_NAME, CAUSE)))
+			.isEqualTo("java.lang.RuntimeException: outer; Cause: inner");
+	}
+
+	@Test
 	void describe_withoutReason_isEmptyWhateverElseIsSelected() {
 		assertThat(ExceptionDetailResolver.describe(ex, Set.of(CLASS_NAME, MESSAGE, CAUSE))).isEmpty();
 		assertThat(ExceptionDetailResolver.describe(ex, Set.of(MESSAGE))).isEmpty();

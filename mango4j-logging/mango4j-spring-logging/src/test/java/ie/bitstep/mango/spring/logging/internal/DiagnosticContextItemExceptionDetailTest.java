@@ -65,6 +65,14 @@ class DiagnosticContextItemExceptionDetailTest {
 		public void causeStackTrace() {
 		}
 
+		@LoggableMethod(logException = {REASON, CAUSE})
+		public void reasonAndCause() {
+		}
+
+		@LoggableMethod(logException = {CAUSE})
+		public void causeOnly() {
+		}
+
 		@LoggableMethod(logException = {STACK_TRACE})
 		public void stackTraceOnly() {
 		}
@@ -195,6 +203,39 @@ class DiagnosticContextItemExceptionDetailTest {
 		assertThat(stackTraceOf(loggable("messageCauseStackTrace", ex)))
 			.anyMatch(l -> l.startsWith("Caused by: java.lang.IllegalStateException"))
 			.anyMatch(l -> l.startsWith("Suppressed: java.lang.IllegalArgumentException"));
+	}
+
+	@Test
+	void cause_selectedWithReason_causeChainAppendedToReason() throws Exception {
+		RuntimeException ex = new RuntimeException("outer", new IllegalStateException("middle", new IllegalArgumentException("inner")));
+
+		Map<String, Object> loggable = loggable("reasonAndCause", ex);
+
+		assertThat(loggable).containsEntry("reason", "outer; Cause: middle; Cause: inner").doesNotContainKey("stacktrace");
+	}
+
+	@Test
+	void cause_selectedButNoCause_reasonHasNoCauseSuffix() throws Exception {
+		Map<String, Object> loggable = loggable("reasonAndCause", new RuntimeException("outer"));
+
+		assertThat(loggable).containsEntry("reason", "outer");
+	}
+
+	@Test
+	void cause_selectedWithoutReasonOrStackTrace_nothingToShow() throws Exception {
+		Map<String, Object> loggable = loggable("causeOnly", new RuntimeException("outer", new IllegalStateException("inner")));
+
+		assertThat(loggable).doesNotContainKeys("reason", "stacktrace", "exception");
+	}
+
+	@Test
+	void cause_selectedWithStackTraceAndReason_bothShowTheCause() throws Exception {
+		RuntimeException ex = new RuntimeException("outer", new IllegalStateException("inner"));
+
+		Map<String, Object> loggable = loggable("defaults", ex);
+
+		assertThat(loggable).containsEntry("reason", "outer; Cause: inner");
+		assertThat(stackTraceOf(loggable)).contains("Caused by: java.lang.IllegalStateException: inner");
 	}
 
 	@Test
